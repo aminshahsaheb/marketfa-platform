@@ -15,7 +15,7 @@ MarketFa is a multi-tenant retail system. A query bug, guessed UUID, background 
 - Application repositories always scope by tenant.
 - PostgreSQL RLS is defense in depth for tenant-owned tables.
 - Set tenant context transaction-locally within every tenant-scoped transaction.
-- Runtime DB role is non-superuser and has no BYPASSRLS; migration role is separate.
+- Runtime login is non-superuser, has no BYPASSRLS, and is `NOINHERIT`; it must explicitly `SET LOCAL ROLE marketfa_app` inside each transaction. The application role is `NOLOGIN`, non-superuser, `NOBYPASSRLS`, and `NOINHERIT`; migration role is separate.
 - Composite foreign keys enforce same-tenant references.
 - Background jobs establish context per job.
 - The MVP creates one store per tenant, but the schema does not permanently forbid multiple stores.
