@@ -4,9 +4,11 @@
 - **Date:** 2026-10-30
 
 ## Context
+
 MarketFa launches in Iran and must support Persian/Toman display and English/IRR display. Storing floating-point monetary values risks rounding errors. Storing bare integers without currency identity is ambiguous. Toman is a common presentation unit but the accounting currency must be explicit.
 
 ## Decision
+
 - Use a currency-aware integer money type: `Money { amountMinor: bigint, currency: CurrencyCode }`.
 - For the Iran launch, post and reconcile all accounting amounts as integer Rial (IRR), with one canonical quantum equal to one Rial.
 - Treat Toman as an explicit presentation/input unit only: 1 Toman = 10 Rial.
@@ -17,6 +19,7 @@ MarketFa launches in Iran and must support Persian/Toman display and English/IRR
 - Isolate Moadian payload mapping in the Iran compliance adapter. Confirm field units, precision, and rounding against the current official schema before live submission.
 
 ## Consequences
+
 - The UI can display Toman or Rial without changing stored accounting data.
 - English and Persian interfaces share identical canonical amounts and ledger outcomes.
 - Foreign currencies can be added through an explicit currency registry and FX model, not by changing the meaning of the IRR integer.

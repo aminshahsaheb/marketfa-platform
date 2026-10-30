@@ -12,6 +12,7 @@ labels: enhancement
 ## Acceptance criteria
 
 ## Domain impact
+
 Consider accounting, inventory, permissions, audit, offline, and tenant isolation.
 
 ## Open questions

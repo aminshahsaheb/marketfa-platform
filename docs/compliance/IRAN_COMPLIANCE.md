@@ -7,6 +7,7 @@
 Iran is the first launch jurisdiction. The platform must support Iran-specific tax and electronic invoicing without embedding those rules in the generic accounting kernel.
 
 The legal and technical rules change. Every rule must have:
+
 - official source document and source URL;
 - publication date and effective-from/effective-to dates;
 - jurisdiction and taxpayer/transaction scope;
@@ -28,6 +29,7 @@ Do not let a UI locale select the compliance profile. Store jurisdiction selects
 ## 3. Moadian integration boundary
 
 The integration must be an adapter behind an application port. It must support:
+
 - credential and private-key protection outside browser storage;
 - key/certificate lifecycle and revocation;
 - schema-versioned serialization and validation;
@@ -52,6 +54,7 @@ Tax rates, exemptions, invoice types, taxpayer eligibility, thresholds, and effe
 ## 6. Sources and verification
 
 Initial legal reference:
+
 - [Law on Point-of-Sale Terminals and Taxpayer System](https://law-ir.ir/law/cat/1769/) — useful consolidated legal text; verify amendments against official publication.
 - [Taxpayer System / electronic invoice technical guidance portal](https://www.intamedia.ir/) — official authority portal; capture the exact current schema and circular before implementation.
 - [Official Tax Affairs Organization portal](https://www.tax.gov.ir/) — official portal.
@@ -61,6 +64,7 @@ A secondary report dated 26 Tir 1405 describes an extension through the end of 1
 ## 7. Mandatory approval gate
 
 No production tax feature until an Iran tax/accounting reviewer approves:
+
 - current taxpayer applicability and exemptions;
 - VAT categories/rates and effective dates;
 - invoice types and required fields;

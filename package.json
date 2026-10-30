@@ -1,0 +1,35 @@
+{
+  "name": "marketfa-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=22.21.1 <23",
+    "pnpm": ">=10.20.0 <11"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @marketfa/api start:dev",
+    "dev:web": "pnpm --filter @marketfa/web dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "eslint . --ext .ts,.tsx,.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.19.1",
+    "eslint": "10.13.0",
+    "prettier": "3.6.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1"
+  }
+}

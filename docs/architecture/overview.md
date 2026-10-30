@@ -1,93 +1,45 @@
 # Architecture Overview
 
-**Status:** Proposed baseline  
-**Architecture style:** Modular monolith with explicit domain boundaries.
+**Status:** Proposed baseline. The M1 scaffold does not yet implement all components described here.
 
-## 1. System context
+## System context
 
-The browser PWA is an untrusted client. It may cache application assets and a limited operational dataset, but it is never authoritative for price, tax, stock, accounting, permissions, or final posting.
+The browser is an untrusted client. It may cache limited operational data, but it is never authoritative for price, tax, stock, accounting, permissions, or final posting. The NestJS API authenticates actors, resolves tenant membership, validates commands, and executes use cases. PostgreSQL is authoritative.
 
-The NestJS API authenticates the actor, resolves tenant membership, validates commands, and executes domain use cases. PostgreSQL is the authoritative store. Financial and stock effects are committed in database transactions.
+## Modules
 
-## 2. Logical components
+Identity and Access; Tenancy and Store Setup; Catalog; Procurement; Inventory; Sales; Payments; POS Operations; Accounting; Audit; Sync; Reporting. Each module owns its writes. Cross-module workflows use application interfaces and explicit transaction boundaries.
 
-- Identity and Access: users, memberships, roles, sessions.
-- Tenancy and Store Setup: tenant, store, terminal, configuration.
-- Catalog: products, barcodes, units, price lists.
-- Procurement: suppliers, purchase orders (later), receipts, supplier invoices.
-- Inventory: batches, stock ledger, reservations, adjustments, transfers (later).
-- Sales: cart validation, sales, sale lines, discounts.
-- Payments: tender records, refunds, cash movements.
-- POS Operations: shifts, cash counts, terminal sessions.
-- Accounting: chart of accounts, journal entries, journal lines, periods, reports.
-- Audit: append-only audit events and correlation.
-- Sync: device identity, command inbox/outbox, idempotency, conflict responses.
-- Reporting: read models and exports.
+## Sale transaction target
 
-Modules own their write operations. Cross-module workflows call application services or domain events within the same transaction; avoid circular imports and shared mutable repositories.
-
-## 3. Transaction boundary: posting a sale
-
-A sale posting command must:
 1. Authenticate actor and resolve tenant/store/terminal permissions.
 2. Validate command schema and idempotency key.
-3. Lock or conditionally update the required stock rows in a deterministic order.
-4. Revalidate sellable quantity and current server-approved price/tax policy.
-5. Allocate batches according to the configured policy.
+3. Lock or conditionally update stock rows in deterministic order.
+4. Revalidate sellable quantity and server-approved price/tax policy.
+5. Allocate batches according to configured policy.
 6. Persist sale, lines, tenders, stock movements, and balanced journal entries.
 7. Persist audit and outbox events.
-8. Commit once; otherwise roll back all effects.
+8. Commit once; otherwise roll back all local effects.
 
-Do not call external payment providers inside a database transaction. Use a payment intent/state machine and reconciliation workflow if a provider is introduced.
+External provider calls do not run inside the database transaction.
 
-## 4. Offline model
+## Offline target
 
-Offline support is bounded and explicit:
-- Cache only data required for a terminal's permitted workflow.
-- Store commands locally with UUID, device ID, tenant scope, creation time, schema version, and idempotency key.
-- Do not trust client timestamps for financial ordering.
-- Server revalidates every command at replay.
-- Command states: queued, sending, accepted, rejected, needs_review.
-- Retries reuse the same idempotency key.
-- Conflicts return typed reason codes and do not silently overwrite.
-- Initial release may allow offline draft capture while restricting final posting or stock-sensitive sales to a single-terminal allocation policy.
+Offline capture is bounded. Every command carries a UUID, device ID, schema version, tenant scope and idempotency key. The server revalidates on replay. States: queued, sending, accepted, rejected, needs_review. No unrestricted multi-device offline stock allocation is promised.
 
-## 5. Data and consistency
+## Data consistency
 
 - PostgreSQL is the source of truth.
-- Use integer minor currency units where currency supports them; otherwise use explicit decimal precision. Never use binary floating point for money.
-- Use NUMERIC for measured quantities with documented scale and rounding.
-- Store UTC instants and the applicable IANA timezone separately.
-- Posted journals and stock movements are immutable. Corrections use reversing/compensating records.
-- Add tenant_id to tenant-owned records and enforce it in repository queries; evaluate PostgreSQL row-level security as defense in depth.
-- Use foreign keys, unique constraints, check constraints, and appropriate indexes.
-- Use migrations committed to source control.
+- Initial Iran ledger amounts use integer IRR; Toman is an explicit input/display unit (1 Toman = 10 Rial).
+- Use NUMERIC/exact decimal intermediates for measured quantities and prorated calculations; no binary floating-point money.
+- Store UTC instants and IANA timezone separately. Store accounting dates as date-only values.
+- Posted journals and stock movements are immutable; corrections use reversals/compensating records.
+- Tenant scope is server-derived and enforced in queries and database constraints.
 
-## 6. API conventions
+## API and security
 
-- Version external API paths (for example /api/v1).
-- Validate all input at the boundary.
-- Use stable error codes and correlation IDs.
-- Apply pagination to collection endpoints.
-- Avoid returning internal database models directly.
-- Define idempotency behavior for every command endpoint.
-- Use OpenAPI as a generated contract, then review breaking changes.
+Version APIs under `/api/v1`; validate input at boundaries; use stable error codes, correlation IDs, pagination and idempotency. Enforce authorization on every request. Use secure sessions, CSRF defenses where applicable, rate limits, encrypted backups and least privilege. Log metadata, not secrets or sensitive payloads.
 
-## 7. Security boundaries
+## Observability and deployment
 
-- No secrets in source control or browser bundles.
-- Authorization is enforced server-side on every request.
-- Tenant scope comes from authenticated membership.
-- Sensitive actions require explicit permissions and audit records.
-- Rate-limit authentication and abuse-prone endpoints.
-- Use secure, HttpOnly, SameSite cookies if cookie sessions are selected; document CSRF protection.
-- Encrypt backups and restrict restore permissions.
-- Log metadata, not passwords, tokens, card data, or unnecessary personal data.
-
-## 8. Observability
-
-Structured logs include timestamp, level, service, request_id, correlation_id, actor_id (when safe), tenant_id, and event name. Metrics cover API errors/latency, sync queue age, command rejection, transaction conflicts, and backup status. Never place secrets or sensitive payloads in logs.
-
-## 9. Deployment shape
-
-Local development uses Docker Compose for PostgreSQL and app services. Production topology, hosting provider, backups, monitoring, and data residency are decisions for the pilot environment, not assumptions embedded in code.
+Structured logs include timestamp, level, service, request/correlation ID, actor and tenant identifiers where safe. Metrics cover latency, errors, sync age, conflicts and backup status. Production hosting, data residency and backup topology remain pilot decisions.

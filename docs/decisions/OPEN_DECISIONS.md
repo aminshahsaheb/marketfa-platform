@@ -2,39 +2,37 @@
 
 This document prevents unverified assumptions from silently becoming implementation rules.
 
-| ID | Decision | Why it matters | Owner / evidence needed | Status |
-|---|---|---|---|---|
-| OD-001 | First launch jurisdiction | Tax, invoices, accounting, privacy, data residency | Product owner + Iran tax/accounting review | **Decided: Iran first** |
-| OD-002 | Currency and display units | Rial/Toman handling, minor units, rounding | Product owner + Iran accountant + official schema | **Partially decided: integer IRR ledger and explicit Toman display; fractional/rounding policy pending** |
-| OD-003 | Tax model | Inclusive/exclusive tax, exemptions, rates, rounding | Iran tax specialist + current official rules | **Partially decided: versioned Iran rules; exact rule pack pending review** |
-| OD-004 | Fiscal calendar and period locks | Posting rules and statutory reporting | Iran accountant | **Partially decided: Jalali operational calendar; fiscal-period policy pending** |
-| OD-005 | Initial customer profile | Retail vertical, SKU count, transaction volume | Operator interviews | Open |
-| OD-006 | Single-store vs multi-store MVP | Tenant and store model scope | Pilot requirements | Open |
-| OD-007 | Offline capability | Permitted operations, duration, number of terminals | Connectivity tests + operator interviews | Open |
-| OD-008 | Hardware | Barcode scanner, scale, receipt printer, cash drawer | Pilot equipment inventory | Open |
-| OD-009 | Supplier workflow | Purchase receipt, supplier invoice, payable, payment | Operator workflow mapping | Open |
-| OD-010 | Customer accounts | Credit sale, balance, limits, settlements | Operator workflow mapping | Open |
-| OD-011 | Data migration | Source export, data quality, reconciliation | Legacy data sample + mapping | Open |
-| OD-012 | Hosting and data residency | Availability, backups, compliance, cost | Deployment constraints | Open |
+## Decision register
 
-A decision may move to accepted only when its evidence and consequences are recorded. Architecture choices that depend on an open product decision must be marked provisional.
-
+- **OD-001 — First launch jurisdiction:** Decided: Iran first. Tax and legal details still require local review.
+- **OD-002 — Currency and display units:** Partially decided. Integer IRR ledger; explicit Toman input/display. Fractional and rounding policy pending.
+- **OD-003 — Tax model:** Architecture decided: versioned Iran rules. Exact rule pack requires current official sources and Iran tax review.
+- **OD-004 — Fiscal calendar and period locks:** Open. Iran accountant must confirm fiscal-year and period-close rules.
+- **OD-005 — Initial customer profile:** Open. Requires retail segment, SKU count, and transaction-volume interviews.
+- **OD-006 — Single-store vs multi-store MVP:** MVP currently scoped as one store per tenant. Validate with pilot requirements.
+- **OD-007 — Offline capability:** Open. Define permitted operations, duration, and number of terminals.
+- **OD-008 — Hardware:** Open. Inventory barcode scanner, scale, receipt printer, and cash drawer requirements.
+- **OD-009 — Supplier workflow:** Open. Map purchase receipt, supplier invoice, payable, and payment.
+- **OD-010 — Customer accounts:** Open. Validate credit sale, balance, limits, and settlements.
+- **OD-011 — Data migration:** Open. Requires source export, data-quality review, and reconciliation mapping.
+- **OD-012 — Hosting and data residency:** Open. Decide after deployment constraints and legal review.
 
 ## Confirmed cross-cutting decisions
 
-| ID | Decision | Status |
-|---|---|---|
-| OD-013 | First launch market is Iran | Decided |
-| OD-014 | Persian (fa-IR) and English (en) are first-release languages | Decided |
-| OD-015 | Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian presentation | Decided as presentation defaults; user/store overrides must be supported |
-| OD-016 | UI locale is independent from store jurisdiction, currency, and tax profile | Decided |
-| OD-017 | Iran tax/Moadian requirements use versioned, effective-dated rules and a dedicated integration adapter | Decided as architecture; detailed compliance rules pending specialist review |
+- **OD-013:** First launch market is Iran.
+- **OD-014:** Persian (fa-IR) and English (en) are first-release languages.
+- **OD-015:** Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian presentation. User/store overrides are supported.
+- **OD-016:** UI locale is independent from store jurisdiction, currency, and tax profile.
+- **OD-017:** Iran tax/Moadian requirements use versioned, effective-dated rules and a dedicated adapter. Detailed compliance rules await specialist review.
+- **OD-018:** Iran accounting ledger uses integer IRR; Toman is explicit input/display only. Rounding policy remains open.
+- **OD-019:** M1 uses pnpm workspace, NestJS API, React/Vite web, and PostgreSQL. Frozen-lockfile CI and runtime smoke tests passed on the feature branch.
 
-Open items still blocking financial implementation:
-- Fractional quantity × unit-price policy, legal tax rounding, and deterministic remainder allocation.
-- Applicable tax rates, categories, exemptions, thresholds, invoice types, and exact taxpayer applicability.
-- Official Moadian API/schema version, signing and key management requirements, and certification/test path.
+## Financial implementation blockers
+
+- Fractional quantity × unit-price policy, statutory tax rounding, and deterministic remainder allocation.
+- Current official tax rates, categories, exemptions, thresholds, invoice types, and taxpayer applicability.
+- Current official Moadian API/schema version, signing/key management, and test/certification path.
 - Fiscal year/period policy, chart-of-accounts template, inventory costing, and legally required reports.
 - Target retail segment, pilot store, hardware, and offline workflow.
 
-Do not close these items using assumptions from old MarketFa code or a non-authoritative summary. Attach source document, publication/effective date, reviewer, and test cases to each accepted rule.
+Do not close these items using assumptions from legacy code or a secondary summary. Record source, publication/effective date, reviewer, scope, and test vectors for each accepted rule.

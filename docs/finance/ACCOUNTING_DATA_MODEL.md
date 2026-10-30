@@ -25,6 +25,7 @@ erDiagram
 ## 2. Tables and essential fields
 
 ### accounts
+
 - id UUID primary key
 - store_id UUID not null
 - code VARCHAR(32) not null
@@ -39,6 +40,7 @@ erDiagram
 - composite FK ensures parent belongs to same store
 
 ### fiscal_periods
+
 - id UUID primary key
 - store_id UUID not null
 - name VARCHAR(80) not null
@@ -52,6 +54,7 @@ erDiagram
 - no overlapping periods per store (exclusion constraint or transactional validation)
 
 ### posting_rule_versions
+
 - id UUID primary key
 - store_id UUID nullable for reviewed global templates
 - rule_key VARCHAR(100) not null
@@ -67,6 +70,7 @@ erDiagram
 - Rule configuration must be schema-validated; JSONB is not a substitute for typed validation.
 
 ### journal_entries
+
 - id UUID primary key
 - store_id UUID not null
 - period_id UUID not null
@@ -92,6 +96,7 @@ erDiagram
 - composite FKs enforce period and source same store
 
 ### journal_lines
+
 - id UUID primary key
 - store_id UUID not null (denormalized for composite FK enforcement)
 - journal_entry_id UUID not null
@@ -107,12 +112,14 @@ erDiagram
 - composite FKs ensure account and journal belong to same store
 
 ### accounting_sequences
+
 - store_id UUID primary key
 - next_entry_number BIGINT not null CHECK(next_entry_number > 0)
 - updated_at timestamptz not null
 - Updated with row lock inside the posting transaction. Never use MAX(entry_number)+1.
 
 ### accounting_audit_events
+
 - id UUID primary key
 - store_id UUID not null
 - actor_id UUID nullable for system worker
@@ -128,6 +135,7 @@ erDiagram
 ## 3. Constraints requiring transaction/deferred enforcement
 
 A row CHECK cannot verify the sum of all lines in a journal. On posting:
+
 - Lock journal header.
 - Verify at least two lines.
 - Verify all lines are valid and same-store.
@@ -164,6 +172,7 @@ Use partial indexes for posted records and source idempotency where supported. V
 ## 6. Sequence and concurrency
 
 Use a per-store sequence row:
+
 1. Lock sequence row with SELECT FOR UPDATE.
 2. Read and increment next_entry_number.
 3. Insert journal and lines.

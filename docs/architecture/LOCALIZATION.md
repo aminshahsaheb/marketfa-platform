@@ -6,6 +6,7 @@
 ## 1. Non-negotiable separation
 
 These are separate concepts and must never be inferred from one another:
+
 - UI locale: language and presentation direction.
 - Store jurisdiction: legal country and applicable compliance profile.
 - Functional currency: currency used by the store's books.
@@ -17,14 +18,14 @@ Changing UI language must never alter stored values, tax rules, posted journals,
 
 ## 2. Locale behavior
 
-| Concern | Persian (`fa-IR`) | English (`en`) |
-|---|---|---|
-| Direction | RTL | LTR |
-| Default calendar display | Jalali | Gregorian |
-| Digits | Persian digits by default; configurable | Latin digits by default |
-| Translation | Persian catalogue | English catalogue |
-| Currency labels | Explicit IRR/Rial or Toman label | Explicit IRR/Rial or Toman label |
-| Date/time | Locale-aware, store timezone | Locale-aware, store timezone |
+| Concern                  | Persian (`fa-IR`)                       | English (`en`)                   |
+| ------------------------ | --------------------------------------- | -------------------------------- |
+| Direction                | RTL                                     | LTR                              |
+| Default calendar display | Jalali                                  | Gregorian                        |
+| Digits                   | Persian digits by default; configurable | Latin digits by default          |
+| Translation              | Persian catalogue                       | English catalogue                |
+| Currency labels          | Explicit IRR/Rial or Toman label        | Explicit IRR/Rial or Toman label |
+| Date/time                | Locale-aware, store timezone            | Locale-aware, store timezone     |
 
 English is not synonymous with a foreign jurisdiction. An English-speaking user operating an Iranian store still uses the Iran tax profile and the store's configured currency.
 

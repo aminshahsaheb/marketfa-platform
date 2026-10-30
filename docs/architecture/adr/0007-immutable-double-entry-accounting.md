@@ -4,9 +4,11 @@
 - **Date:** 2026-10-30
 
 ## Context
+
 MarketFa must keep POS, payments, inventory, tax subledgers, and financial reports consistent. Financial events need atomic posting, auditability, exact balancing, and safe correction.
 
 ## Decision
+
 - Use an accrual-capable double-entry journal as the authoritative financial ledger.
 - Use integer IRR amounts for the initial Iran ledger, with exact arithmetic and explicit rounding boundaries.
 - Separate chart of accounts, fiscal periods, journal headers, journal lines, posting-rule versions, and accounting audit events.
@@ -18,6 +20,7 @@ MarketFa must keep POS, payments, inventory, tax subledgers, and financial repor
 - Reports read posted ledger facts and reconcile to operational subledgers.
 
 ## Consequences
+
 - No module may write accounting tables directly.
 - No browser-generated journal is trusted for automated posting.
 - Drafts do not affect financial reports.

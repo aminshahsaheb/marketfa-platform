@@ -1,16 +1,21 @@
-# ADR 0004: Defer Market-Specific Financial Policy Until Discovery
+# ADR 0004: Defer Unverified Market-Specific Financial Rules
 
-- **Status:** Accepted
+- **Status:** Superseded in part by ADR-0005 and ADR-0006; tax and statutory policy deferral remains active
 - **Date:** 2026-10-30
 
 ## Context
-The legacy application uses integer Toman amounts and Jalali display dates. The target jurisdiction, statutory invoice requirements, tax rules, fiscal calendar, and currency policy have not yet been confirmed for the new platform. Hardcoding legacy assumptions into a new data model would create expensive migration and correctness risks.
+
+The legacy application uses Toman amounts and Jalali date presentation. The new product later confirmed Iran as its first launch jurisdiction, Persian and English as first-release locales, and integer IRR as the canonical accounting unit. Current tax obligations, invoice rules, fiscal-period details, and field-level Moadian schema requirements still require authoritative evidence and specialist review.
 
 ## Decision
-Do not encode jurisdiction-specific tax, invoice, currency, or fiscal-period behavior in the new domain model until M0 discovery records the target market and obtains appropriate accounting/legal review. The domain must represent currency and precision explicitly rather than assume one global currency.
+
+- ADR-0005 supersedes the earlier uncertainty about initial jurisdiction and language.
+- ADR-0006 supersedes the earlier uncertainty about the canonical Iran ledger unit and Rial/Toman display conversion.
+- Do not hard-code tax rates, taxpayer applicability, invoice schema fields, statutory rounding, fiscal-period rules, or account templates without current official evidence and appropriate Iran accounting/tax review.
+- Legacy behavior remains evidence, not an automatic specification.
 
 ## Consequences
-- M0 must resolve the financial policy before the accounting kernel is implemented.
-- Legacy behavior is preserved as reference evidence, not automatically adopted.
-- Database and API contracts must make currency and timezone explicit.
-- No tax-compliance claim is permitted without jurisdiction-specific validation.
+
+- M0 discovery and professional review remain mandatory for statutory behavior.
+- Database and API contracts retain explicit currency and timezone semantics.
+- No tax-compliance claim is permitted until the actual workflow and current technical specification have been verified.
