@@ -54,9 +54,38 @@ test(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
         [tenantA, userA, tenantB, userB, userC],
       );
+      const parentSession = randomUUID();
+      await owner.query(
+        "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, now() + interval '1 day')",
+        [parentSession, userA, randomBytes(32)],
+      );
+      await assert.rejects(
+        owner.query(
+          "INSERT INTO user_sessions (user_id, token_hash, expires_at, rotation_parent_id) VALUES ($1, $2, now() + interval '1 day', $3)",
+          [userB, randomBytes(32), parentSession],
+        ),
+      );
+
+      await assert.rejects(
+        owner.query(
+          "INSERT INTO terminals (tenant_id, store_id, name, credential_hash, status) VALUES ($1, $2, 'Invalid revoked terminal', $3, 'REVOKED')",
+          [tenantA, storeA, randomBytes(32)],
+        ),
+      );
+
       await owner.query(
         "INSERT INTO terminals (id, tenant_id, store_id, name, credential_hash) VALUES ($1, $2, $3, $4, $5)",
         [terminalA, tenantA, storeA, "Terminal A", randomBytes(32)],
+      );
+      await owner.query(
+        "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
+        [tenantA, storeA, terminalA, userA],
+      );
+      await assert.rejects(
+        owner.query(
+          "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
+          [tenantA, storeA, terminalA, userA],
+        ),
       );
       await assert.rejects(
         owner.query(
