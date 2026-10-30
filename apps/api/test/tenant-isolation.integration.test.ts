@@ -52,7 +52,17 @@ test(
       );
       await owner.query(
         "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)",
-        [storeA, tenantA, "Store A", storeB, tenantB, "Store B", storeA2, tenantA, "Store A2"],
+        [
+          storeA,
+          tenantA,
+          "Store A",
+          storeB,
+          tenantB,
+          "Store B",
+          storeA2,
+          tenantA,
+          "Store A2",
+        ],
       );
       await owner.query(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
@@ -104,7 +114,9 @@ test(
         tenantA,
         "members:manage",
         async (client) => {
-          const result = await client.query("SELECT id FROM stores ORDER BY id");
+          const result = await client.query(
+            "SELECT id FROM stores ORDER BY id",
+          );
           return result.rows.map((row) => row.id);
         },
       );
