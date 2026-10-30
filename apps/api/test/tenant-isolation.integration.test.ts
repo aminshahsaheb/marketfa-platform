@@ -3,6 +3,10 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
+import {
+  DatabaseService,
+  TenantPermissionDeniedError,
+} from "../src/database/database.service";
 
 const migrationUrl = process.env.DATABASE_URL_MIGRATION;
 const runtimeUrl = process.env.DATABASE_URL;
@@ -92,6 +96,28 @@ test(
           "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
           [tenantA, storeA2, terminalA, userA],
         ),
+      );
+
+      const databaseService = new DatabaseService(runtime);
+      const ownerVisibleStores = await databaseService.withTenantPermission(
+        { userId: userA },
+        tenantA,
+        "members:manage",
+        async (client) => {
+          const result = await client.query("SELECT id FROM stores ORDER BY id");
+          return result.rows.map((row) => row.id);
+        },
+      );
+      assert.deepEqual(ownerVisibleStores, [storeA, storeA2].sort());
+
+      await assert.rejects(
+        databaseService.withTenantPermission(
+          { userId: userC },
+          tenantA,
+          "members:manage",
+          async () => "must not execute",
+        ),
+        TenantPermissionDeniedError,
       );
 
       const client = await runtime.connect();
