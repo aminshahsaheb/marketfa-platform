@@ -38,10 +38,7 @@ export class DatabaseService implements OnModuleDestroy {
   async withTenant<T>(
     actor: AuthenticatedActor,
     tenantId: string,
-    operation: (
-      client: PoolClient,
-      membership: ActiveMembership
-    ) => Promise<T>
+    operation: (client: PoolClient, membership: ActiveMembership) => Promise<T>,
   ): Promise<T> {
     const client = await this.pool.connect();
     let transactionStarted = false;
@@ -50,10 +47,9 @@ export class DatabaseService implements OnModuleDestroy {
       await client.query("BEGIN");
       transactionStarted = true;
       await client.query("SET LOCAL ROLE marketfa_app");
-      await client.query(
-        "SELECT set_config('app.current_user_id', $1, true)",
-        [actor.userId]
-      );
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [
+        actor.userId,
+      ]);
 
       const membershipResult = await client.query<{
         role: TenantRole;
@@ -61,7 +57,7 @@ export class DatabaseService implements OnModuleDestroy {
         `SELECT role
          FROM tenant_memberships
          WHERE tenant_id = $1 AND user_id = $2 AND status = 'ACTIVE'`,
-        [tenantId, actor.userId]
+        [tenantId, actor.userId],
       );
 
       const membership = membershipResult.rows[0];
@@ -71,12 +67,12 @@ export class DatabaseService implements OnModuleDestroy {
 
       await client.query(
         "SELECT set_config('app.current_tenant_id', $1, true)",
-        [tenantId]
+        [tenantId],
       );
 
       const tenantResult = await client.query<{ status: string }>(
         "SELECT status FROM tenants WHERE id = $1",
-        [tenantId]
+        [tenantId],
       );
 
       if (tenantResult.rows[0]?.status !== "ACTIVE") {
@@ -86,7 +82,7 @@ export class DatabaseService implements OnModuleDestroy {
       const result = await operation(client, {
         tenantId,
         userId: actor.userId,
-        role: membership.role
+        role: membership.role,
       });
 
       await client.query("COMMIT");

@@ -15,7 +15,7 @@
     "test": "pnpm -r --if-present test",
     "lint": "eslint . --ext .ts,.tsx,.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --write apps/api/src/database/database.service.ts apps/api/src/health/health.service.ts && prettier --check . && echo MARKETFA_LAST_0_BEGIN && cat apps/api/src/database/database.service.ts && echo MARKETFA_LAST_0_END && echo MARKETFA_LAST_1_BEGIN && cat apps/api/src/health/health.service.ts && echo MARKETFA_LAST_1_END"
+    "format:check": "prettier --check ."
   },
   "pnpm": {
     "onlyBuiltDependencies": [
