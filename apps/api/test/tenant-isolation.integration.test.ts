@@ -97,6 +97,13 @@ test(
           [tenantA],
         );
 
+        const assertDenied = async (statement: string, values: unknown[]) => {
+          await client.query("SAVEPOINT expected_denial");
+          await assert.rejects(client.query(statement, values));
+          await client.query("ROLLBACK TO SAVEPOINT expected_denial");
+          await client.query("RELEASE SAVEPOINT expected_denial");
+        };
+
         const visible = await client.query("SELECT id FROM stores ORDER BY id");
         assert.deepEqual(
           visible.rows.map((row) => row.id),
@@ -109,18 +116,14 @@ test(
         );
         assert.equal(hidden.rowCount, 0);
 
-        await assert.rejects(
-          client.query(
-            "UPDATE tenant_memberships SET role = 'OWNER' WHERE tenant_id = $1 AND user_id = $2",
-            [tenantA, userC],
-          ),
+        await assertDenied(
+          "UPDATE tenant_memberships SET role = 'OWNER' WHERE tenant_id = $1 AND user_id = $2",
+          [tenantA, userC],
         );
 
-        await assert.rejects(
-          client.query(
-            "INSERT INTO audit_events (tenant_id, actor_user_id, action, entity_type) VALUES ($1, $2, 'test', 'test')",
-            [tenantA, userC],
-          ),
+        await assertDenied(
+          "INSERT INTO audit_events (tenant_id, actor_user_id, action, entity_type) VALUES ($1, $2, 'test', 'test')",
+          [tenantA, userC],
         );
 
         await client.query(
@@ -128,11 +131,9 @@ test(
           [tenantA, userA],
         );
 
-        await assert.rejects(
-          client.query(
-            "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3)",
-            [randomUUID(), tenantB, "Forbidden Store"],
-          ),
+        await assertDenied(
+          "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3)",
+          [randomUUID(), tenantB, "Forbidden Store"],
         );
         await client.query("ROLLBACK");
       } finally {
