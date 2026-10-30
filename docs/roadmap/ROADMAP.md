@@ -5,7 +5,11 @@ Work is gated by evidence. A phase is not complete because its files exist.
 ## M0 — Discovery and legacy baseline
 - [ ] Inventory legacy capabilities and known defects.
 - [ ] Confirm target retail segment and pilot operator.
-- [ ] Confirm jurisdiction, currency, timezone, tax, fiscal calendar.
+- [x] Confirm first launch jurisdiction: Iran.
+- [x] Confirm first-release languages: Persian (fa-IR) and English (en).
+- [ ] Approve canonical currency unit, Rial/Toman conversion, precision, and rounding.
+- [ ] Verify current Iran tax rules, invoice types, exemptions, thresholds, and Moadian API requirements.
+- [ ] Confirm timezone, fiscal calendar, tax, and legal reporting policy.
 - [ ] Define hardware and offline requirements.
 - [ ] Define import/export sample and migration mapping.
 - [ ] Approve MVP and measurable pilot outcomes.
