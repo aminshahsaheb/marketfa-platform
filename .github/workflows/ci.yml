@@ -38,17 +38,6 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Apply formatting and expose changed source for bootstrap review
-        shell: bash
-        run: |
-          pnpm format
-          echo MARKETFA_FORMATTED_FILES_BEGIN
-          while IFS= read -r file; do
-            printf 'FILE_BEGIN:%s\\n' "$file"
-            cat "$file"
-            printf '\\nFILE_END:%s\\n' "$file"
-          done < <(git diff --name-only)
-          echo MARKETFA_FORMATTED_FILES_END
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
@@ -57,21 +46,28 @@ jobs:
       - name: Smoke test API and web startup against PostgreSQL
         shell: bash
         run: |
+          set -euo pipefail
           pnpm --filter @marketfa/api start > /tmp/marketfa-api.log 2>&1 &
           API_PID=$!
-          trap 'kill "$API_PID" 2>/dev/null || true' EXIT
+          WEB_PID=""
+          cleanup() {
+            kill "$API_PID" 2>/dev/null || true
+            if [ -n "$WEB_PID" ]; then kill "$WEB_PID" 2>/dev/null || true; fi
+          }
+          trap cleanup EXIT
+          API_READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready > /dev/null; then break; fi
+            if curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready > /dev/null; then API_READY=1; break; fi
             sleep 1
           done
+          if [ "$API_READY" -ne 1 ]; then cat /tmp/marketfa-api.log; exit 1; fi
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/live
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready
-          pnpm --filter @marketfa/web preview -- --host 127.0.0.1 > /tmp/marketfa-web.log 2>&1 &
+          pnpm --filter @marketfa/web preview > /tmp/marketfa-web.log 2>&1 &
           WEB_PID=$!
-          trap 'kill "$API_PID" "$WEB_PID" 2>/dev/null || true' EXIT
+          WEB_READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ | grep -q MarketFa; then exit 0; fi
+            if curl --fail --silent http://127.0.0.1:4173/ | grep -q MarketFa; then WEB_READY=1; break; fi
             sleep 1
           done
-          cat /tmp/marketfa-api.log /tmp/marketfa-web.log
-          exit 1
+          if [ "$WEB_READY" -ne 1 ]; then cat /tmp/marketfa-web.log; exit 1; fi
