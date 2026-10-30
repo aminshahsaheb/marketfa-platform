@@ -108,6 +108,11 @@ test(
       assert.deepEqual(stored.rows[0]?.token_hash, expectedHash);
       assert.notEqual(stored.rows[0]?.token_hash.toString(), issued.token);
       assert.equal(stored.rows[0]?.user_agent, "MarketFa test agent");
+      const extendedIdleAttempt = await runtime.query(
+        "SELECT * FROM public.auth_resolve_session($1, $2)",
+        [expectedHash, 2592000],
+      );
+      assert.equal(extendedIdleAttempt.rowCount, 0);
 
       const resolved = await sessions.resolve(issued.token);
       assert.equal(resolved?.sessionId, issued.sessionId);
