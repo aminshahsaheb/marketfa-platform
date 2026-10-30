@@ -7,4 +7,8 @@ WHERE NOT EXISTS (
 )
 \gexec
 
+ALTER ROLE marketfa_runtime
+  WITH LOGIN PASSWORD :'app_password'
+  INHERIT NOSUPERUSER NOBYPASSRLS;
+
 GRANT marketfa_app TO marketfa_runtime;
