@@ -1,7 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { OnModuleDestroy } from "@nestjs/common";
 import type { Pool, PoolClient } from "pg";
-import type { TenantRole } from "../tenancy/permissions";
+import {
+  hasPermission,
+  type Permission,
+  type TenantRole,
+} from "../tenancy/permissions";
 
 export const DATABASE_POOL = Symbol("DATABASE_POOL");
 
@@ -22,6 +26,13 @@ export class TenantAccessDeniedError extends Error {
   }
 }
 
+export class TenantPermissionDeniedError extends Error {
+  constructor(permission: Permission) {
+    super(`The authenticated user's tenant role does not grant: ${permission}`);
+    this.name = "TenantPermissionDeniedError";
+  }
+}
+
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
@@ -35,10 +46,31 @@ export class DatabaseService implements OnModuleDestroy {
     }
   }
 
-  async withTenant<T>(
+  async withTenantPermission<T>(
     actor: AuthenticatedActor,
     tenantId: string,
-    operation: (client: PoolClient, membership: ActiveMembership) => Promise<T>,
+    permission: Permission,
+    operation: (
+      client: PoolClient,
+      membership: ActiveMembership,
+    ) => Promise<T>,
+  ): Promise<T> {
+    return this.withTenant(actor, tenantId, async (client, membership) => {
+      if (!hasPermission(membership.role, permission)) {
+        throw new TenantPermissionDeniedError(permission);
+      }
+
+      return operation(client, membership);
+    });
+  }
+
+  private async withTenant<T>(
+    actor: AuthenticatedActor,
+    tenantId: string,
+    operation: (
+      client: PoolClient,
+      membership: ActiveMembership,
+    ) => Promise<T>,
   ): Promise<T> {
     const client = await this.pool.connect();
     let transactionStarted = false;
