@@ -132,8 +132,8 @@ test(
         );
 
         await assertDenied(
-          "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3)",
-          [randomUUID(), tenantB, "Forbidden Store"],
+          "INSERT INTO audit_events (tenant_id, action, entity_type) VALUES ($1, 'test', 'test')",
+          [tenantB],
         );
         await client.query("ROLLBACK");
       } finally {
@@ -154,6 +154,14 @@ test(
         reused.release();
       }
     } finally {
+      await owner.query(
+        "DELETE FROM terminal_assignments WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
+      await owner.query(
+        "DELETE FROM terminals WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
       await owner.query(
         "DELETE FROM stores WHERE tenant_id = ANY($1::uuid[])",
         [[tenantA, tenantB]],
