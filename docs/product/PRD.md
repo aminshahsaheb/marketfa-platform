@@ -85,3 +85,35 @@ Every API request must derive tenant membership and role from authenticated serv
 ## 7. Acceptance principles
 
 A feature is not complete because its screen works. It must include domain rules, authorization, persistence, audit events, failure behavior, automated tests, and operator documentation. Financial workflows require ledger-level assertions and retry/concurrency tests.
+
+
+## 8. Confirmed launch profile — Iran first, bilingual from day one
+
+**Product decision:** The first commercial launch targets Iran. Persian (fa-IR) is the default product language. English (en) is a first-class supported language from the first release, not a later translation project. The architecture must allow additional locales and country-specific compliance packs without rewriting the accounting core.
+
+### Locale and presentation
+- Persian UI: RTL layout, Persian translations, Persian calendar display, Persian digit preference, and Iran-local formatting.
+- English UI: LTR layout, English translations, Gregorian calendar display by default, and locale-aware number/date formatting.
+- Users may change interface language independently of store legal jurisdiction and accounting settings.
+- A store's legal jurisdiction, functional currency, tax profile, timezone, and fiscal calendar are store-level configuration. They are not inferred from the current UI language.
+- Persist timestamps as UTC instants and store the applicable IANA timezone. Convert for display; do not store Jalali date strings as the canonical timestamp.
+- Persist canonical dates as date-only values where appropriate. Provide tested Gregorian/Jalali conversion and round-trip behavior.
+- All user-facing text must use translation keys. No UI string concatenation as a substitute for translation. Format money, quantities, dates, and percentages through locale-aware formatters.
+- Support RTL/LTR at the component/layout level. Avoid hard-coded left/right assumptions; use logical CSS properties.
+
+### Iran financial profile
+- Iran is the initial jurisdiction. The Iran compliance profile must model Iranian tax identifiers, invoice types, applicable exemptions, tax categories/rates, and Moadian submission/response states as versioned, effective-dated configuration.
+- Do not hard-code a single VAT rate or a single universal e-invoice obligation. Applicability depends on current law, taxpayer class, transaction type, thresholds, exemptions, and effective dates.
+- Distinguish accounting currency and display unit. Rial (IRR) and Toman are not interchangeable labels. The exact canonical storage unit, conversion boundary, and rounding policy must be approved before accounting implementation and validated against official interface specifications.
+- Sales receipts, internal POS receipts, accounting vouchers, and legally compliant electronic tax invoices are distinct document types. Never label a local receipt as a tax-compliant electronic invoice unless the applicable workflow has been accepted by the tax system or a legally valid alternative applies.
+- Moadian integration must be an isolated adapter with credential protection, signing/key lifecycle, submission queue, idempotency, retry policy, status polling, error mapping, and immutable request/response audit metadata. Do not store private signing keys in the browser.
+- Offline sales must clearly distinguish local provisional capture from legally submitted/accepted tax invoices. Offline capture is not proof of tax-system acceptance.
+
+### Acceptance criteria
+- [ ] Full Persian and English coverage for all released workflows, validation messages, errors, receipts, and accessibility labels.
+- [ ] RTL and LTR browser tests cover POS, inventory, accounting, reports, settings, and authentication.
+- [ ] Locale switching does not change stored amounts, posted journals, tax calculations, or legal jurisdiction.
+- [ ] Jalali/Gregorian conversions pass leap-year, month-boundary, timezone, and round-trip tests.
+- [ ] Rial/Toman examples are reviewed and pass exact arithmetic/rounding tests.
+- [ ] Tax rules are effective-dated, traceable to an official source, and approved by an Iran tax/accounting reviewer.
+- [ ] Moadian sandbox/official test workflow is verified before any claim of integration or compliance.
