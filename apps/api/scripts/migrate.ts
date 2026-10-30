@@ -9,10 +9,11 @@ interface MigrationRecord {
 }
 
 export async function runMigrations(): Promise<void> {
-  const connectionString =
-    process.env.DATABASE_URL_MIGRATION;
+  const connectionString = process.env.DATABASE_URL_MIGRATION;
   if (!connectionString) {
-    throw new Error("DATABASE_URL_MIGRATION is required; migrations must never use the runtime connection.");
+    throw new Error(
+      "DATABASE_URL_MIGRATION is required; migrations must never use the runtime connection.",
+    );
   }
 
   const pool = new Pool({ connectionString, max: 1 });
