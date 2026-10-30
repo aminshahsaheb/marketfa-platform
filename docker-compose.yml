@@ -5,17 +5,19 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: marketfa
-      POSTGRES_USER: marketfa
-      POSTGRES_PASSWORD: marketfa_local_only
+      POSTGRES_USER: marketfa_owner
+      POSTGRES_PASSWORD: marketfa_owner_local_only
     ports:
       - "5432:5432"
     volumes:
       - marketfa-postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init/01-roles.sql:/docker-entrypoint-initdb.d/01-roles.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U marketfa -d marketfa"]
+      test: ["CMD-SHELL", "pg_isready -U marketfa_owner -d marketfa"]
       interval: 5s
       timeout: 3s
       retries: 20
     security_opt: ["no-new-privileges:true"]
+
 volumes:
   marketfa-postgres-data:
