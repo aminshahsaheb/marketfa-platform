@@ -15,7 +15,7 @@
     "test": "pnpm -r --if-present test",
     "lint": "eslint . --ext .ts,.tsx,.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --write docs/architecture/adr/0008-tenant-isolation-with-rls.md docs/architecture/adr/0009-provider-neutral-auth-sessions.md docs/architecture/TENANCY_AND_IDENTITY.md docs/testing/TENANCY_SECURITY_TEST_PLAN.md && prettier --check . && echo MARKETFA_M2_0_BEGIN && cat docs/architecture/adr/0008-tenant-isolation-with-rls.md && echo MARKETFA_M2_0_END && echo MARKETFA_M2_1_BEGIN && cat docs/architecture/adr/0009-provider-neutral-auth-sessions.md && echo MARKETFA_M2_1_END && echo MARKETFA_M2_2_BEGIN && cat docs/architecture/TENANCY_AND_IDENTITY.md && echo MARKETFA_M2_2_END && echo MARKETFA_M2_3_BEGIN && cat docs/testing/TENANCY_SECURITY_TEST_PLAN.md && echo MARKETFA_M2_3_END"
+    "format:check": "prettier --check ."
   },
   "pnpm": {
     "onlyBuiltDependencies": [

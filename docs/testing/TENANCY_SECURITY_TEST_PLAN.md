@@ -3,6 +3,7 @@
 **Status:** Required M2 test specification; not yet executed.
 
 ## PostgreSQL isolation tests
+
 - User in tenant A cannot read tenant B row by guessed UUID.
 - User in tenant A cannot create, update, delete, export or aggregate tenant B data.
 - Cross-tenant store/account/source foreign keys fail.
@@ -13,7 +14,9 @@
 - Migration role is distinct from runtime role and never used by API request handling.
 
 ## Authorization matrix
+
 For each role (OWNER, MANAGER, CASHIER, ACCOUNTANT, VIEWER), test allowed and denied use cases:
+
 - invite member, change role, suspend member, transfer ownership;
 - create/edit product, receive purchase, adjust stock;
 - create sale, discount, refund, close shift;
@@ -23,6 +26,7 @@ For each role (OWNER, MANAGER, CASHIER, ACCOUNTANT, VIEWER), test allowed and de
 Test API endpoints directly; do not rely on UI hiding controls.
 
 ## Session and membership tests
+
 - Expired, revoked, malformed, and rotated session tokens fail.
 - Logout revokes session.
 - Suspended user and removed membership lose access immediately.
@@ -32,6 +36,7 @@ Test API endpoints directly; do not rely on UI hiding controls.
 - Login/recovery rate limits and anti-enumeration behavior are verified.
 
 ## Invitation tests
+
 - Expired and revoked invitations fail.
 - Token is one-time and replay fails under concurrency.
 - Role grant cannot exceed inviter's permission.
@@ -39,10 +44,12 @@ Test API endpoints directly; do not rely on UI hiding controls.
 - Concurrent acceptance creates one membership only.
 
 ## Terminal tests
+
 - Terminal secret is never stored or returned after creation.
 - Revoked/rotated terminal credential fails immediately.
 - Terminal from store A cannot send commands to store B.
 - Terminal identity is separate from cashier actor identity.
 
 ## Evidence
+
 Run against PostgreSQL with the actual runtime DB role and connection pool. Retain migration version, DB version, test command, report, and date. Mocks alone do not prove RLS or FK isolation.

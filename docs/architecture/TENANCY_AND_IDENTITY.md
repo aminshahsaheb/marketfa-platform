@@ -17,6 +17,7 @@ Do not equate tenant, user, store, terminal, and session IDs. They represent dif
 ## 2. Data ownership model
 
 Logical entities:
+
 - users
 - auth_identities
 - user_sessions
@@ -35,6 +36,7 @@ A user is global. User records must not contain a single tenant_id. A user can b
 ## 3. Membership and role model
 
 Initial fixed roles:
+
 - OWNER
 - MANAGER
 - CASHIER
@@ -44,6 +46,7 @@ Initial fixed roles:
 Roles are not arbitrary strings supplied by the client. A server-owned permission map defines allowed actions. Every application use case checks a named permission; hiding a button is not authorization.
 
 Initial permission intent:
+
 - OWNER: all store/tenant operations, invitations, role changes, financial reports, period-close approval, ownership transfer.
 - MANAGER: catalog, purchasing, inventory, shifts, sales oversight, refunds within configured limits; cannot transfer ownership or close fiscal periods.
 - CASHIER: assigned-terminal POS operations and own shift; refunds only with explicit permission/limit.
@@ -68,6 +71,7 @@ Never trust tenant_id, role, user_id, or store_id in a command body as proof of 
 ## 5. PostgreSQL isolation
 
 Use defense in depth:
+
 - Application repositories include tenant_id in every tenant-owned query.
 - Composite foreign keys prevent cross-tenant references.
 - PostgreSQL RLS is enabled for tenant-owned tables.
@@ -85,6 +89,7 @@ RLS is a second barrier, not a replacement for application-level permission chec
 Membership states: INVITED, ACTIVE, SUSPENDED, REMOVED.
 
 Invitation:
+
 - Random high-entropy token shown once; store only a cryptographic hash.
 - Bind invitation to tenant, intended identity if known, role, inviter, expiry and status.
 - Accept atomically; replay must fail.
@@ -110,6 +115,7 @@ Store only identity data required for login, recovery, legal/business records, a
 The architecture supports an AuthProvider boundary and normalized identities. Do not select SMS OTP, password, email link, or an external identity provider until the target operator's login/recovery needs, delivery reliability, abuse controls, and operating cost are validated.
 
 Regardless of mechanism:
+
 - Use opaque random session tokens; store token hashes only.
 - Set cookies Secure, HttpOnly, and an appropriate SameSite policy.
 - Rotate sessions after authentication and privilege changes.
