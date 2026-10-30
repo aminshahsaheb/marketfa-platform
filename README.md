@@ -4,10 +4,9 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: **Foundation / M0-M1**. This repository is an engineering scaffold. It is not production-ready and must not be used for live financial records.
+> Status: **Engineering scaffold (M0 discovery and M1 foundation in progress).** This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
-
 - Accounting correctness before convenience.
 - Server-authoritative financial and inventory state.
 - Offline operation with explicit limits and conflict handling.
@@ -17,38 +16,38 @@ MarketFa is being rebuilt as a secure, testable, multi-store platform. The legac
 - Small, reviewable changes with documented acceptance criteria.
 
 ## Architecture
-
-- **Web:** React, TypeScript, Vite, PWA.
-- **Local persistence:** IndexedDB via Dexie; transactional outbox.
+- **Web:** React, TypeScript, Vite; Persian and English from the first release.
+- **Local persistence:** IndexedDB and transactional outbox (later milestone).
 - **API:** NestJS, TypeScript, validated DTOs.
-- **Database:** PostgreSQL; Prisma migrations.
-- **Quality:** Vitest, Playwright, ESLint, type checking, GitHub Actions.
-- **Deployment:** Docker Compose for local development; production deployment is a later decision.
+- **Database:** PostgreSQL; Prisma migrations after tenant model approval.
+- **Quality:** Node test runner, Vitest/Playwright as later test layers, ESLint, TypeScript, GitHub Actions.
+- **Deployment:** Docker Compose for local development.
 
-**Launch profile:** Iran-first; Persian (fa-IR) and English (en) from the first release. Locale is independent from store jurisdiction and tax configuration. See [localization standard](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).\n\nSee [docs/architecture/overview.md](docs/architecture/overview.md), [docs/product/PRD.md](docs/product/PRD.md), [docs/architecture/adr/](docs/architecture/adr/), and [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md).
+**Launch profile:** Iran-first; Persian (fa-IR) and English (en). Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian. UI locale is independent from store jurisdiction, currency, timezone and tax profile. See [localization](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).
+
+See [architecture overview](docs/architecture/overview.md), [PRD](docs/product/PRD.md), [ADRs](docs/architecture/adr/), and [roadmap](docs/roadmap/ROADMAP.md).
 
 ## Repository layout
-
 ```text
-apps/
-  api/       NestJS application
-  web/       React PWA
-packages/
-  contracts/ shared API contracts and schemas
-  domain/    framework-independent business rules
-  config/    shared tooling configuration
-prisma/      database schema and migrations
-docs/        product, architecture, security, operations
-infra/       local development infrastructure
-.github/     CI and contribution templates
+apps/api       NestJS API
+apps/web       React web shell
+packages/domain      framework-independent domain rules
+packages/contracts   shared API contracts
+docs           product, architecture, security, operations
+.github        CI and contribution templates
+docker-compose.yml   local PostgreSQL
 ```
 
 ## Local setup
+1. Install Node.js 22.21.1 and pnpm 10.20.0.
+2. Run `pnpm install`.
+3. Copy `.env.example` to `.env` and use local-only credentials.
+4. Run `docker compose up -d postgres`.
+5. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
 
-The initial scaffold is being established. Runtime commands and environment requirements will be added with the first executable workspace milestone. Never commit real credentials or customer data. Copy `.env.example` to `.env` only after the relevant services are implemented.
+The initial branch is a scaffold. A committed lockfile and successful clean-clone CI are still required before calling setup reproducible. Never commit real credentials or customer data.
 
 ## Non-goals for the first release
-
 - Microservices.
 - Unrestricted multi-device offline stock selling.
 - Client-side authority over price, tax, stock, or accounting.
@@ -56,9 +55,7 @@ The initial scaffold is being established. Runtime commands and environment requ
 - Tax/legal compliance claims without jurisdiction-specific review.
 
 ## Security
-
 Report suspected vulnerabilities privately to the repository owner. Do not publish secrets, access tokens, real customer data, or production backups in issues or commits.
 
 ## License
-
 All rights reserved unless and until a license is explicitly added.

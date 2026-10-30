@@ -16,8 +16,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    security_opt:
-      - no-new-privileges:true
-
+    security_opt: ["no-new-privileges:true"]
 volumes:
   marketfa-postgres-data:
