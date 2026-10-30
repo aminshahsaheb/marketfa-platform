@@ -21,7 +21,7 @@ ALTER TABLE user_sessions
   ADD CONSTRAINT user_sessions_rotation_same_user_fk
     FOREIGN KEY (user_id, rotation_parent_id)
     REFERENCES user_sessions (user_id, id)
-    ON DELETE RESTRICT,
+    ON DELETE CASCADE,
   ADD CONSTRAINT user_sessions_rotation_not_self_ck
     CHECK (rotation_parent_id IS NULL OR rotation_parent_id <> id),
   ADD CONSTRAINT user_sessions_last_seen_after_creation_ck
