@@ -45,3 +45,26 @@ test("accountant has financial read and draft access, not POS access", () => {
   assert.equal(hasPermission("ACCOUNTANT", "journal:approve"), false);
   assert.equal(hasPermission("ACCOUNTANT", "pos:sell"), false);
 });
+
+test("manager can operate retail workflows but cannot administer tenant ownership", () => {
+  assert.equal(hasPermission("MANAGER", "catalog:write"), true);
+  assert.equal(hasPermission("MANAGER", "purchasing:write"), true);
+  assert.equal(hasPermission("MANAGER", "inventory:write"), true);
+  assert.equal(hasPermission("MANAGER", "refund:approve"), true);
+  assert.equal(hasPermission("MANAGER", "shift:manage"), true);
+  assert.equal(hasPermission("MANAGER", "members:manage"), false);
+  assert.equal(hasPermission("MANAGER", "tenant:manage"), false);
+  assert.equal(hasPermission("MANAGER", "period:close"), false);
+  assert.equal(hasPermission("MANAGER", "backup:manage"), false);
+});
+
+test("viewer is read-only and cannot execute financial or operational writes", () => {
+  assert.equal(hasPermission("VIEWER", "catalog:read"), true);
+  assert.equal(hasPermission("VIEWER", "inventory:read"), true);
+  assert.equal(hasPermission("VIEWER", "reports:read"), true);
+  assert.equal(hasPermission("VIEWER", "catalog:write"), false);
+  assert.equal(hasPermission("VIEWER", "inventory:write"), false);
+  assert.equal(hasPermission("VIEWER", "pos:sell"), false);
+  assert.equal(hasPermission("VIEWER", "ledger:read"), false);
+  assert.equal(hasPermission("VIEWER", "reports:financial"), false);
+});
