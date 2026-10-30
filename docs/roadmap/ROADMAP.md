@@ -3,37 +3,40 @@
 Work is gated by evidence. A phase is not complete because its files exist.
 
 ## M0 — Discovery and legacy baseline
-- [ ] Inventory legacy capabilities and known defects.
-- [ ] Confirm target retail segment and pilot operator.
+- [x] Audit supplied legacy capabilities and record known architectural risks.
 - [x] Confirm first launch jurisdiction: Iran.
 - [x] Confirm first-release languages: Persian (fa-IR) and English (en).
-- [x] Decide canonical Iran ledger unit: integer IRR; Toman is an explicit display/input unit (1 Toman = 10 Rial).
-- [ ] Approve fractional quantity, line rounding, tax rounding, and deterministic remainder-allocation policies with an Iran accountant.
-- [ ] Verify current Iran tax rules, invoice types, exemptions, thresholds, and Moadian API requirements.
-- [ ] Confirm timezone, fiscal calendar, tax, and legal reporting policy.
+- [x] Decide canonical Iran ledger unit: integer IRR; Toman is explicit input/display (1 Toman = 10 Rial).
+- [ ] Identify first retail segment and pilot operator.
+- [ ] Approve fractional quantity, line rounding, tax rounding, and deterministic remainder allocation with an Iran accountant.
+- [ ] Verify current tax rules, invoice types, exemptions, thresholds, and Moadian schema against official primary sources.
+- [ ] Confirm timezone, fiscal calendar, tax and legal reporting policy.
 - [ ] Define hardware and offline requirements.
-- [ ] Define import/export sample and migration mapping.
-- [ ] Approve MVP and measurable pilot outcomes.
+- [ ] Define sanitized import/export sample and migration mapping.
+- [ ] Approve MVP scenarios and measurable pilot outcomes.
 
 **Exit:** signed-off PRD decisions and acceptance scenarios.
 
 ## M1 — Repository and engineering foundation
-- [ ] Workspace and package manager selected.
-- [ ] TypeScript strict configuration.
-- [ ] API and web applications boot locally.
-- [ ] PostgreSQL Docker Compose and health check.
-- [ ] Prisma schema and migration workflow.
-- [ ] CI: install, format/lint, typecheck, unit tests, build.
-- [ ] Contribution, security, environment, and ADR rules.
-- [ ] First architecture decision records.
+- [x] Create pnpm workspace and pin Node/pnpm/dependency versions.
+- [x] Add strict TypeScript baseline and lint configuration.
+- [x] Add NestJS API shell and React/Vite web shell.
+- [x] Add PostgreSQL Docker Compose service and health check.
+- [x] Add API liveness and database-readiness endpoints.
+- [x] Add first domain money primitive and Rial/Toman unit tests.
+- [x] Add initial GitHub Actions CI workflow.
+- [ ] Generate and commit pnpm-lock.yaml.
+- [ ] Execute CI successfully and fix all failures.
+- [ ] Verify clean-clone install, test, build, and local startup.
+- [ ] Add Prisma only after M2 tenant/store contracts are approved; document migration workflow then.
 
-**Exit:** clean clone can install, test, build, and run locally from documented steps.
+**Exit:** clean clone can install from lockfile, test, build, and run locally; CI passes.
 
 ## M2 — Identity and tenancy
 - [ ] Authentication/session lifecycle.
-- [ ] Tenant, store, terminal, membership.
+- [ ] Tenant, store, terminal, membership and actor model.
 - [ ] Roles and permissions.
-- [ ] Tenant isolation integration tests.
+- [ ] Tenant isolation integration tests against PostgreSQL.
 - [ ] Audit events for access and configuration changes.
 
 **Exit:** cross-tenant access tests fail closed.
@@ -43,9 +46,8 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Define logical PostgreSQL accounting data model and constraints.
 - [x] Define accounting golden, property, concurrency, and reconciliation test plan.
 - [x] Record ADR-0007 for immutable double-entry posting.
-- [ ] Align schema with M2 tenant/store and membership contracts.
-- [ ] Approve chart-of-accounts starter template with Iran accountant.
-- [ ] Confirm fiscal-year start, period boundaries, and close/reopen policy.
+- [ ] Align schema with M2 tenant/store/membership contracts.
+- [ ] Approve chart-of-accounts starter template and fiscal-period policy with Iran accountant.
 - [ ] Approve inventory costing and COGS timing.
 - [ ] Implement journal/account/period schema and migrations.
 - [ ] Implement posting, idempotency, reversal, and period locking.
