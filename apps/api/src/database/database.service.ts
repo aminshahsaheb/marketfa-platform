@@ -86,8 +86,7 @@ export class DatabaseService implements OnModuleDestroy {
       }>(
         `SELECT role
          FROM tenant_memberships
-         WHERE tenant_id = $1 AND user_id = $2 AND status = 'ACTIVE'
-         FOR SHARE`,
+         WHERE tenant_id = $1 AND user_id = $2 AND status = 'ACTIVE'`,
         [tenantId, actor.userId],
       );
 
@@ -102,7 +101,7 @@ export class DatabaseService implements OnModuleDestroy {
       );
 
       const tenantResult = await client.query<{ status: string }>(
-        "SELECT status FROM tenants WHERE id = $1 FOR SHARE",
+        "SELECT status FROM tenants WHERE id = $1",
         [tenantId],
       );
 
