@@ -97,12 +97,29 @@ test(
       const client = await runtime.connect();
       try {
         await client.query("BEGIN");
-        const role = await client.query(
-          "SELECT current_user AS role_name, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user",
+        const loginRole = await client.query(
+          "SELECT session_user AS role_name, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = session_user",
         );
-        assert.equal(role.rows[0]?.role_name, "marketfa_runtime");
+        assert.equal(loginRole.rows[0]?.role_name, "marketfa_runtime");
+        assert.equal(loginRole.rows[0]?.rolsuper, false);
+        assert.equal(loginRole.rows[0]?.rolbypassrls, false);
+
+        const directPrivileges = await client.query(
+          "SELECT has_table_privilege('marketfa_runtime', 'stores', 'SELECT') AS can_read_without_role_switch",
+        );
+        assert.equal(
+          directPrivileges.rows[0]?.can_read_without_role_switch,
+          false,
+        );
+
+        await client.query("SET LOCAL ROLE marketfa_app");
+        const role = await client.query(
+          "SELECT current_user AS role_name, rolsuper, rolbypassrls, rolcanlogin FROM pg_roles WHERE rolname = current_user",
+        );
+        assert.equal(role.rows[0]?.role_name, "marketfa_app");
         assert.equal(role.rows[0]?.rolsuper, false);
         assert.equal(role.rows[0]?.rolbypassrls, false);
+        assert.equal(role.rows[0]?.rolcanlogin, false);
 
         const writePrivileges = await client.query(
           `SELECT
@@ -172,6 +189,7 @@ test(
       const reused = await runtime.connect();
       try {
         await reused.query("BEGIN");
+        await reused.query("SET LOCAL ROLE marketfa_app");
         await reused.query(
           "SELECT set_config('app.current_user_id', $1, true)",
           [userA],
