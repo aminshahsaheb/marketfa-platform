@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { OnModuleDestroy } from "@nestjs/common";
-import { Pool } from "pg";
-import type { PoolClient } from "pg";
+import type { Pool, PoolClient } from "pg";
 import type { TenantRole } from "../tenancy/permissions";
 
 export const DATABASE_POOL = Symbol("DATABASE_POOL");

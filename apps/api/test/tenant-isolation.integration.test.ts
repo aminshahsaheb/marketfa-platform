@@ -4,7 +4,8 @@ import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
 
-const migrationUrl = process.env.DATABASE_URL_MIGRATION ?? process.env.DATABASE_URL;
+const migrationUrl =
+  process.env.DATABASE_URL_MIGRATION ?? process.env.DATABASE_URL;
 const runtimeUrl = process.env.DATABASE_URL;
 const enabled = Boolean(migrationUrl && runtimeUrl);
 
@@ -33,20 +34,20 @@ test(
           `+98912${phoneSuffix}`,
           userB,
           "Tenant B User",
-          `+98913${phoneSuffix}`
-        ]
+          `+98913${phoneSuffix}`,
+        ],
       );
       await owner.query(
         "INSERT INTO tenants (id, display_name, created_by_user_id) VALUES ($1, $2, $3), ($4, $5, $6)",
-        [tenantA, "Tenant A", userA, tenantB, "Tenant B", userB]
+        [tenantA, "Tenant A", userA, tenantB, "Tenant B", userB],
       );
       await owner.query(
         "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3), ($4, $5, $6)",
-        [storeA, tenantA, "Store A", storeB, tenantB, "Store B"]
+        [storeA, tenantA, "Store A", storeB, tenantB, "Store B"],
       );
       await owner.query(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE')",
-        [tenantA, userA, tenantB, userB]
+        [tenantA, userA, tenantB, userB],
       );
 
       const client = await runtime.connect();
@@ -54,36 +55,37 @@ test(
         await client.query("BEGIN");
         await client.query("SET LOCAL ROLE marketfa_app");
         const role = await client.query(
-          "SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user"
+          "SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user",
         );
         assert.equal(role.rows[0]?.rolsuper, false);
         assert.equal(role.rows[0]?.rolbypassrls, false);
 
         await client.query(
           "SELECT set_config('app.current_user_id', $1, true)",
-          [userA]
+          [userA],
         );
         await client.query(
           "SELECT set_config('app.current_tenant_id', $1, true)",
-          [tenantA]
+          [tenantA],
         );
 
-        const visible = await client.query(
-          "SELECT id FROM stores ORDER BY id"
+        const visible = await client.query("SELECT id FROM stores ORDER BY id");
+        assert.deepEqual(
+          visible.rows.map((row) => row.id),
+          [storeA],
         );
-        assert.deepEqual(visible.rows.map((row) => row.id), [storeA]);
 
         const hidden = await client.query(
           "SELECT id FROM stores WHERE tenant_id = $1",
-          [tenantB]
+          [tenantB],
         );
         assert.equal(hidden.rowCount, 0);
 
         await assert.rejects(
           client.query(
             "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3)",
-            [randomUUID(), tenantB, "Forbidden Store"]
-          )
+            [randomUUID(), tenantB, "Forbidden Store"],
+          ),
         );
         await client.query("ROLLBACK");
       } finally {
@@ -96,7 +98,7 @@ test(
         await reused.query("SET LOCAL ROLE marketfa_app");
         await reused.query(
           "SELECT set_config('app.current_user_id', $1, true)",
-          [userA]
+          [userA],
         );
         const noTenantContext = await reused.query("SELECT id FROM stores");
         assert.equal(noTenantContext.rowCount, 0);
@@ -105,16 +107,17 @@ test(
         reused.release();
       }
     } finally {
-      await owner.query("DELETE FROM stores WHERE tenant_id = ANY($1::uuid[])", [
-        [tenantA, tenantB]
-      ]);
+      await owner.query(
+        "DELETE FROM stores WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
       await owner.query("DELETE FROM tenants WHERE id = ANY($1::uuid[])", [
-        [tenantA, tenantB]
+        [tenantA, tenantB],
       ]);
       await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
-        [userA, userB]
+        [userA, userB],
       ]);
       await Promise.all([owner.end(), runtime.end()]);
     }
-  }
+  },
 );

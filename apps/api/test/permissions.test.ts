@@ -23,7 +23,7 @@ test("owner can access all defined permissions", () => {
     "period:close",
     "reports:read",
     "reports:financial",
-    "backup:manage"
+    "backup:manage",
   ] as const;
 
   for (const permission of permissions) {

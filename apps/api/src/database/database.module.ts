@@ -12,10 +12,10 @@ import { DATABASE_POOL, DatabaseService } from "./database.service";
           throw new Error("DATABASE_URL is required.");
         }
         return new Pool({ connectionString, max: 10 });
-      }
+      },
     },
-    DatabaseService
+    DatabaseService,
   ],
-  exports: [DatabaseService]
+  exports: [DatabaseService],
 })
 export class DatabaseModule {}

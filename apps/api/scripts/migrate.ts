@@ -39,7 +39,7 @@ export async function runMigrations(): Promise<void> {
       const checksum = createHash("sha256").update(sql).digest("hex");
       const existing = await client.query<MigrationRecord>(
         "SELECT version, checksum FROM schema_migrations WHERE version = $1",
-        [version]
+        [version],
       );
 
       if (existing.rowCount) {
@@ -54,7 +54,7 @@ export async function runMigrations(): Promise<void> {
         await client.query(sql);
         await client.query(
           "INSERT INTO schema_migrations (version, checksum) VALUES ($1, $2)",
-          [version, checksum]
+          [version, checksum],
         );
         await client.query("COMMIT");
         process.stdout.write(`Applied migration ${version}\n`);
@@ -78,7 +78,7 @@ if (require.main === module) {
     process.stderr.write(
       error instanceof Error
         ? `${error.stack ?? error.message}\n`
-        : `${String(error)}\n`
+        : `${String(error)}\n`,
     );
     process.exitCode = 1;
   });

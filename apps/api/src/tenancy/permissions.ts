@@ -48,7 +48,7 @@ const rolePermissions: Readonly<Record<TenantRole, ReadonlySet<Permission>>> = {
     "period:close",
     "reports:read",
     "reports:financial",
-    "backup:manage"
+    "backup:manage",
   ]),
   MANAGER: new Set([
     "catalog:read",
@@ -62,26 +62,26 @@ const rolePermissions: Readonly<Record<TenantRole, ReadonlySet<Permission>>> = {
     "refund:approve",
     "shift:operate",
     "shift:manage",
-    "reports:read"
+    "reports:read",
   ]),
   CASHIER: new Set([
     "catalog:read",
     "pos:sell",
     "refund:request",
-    "shift:operate"
+    "shift:operate",
   ]),
   ACCOUNTANT: new Set([
     "ledger:read",
     "journal:draft",
     "reports:read",
-    "reports:financial"
+    "reports:financial",
   ]),
-  VIEWER: new Set(["catalog:read", "inventory:read", "reports:read"])
+  VIEWER: new Set(["catalog:read", "inventory:read", "reports:read"]),
 };
 
 export function hasPermission(
   role: TenantRole,
-  permission: Permission
+  permission: Permission,
 ): boolean {
   return rolePermissions[role].has(permission);
 }
