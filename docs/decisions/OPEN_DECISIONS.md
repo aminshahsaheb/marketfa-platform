@@ -5,7 +5,7 @@ This document prevents unverified assumptions from silently becoming implementat
 | ID | Decision | Why it matters | Owner / evidence needed | Status |
 |---|---|---|---|---|
 | OD-001 | First launch jurisdiction | Tax, invoices, accounting, privacy, data residency | Product owner + Iran tax/accounting review | **Decided: Iran first** |
-| OD-002 | Currency and display units | Rial/Toman handling, minor units, rounding | Product owner + Iran accountant + official schema | **Partially open: Iran profile; canonical unit/rounding pending** |
+| OD-002 | Currency and display units | Rial/Toman handling, minor units, rounding | Product owner + Iran accountant + official schema | **Partially decided: integer IRR ledger and explicit Toman display; fractional/rounding policy pending** |
 | OD-003 | Tax model | Inclusive/exclusive tax, exemptions, rates, rounding | Iran tax specialist + current official rules | **Partially decided: versioned Iran rules; exact rule pack pending review** |
 | OD-004 | Fiscal calendar and period locks | Posting rules and statutory reporting | Iran accountant | **Partially decided: Jalali operational calendar; fiscal-period policy pending** |
 | OD-005 | Initial customer profile | Retail vertical, SKU count, transaction volume | Operator interviews | Open |
@@ -31,10 +31,10 @@ A decision may move to accepted only when its evidence and consequences are reco
 | OD-017 | Iran tax/Moadian requirements use versioned, effective-dated rules and a dedicated integration adapter | Decided as architecture; detailed compliance rules pending specialist review |
 
 Open items still blocking financial implementation:
-- Canonical monetary storage unit (Rial vs a defined minor-unit abstraction), conversion rules, and rounding policy.
-- Applicable 1405 tax rates, categories, exemptions, thresholds, invoice types, and exact taxpayer applicability.
+- Fractional quantity × unit-price policy, legal tax rounding, and deterministic remainder allocation.
+- Applicable tax rates, categories, exemptions, thresholds, invoice types, and exact taxpayer applicability.
 - Official Moadian API/schema version, signing and key management requirements, and certification/test path.
-- Fiscal year/period policy and legally required reports.
+- Fiscal year/period policy, chart-of-accounts template, inventory costing, and legally required reports.
 - Target retail segment, pilot store, hardware, and offline workflow.
 
 Do not close these items using assumptions from old MarketFa code or a non-authoritative summary. Attach source document, publication/effective date, reviewer, and test cases to each accepted rule.
