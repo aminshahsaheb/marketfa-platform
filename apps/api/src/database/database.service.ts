@@ -28,9 +28,7 @@ export class TenantAccessDeniedError extends Error {
 
 export class TenantPermissionDeniedError extends Error {
   constructor(permission: Permission) {
-    super(
-      `The authenticated user's tenant role does not grant: ${permission}`,
-    );
+    super(`The authenticated user's tenant role does not grant: ${permission}`);
     this.name = "TenantPermissionDeniedError";
   }
 }
@@ -52,10 +50,7 @@ export class DatabaseService implements OnModuleDestroy {
     actor: AuthenticatedActor,
     tenantId: string,
     permission: Permission,
-    operation: (
-      client: PoolClient,
-      membership: ActiveMembership,
-    ) => Promise<T>,
+    operation: (client: PoolClient, membership: ActiveMembership) => Promise<T>,
   ): Promise<T> {
     return this.withTenant(actor, tenantId, async (client, membership) => {
       if (!hasPermission(membership.role, permission)) {
@@ -81,10 +76,9 @@ export class DatabaseService implements OnModuleDestroy {
       await client.query("BEGIN");
       transactionStarted = true;
       await client.query("SET LOCAL ROLE marketfa_app");
-      await client.query(
-        "SELECT set_config('app.current_user_id', $1, true)",
-        [actor.userId],
-      );
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [
+        actor.userId,
+      ]);
 
       const membershipResult = await client.query<{
         role: TenantRole;
