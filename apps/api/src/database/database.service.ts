@@ -120,11 +120,18 @@ export class DatabaseService implements OnModuleDestroy {
       return result;
     } catch (error) {
       if (transactionStarted) {
-        await client.query("ROLLBACK");
+        try {
+          await client.query("ROLLBACK");
+        } catch {
+          client.release(true);
+          throw error;
+        }
       }
       throw error;
     } finally {
-      client.release();
+      if (!transactionStarted) {
+        client.release();
+      }
     }
   }
 
