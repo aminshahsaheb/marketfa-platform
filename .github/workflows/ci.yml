@@ -1,13 +1,17 @@
 name: CI
+
 on:
   pull_request:
   push:
     branches: [main]
+
 permissions:
   contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -30,44 +34,74 @@ jobs:
       DATABASE_URL: postgresql://marketfa:marketfa_local_only@localhost:5432/marketfa?schema=public
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10.20.0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22.21.1
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
       - name: Smoke test API and web startup against PostgreSQL
         shell: bash
         run: |
           set -euo pipefail
-          pnpm --filter @marketfa/api start > /tmp/marketfa-api.log 2>&1 &
+
+          node apps/api/dist/main.js > /tmp/marketfa-api.log 2>&1 &
           API_PID=$!
           WEB_PID=""
+
           cleanup() {
             kill "$API_PID" 2>/dev/null || true
-            if [ -n "$WEB_PID" ]; then kill "$WEB_PID" 2>/dev/null || true; fi
+            if [ -n "$WEB_PID" ]; then
+              kill "$WEB_PID" 2>/dev/null || true
+            fi
+            wait "$API_PID" 2>/dev/null || true
+            if [ -n "$WEB_PID" ]; then
+              wait "$WEB_PID" 2>/dev/null || true
+            fi
           }
           trap cleanup EXIT
+
           API_READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready > /dev/null; then API_READY=1; break; fi
+            if curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready > /dev/null; then
+              API_READY=1
+              break
+            fi
             sleep 1
           done
-          if [ "$API_READY" -ne 1 ]; then cat /tmp/marketfa-api.log; exit 1; fi
+
+          if [ "$API_READY" -ne 1 ]; then
+            cat /tmp/marketfa-api.log
+            exit 1
+          fi
+
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/live
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready
-          pnpm --filter @marketfa/web preview > /tmp/marketfa-web.log 2>&1 &
+
+          ./apps/web/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > /tmp/marketfa-web.log 2>&1 &
           WEB_PID=$!
+
           WEB_READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ | grep -q MarketFa; then WEB_READY=1; break; fi
+            if curl --fail --silent http://127.0.0.1:4173/ | grep -q MarketFa; then
+              WEB_READY=1
+              break
+            fi
             sleep 1
           done
-          if [ "$WEB_READY" -ne 1 ]; then cat /tmp/marketfa-web.log; exit 1; fi
+
+          if [ "$WEB_READY" -ne 1 ]; then
+            cat /tmp/marketfa-web.log
+            exit 1
+          fi
