@@ -18,22 +18,28 @@ test(
 
     const userA = randomUUID();
     const userB = randomUUID();
+    const userC = randomUUID();
     const tenantA = randomUUID();
     const tenantB = randomUUID();
     const storeA = randomUUID();
     const storeB = randomUUID();
+    const storeA2 = randomUUID();
+    const terminalA = randomUUID();
     const phoneSuffix = randomUUID().replaceAll("-", "").slice(0, 8);
 
     try {
       await owner.query(
-        "INSERT INTO users (id, display_name, phone_e164) VALUES ($1, $2, $3), ($4, $5, $6)",
+        "INSERT INTO users (id, display_name, phone_e164) VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)",
         [
           userA,
-          "Tenant A User",
+          "Tenant A Owner",
           `+98912${phoneSuffix}`,
           userB,
-          "Tenant B User",
+          "Tenant B Owner",
           `+98913${phoneSuffix}`,
+          userC,
+          "Tenant A Cashier",
+          `+98914${phoneSuffix}`,
         ],
       );
       await owner.query(
@@ -41,12 +47,22 @@ test(
         [tenantA, "Tenant A", userA, tenantB, "Tenant B", userB],
       );
       await owner.query(
-        "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3), ($4, $5, $6)",
-        [storeA, tenantA, "Store A", storeB, tenantB, "Store B"],
+        "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)",
+        [storeA, tenantA, "Store A", storeB, tenantB, "Store B", storeA2, tenantA, "Store A2"],
       );
       await owner.query(
-        "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE')",
-        [tenantA, userA, tenantB, userB],
+        "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
+        [tenantA, userA, tenantB, userB, userC],
+      );
+      await owner.query(
+        "INSERT INTO terminals (id, tenant_id, store_id, name, credential_hash) VALUES ($1, $2, $3, $4, $5)",
+        [terminalA, tenantA, storeA, "Terminal A", randomUUID().replaceAll("-", "")],
+      );
+      await assert.rejects(
+        owner.query(
+          "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
+          [tenantA, storeA2, terminalA, userA],
+        ),
       );
 
       const client = await runtime.connect();
@@ -58,6 +74,19 @@ test(
         assert.equal(role.rows[0]?.role_name, "marketfa_runtime");
         assert.equal(role.rows[0]?.rolsuper, false);
         assert.equal(role.rows[0]?.rolbypassrls, false);
+
+        const writePrivileges = await client.query(
+          `SELECT
+             has_table_privilege(current_user, 'users', 'UPDATE') AS can_update_users,
+             has_table_privilege(current_user, 'auth_identities', 'INSERT') AS can_insert_identities,
+             has_table_privilege(current_user, 'user_sessions', 'INSERT') AS can_insert_sessions,
+             has_table_privilege(current_user, 'tenant_memberships', 'UPDATE') AS can_update_memberships,
+             has_table_privilege(current_user, 'tenant_invitations', 'INSERT') AS can_create_invitations,
+             has_table_privilege(current_user, 'terminals', 'INSERT') AS can_create_terminals`,
+        );
+        for (const value of Object.values(writePrivileges.rows[0] ?? {})) {
+          assert.equal(value, false);
+        }
 
         await client.query(
           "SELECT set_config('app.current_user_id', $1, true)",
@@ -79,6 +108,25 @@ test(
           [tenantB],
         );
         assert.equal(hidden.rowCount, 0);
+
+        await assert.rejects(
+          client.query(
+            "UPDATE tenant_memberships SET role = 'OWNER' WHERE tenant_id = $1 AND user_id = $2",
+            [tenantA, userC],
+          ),
+        );
+
+        await assert.rejects(
+          client.query(
+            "INSERT INTO audit_events (tenant_id, actor_user_id, action, entity_type) VALUES ($1, $2, 'test', 'test')",
+            [tenantA, userC],
+          ),
+        );
+
+        await client.query(
+          "INSERT INTO audit_events (tenant_id, actor_user_id, action, entity_type) VALUES ($1, $2, 'test', 'test')",
+          [tenantA, userA],
+        );
 
         await assert.rejects(
           client.query(
@@ -113,7 +161,7 @@ test(
         [tenantA, tenantB],
       ]);
       await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
-        [userA, userB],
+        [userA, userB, userC],
       ]);
       await Promise.all([owner.end(), runtime.end()]);
     }
