@@ -10,9 +10,9 @@ interface MigrationRecord {
 
 export async function runMigrations(): Promise<void> {
   const connectionString =
-    process.env.DATABASE_URL_MIGRATION ?? process.env.DATABASE_URL;
+    process.env.DATABASE_URL_MIGRATION;
   if (!connectionString) {
-    throw new Error("DATABASE_URL_MIGRATION or DATABASE_URL is required.");
+    throw new Error("DATABASE_URL_MIGRATION is required; migrations must never use the runtime connection.");
   }
 
   const pool = new Pool({ connectionString, max: 1 });
@@ -28,7 +28,7 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
-    const directory = resolve(process.cwd(), "database/migrations");
+    const directory = resolve(__dirname, "../database/migrations");
     const files = (await readdir(directory))
       .filter((file) => file.endsWith(".sql"))
       .sort();
