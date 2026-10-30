@@ -81,9 +81,10 @@ export class DatabaseService implements OnModuleDestroy {
       await client.query("BEGIN");
       transactionStarted = true;
       await client.query("SET LOCAL ROLE marketfa_app");
-      await client.query("SELECT set_config('app.current_user_id', $1, true)", [
-        actor.userId,
-      ]);
+      await client.query(
+        "SELECT set_config('app.current_user_id', $1, true)",
+        [actor.userId],
+      );
 
       const membershipResult = await client.query<{
         role: TenantRole;
