@@ -5,7 +5,7 @@ import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
 
 const migrationUrl =
-  process.env.DATABASE_URL_MIGRATION ?? process.env.DATABASE_URL;
+  process.env.DATABASE_URL_MIGRATION;
 const runtimeUrl = process.env.DATABASE_URL;
 const enabled = Boolean(migrationUrl && runtimeUrl);
 
@@ -53,10 +53,10 @@ test(
       const client = await runtime.connect();
       try {
         await client.query("BEGIN");
-        await client.query("SET LOCAL ROLE marketfa_app");
         const role = await client.query(
-          "SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user",
+          "SELECT current_user AS role_name, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user",
         );
+        assert.equal(role.rows[0]?.role_name, "marketfa_runtime");
         assert.equal(role.rows[0]?.rolsuper, false);
         assert.equal(role.rows[0]?.rolbypassrls, false);
 
@@ -95,7 +95,6 @@ test(
       const reused = await runtime.connect();
       try {
         await reused.query("BEGIN");
-        await reused.query("SET LOCAL ROLE marketfa_app");
         await reused.query(
           "SELECT set_config('app.current_user_id', $1, true)",
           [userA],
