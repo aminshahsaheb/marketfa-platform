@@ -25,7 +25,7 @@ MarketFa is being rebuilt as a secure, testable, multi-store platform. The legac
 - **Quality:** Vitest, Playwright, ESLint, type checking, GitHub Actions.
 - **Deployment:** Docker Compose for local development; production deployment is a later decision.
 
-See [docs/architecture/overview.md](docs/architecture/overview.md), [docs/product/PRD.md](docs/product/PRD.md), [docs/architecture/adr/](docs/architecture/adr/), and [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md).
+**Launch profile:** Iran-first; Persian (fa-IR) and English (en) from the first release. Locale is independent from store jurisdiction and tax configuration. See [localization standard](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).\n\nSee [docs/architecture/overview.md](docs/architecture/overview.md), [docs/product/PRD.md](docs/product/PRD.md), [docs/architecture/adr/](docs/architecture/adr/), and [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md).
 
 ## Repository layout
 
