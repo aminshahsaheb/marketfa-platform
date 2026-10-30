@@ -107,7 +107,7 @@ test(
         const visible = await client.query("SELECT id FROM stores ORDER BY id");
         assert.deepEqual(
           visible.rows.map((row) => row.id),
-          [storeA],
+          [storeA, storeA2].sort(),
         );
 
         const hidden = await client.query(
