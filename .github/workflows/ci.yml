@@ -48,6 +48,13 @@ jobs:
       - run: pnpm typecheck
       - name: Bootstrap non-superuser runtime role
         run: psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -f infra/postgres/init/01-roles.sql
+      - name: Verify runtime role bootstrap and credential rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PASSWORD="$(openssl rand -hex 32)"
+          psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -v app_password="$APP_PASSWORD" -f apps/api/database/bootstrap/create-runtime-role.sql
+          echo "DATABASE_URL=postgresql://marketfa_runtime:${APP_PASSWORD}@localhost:5432/marketfa" >> "$GITHUB_ENV"
       - name: Apply SQL migrations with owner connection
         run: pnpm --filter @marketfa/api db:migrate
       - run: pnpm test
