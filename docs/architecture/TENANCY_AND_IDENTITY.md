@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** Tenant/RLS foundation and provider-neutral opaque session core are implemented on stacked M2 branches. Authentication provider and HTTP cookie integration remain open product/security decisions.  
+**Status:** Tenant/RLS foundation is merged; provider-neutral opaque session core is under review. Authentication provider and HTTP cookie integration remain open product/security decisions.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts
