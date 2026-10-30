@@ -4,7 +4,7 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: **Engineering scaffold (M0 discovery and M1 foundation in progress).** This repository is not production-ready and must not be used for live financial records.
+> Status: **M1 engineering foundation passed CI on the feature branch; PR #4 awaits review and merge.** This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
 
@@ -22,7 +22,7 @@ MarketFa is being rebuilt as a secure, testable, multi-store platform. The legac
 - **Local persistence:** IndexedDB and transactional outbox (later milestone).
 - **API:** NestJS, TypeScript, validated DTOs.
 - **Database:** PostgreSQL; Prisma migrations after tenant model approval.
-- **Quality:** Node test runner, Vitest/Playwright as later test layers, ESLint, TypeScript, GitHub Actions.
+- **Quality:** Node test runner, Vitest/Playwright as later test layers, ESLint, TypeScript, Prettier, GitHub Actions.
 - **Deployment:** Docker Compose for local development.
 
 **Launch profile:** Iran-first; Persian (fa-IR) and English (en). Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian. UI locale is independent from store jurisdiction, currency, timezone and tax profile. See [localization](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).
@@ -44,12 +44,12 @@ docker-compose.yml   local PostgreSQL
 ## Local setup
 
 1. Install Node.js 22.21.1 and pnpm 10.20.0.
-2. Run `pnpm install`.
+2. Run `pnpm install --frozen-lockfile`.
 3. Copy `.env.example` to `.env` and use local-only credentials.
 4. Run `docker compose up -d postgres`.
 5. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
 
-The initial branch is a scaffold. A committed lockfile and successful clean-clone CI are still required before calling setup reproducible. Never commit real credentials or customer data.
+The M1 feature branch passed frozen-lockfile install, formatting, lint, typecheck, tests, build, and API/PostgreSQL/web startup smoke tests in GitHub Actions. Never commit real credentials or customer data.
 
 ## Non-goals for the first release
 

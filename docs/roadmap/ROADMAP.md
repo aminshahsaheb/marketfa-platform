@@ -26,13 +26,14 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Add PostgreSQL Docker Compose service and health check.
 - [x] Add API liveness and database-readiness endpoints.
 - [x] Add first domain money primitive and Rial/Toman unit tests.
-- [x] Add initial GitHub Actions CI workflow.
-- [ ] Generate and commit pnpm-lock.yaml.
-- [ ] Execute CI successfully and fix all failures.
-- [ ] Verify clean-clone install, test, build, and local startup.
+- [x] Add GitHub Actions CI workflow.
+- [x] Generate and commit pnpm-lock.yaml.
+- [x] Pass frozen-lockfile install, format, lint, typecheck, tests, and production builds.
+- [x] Pass API/PostgreSQL/web runtime smoke checks from a clean CI checkout.
+- [ ] Human review and merge PR #4.
 - [ ] Add Prisma only after M2 tenant/store contracts are approved; document migration workflow then.
 
-**Exit:** clean clone can install from lockfile, test, build, and run locally; CI passes.
+**Exit:** engineering scaffold verified by frozen-lockfile CI. M1 is complete on the feature branch; merge remains a repository review action.
 
 ## M2 — Identity and tenancy
 

@@ -27,7 +27,7 @@ This document prevents unverified assumptions from silently becoming implementat
 | OD-016 | UI locale is independent from store jurisdiction, currency, and tax profile                 | Decided                                                                   |
 | OD-017 | Iran tax/Moadian requirements use versioned, effective-dated rules and a dedicated adapter  | Architecture decided; detailed compliance rules pending specialist review |
 | OD-018 | Iran accounting ledger uses integer IRR; Toman is explicit input/display only               | Decided; rounding policy pending                                          |
-| OD-019 | M1 scaffold uses pnpm workspace, NestJS API, React/Vite web, PostgreSQL                     | Initial implementation direction; clean CI verification pending           |
+| OD-019 | M1 scaffold uses pnpm workspace, NestJS API, React/Vite web, PostgreSQL                     | **Implemented; frozen-lockfile CI and runtime smoke tests passed**       |
 
 ## Financial implementation blockers
 
