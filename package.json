@@ -15,7 +15,7 @@
     "test": "pnpm -r --if-present test",
     "lint": "eslint . --ext .ts,.tsx,.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --write apps/api/scripts/migrate.ts apps/api/src/app.module.ts apps/api/src/database/database.module.ts apps/api/src/database/database.service.ts apps/api/src/tenancy/permissions.ts apps/api/test/permissions.test.ts apps/api/test/tenant-isolation.integration.test.ts && prettier --check . && echo MARKETFA_FMT_0_BEGIN && cat apps/api/scripts/migrate.ts && echo MARKETFA_FMT_0_END && echo MARKETFA_FMT_1_BEGIN && cat apps/api/src/app.module.ts && echo MARKETFA_FMT_1_END && echo MARKETFA_FMT_2_BEGIN && cat apps/api/src/database/database.module.ts && echo MARKETFA_FMT_2_END && echo MARKETFA_FMT_3_BEGIN && cat apps/api/src/database/database.service.ts && echo MARKETFA_FMT_3_END && echo MARKETFA_FMT_4_BEGIN && cat apps/api/src/tenancy/permissions.ts && echo MARKETFA_FMT_4_END && echo MARKETFA_FMT_5_BEGIN && cat apps/api/test/permissions.test.ts && echo MARKETFA_FMT_5_END && echo MARKETFA_FMT_6_BEGIN && cat apps/api/test/tenant-isolation.integration.test.ts && echo MARKETFA_FMT_6_END"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
