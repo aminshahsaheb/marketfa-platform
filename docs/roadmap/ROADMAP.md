@@ -30,18 +30,19 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Generate and commit pnpm-lock.yaml.
 - [x] Pass frozen-lockfile install, format, lint, typecheck, tests, and production builds.
 - [x] Pass API/PostgreSQL/web runtime smoke checks from a clean CI checkout.
-- [ ] Human review and merge PR #4.
+- [x] Human review and merge PR #4 (merged to `main` on 2026-10-30).
 - [ ] Add Prisma only after M2 tenant/store contracts are approved; document migration workflow then.
 
-**Exit:** engineering scaffold verified by frozen-lockfile CI. M1 is complete on the feature branch; merge remains a repository review action.
+**Exit:** engineering scaffold verified by frozen-lockfile CI and merged to `main` through PR #4. M1 is complete.
 
 ## M2 — Identity and tenancy
 
-- [ ] Authentication/session lifecycle.
-- [ ] Tenant, store, terminal, membership and actor model.
-- [ ] Roles and permissions.
-- [ ] Tenant isolation integration tests against PostgreSQL.
-- [ ] Audit events for access and configuration changes.
+- [ ] Authentication/session lifecycle and server-side actor resolution.
+- [x] Initial tenant, store, terminal, membership and session schema.
+- [x] Fixed role/permission map and tenant transaction boundary.
+- [ ] Complete PostgreSQL RLS, privilege, composite-FK and pooled-connection verification.
+- [ ] Invitation, membership lifecycle, terminal revocation and audit use cases.
+- [ ] End-to-end API authorization matrix for every role.
 
 **Exit:** cross-tenant access tests fail closed.
 
