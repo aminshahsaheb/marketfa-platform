@@ -7,7 +7,8 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Confirm target retail segment and pilot operator.
 - [x] Confirm first launch jurisdiction: Iran.
 - [x] Confirm first-release languages: Persian (fa-IR) and English (en).
-- [ ] Approve canonical currency unit, Rial/Toman conversion, precision, and rounding.
+- [x] Decide canonical Iran ledger unit: integer IRR; Toman is an explicit display/input unit (1 Toman = 10 Rial).
+- [ ] Approve fractional quantity, line rounding, tax rounding, and deterministic remainder-allocation policies with an Iran accountant.
 - [ ] Verify current Iran tax rules, invoice types, exemptions, thresholds, and Moadian API requirements.
 - [ ] Confirm timezone, fiscal calendar, tax, and legal reporting policy.
 - [ ] Define hardware and offline requirements.
@@ -38,14 +39,20 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** cross-tenant access tests fail closed.
 
 ## M3 — Accounting kernel
-- [ ] Chart of accounts.
-- [ ] Journal draft and posting.
-- [ ] Balanced-entry invariant.
-- [ ] Reversal and closed-period behavior.
-- [ ] General ledger and trial balance.
-- [ ] Property-based and invariant tests.
+- [x] Define immutable double-entry domain specification.
+- [x] Define logical PostgreSQL accounting data model and constraints.
+- [x] Define accounting golden, property, concurrency, and reconciliation test plan.
+- [x] Record ADR-0007 for immutable double-entry posting.
+- [ ] Align schema with M2 tenant/store and membership contracts.
+- [ ] Approve chart-of-accounts starter template with Iran accountant.
+- [ ] Confirm fiscal-year start, period boundaries, and close/reopen policy.
+- [ ] Approve inventory costing and COGS timing.
+- [ ] Implement journal/account/period schema and migrations.
+- [ ] Implement posting, idempotency, reversal, and period locking.
+- [ ] Implement general ledger and trial balance.
+- [ ] Pass PostgreSQL integration, property, tenant-isolation, and golden tests.
 
-**Exit:** independent ledger fixtures reconcile exactly.
+**Exit:** independent ledger fixtures reconcile exactly; no unapproved tax or account-code assumptions.
 
 ## M4 — Catalog and inventory
 - [ ] Product, barcode, units and conversion.
