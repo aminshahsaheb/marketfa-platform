@@ -71,6 +71,7 @@ export class DatabaseService implements OnModuleDestroy {
   ): Promise<T> {
     const client = await this.pool.connect();
     let transactionStarted = false;
+    let discardClient = false;
 
     try {
       await client.query("BEGIN");
@@ -122,16 +123,14 @@ export class DatabaseService implements OnModuleDestroy {
       if (transactionStarted) {
         try {
           await client.query("ROLLBACK");
+          transactionStarted = false;
         } catch {
-          client.release(true);
-          throw error;
+          discardClient = true;
         }
       }
       throw error;
     } finally {
-      if (!transactionStarted) {
-        client.release();
-      }
+      client.release(discardClient);
     }
   }
 
