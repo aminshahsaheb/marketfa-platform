@@ -73,7 +73,7 @@ jobs:
           fi
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/live
           curl --fail --silent http://127.0.0.1:3000/api/v1/health/ready
-          ./apps/web/node_modules/.bin/vite preview --host 127.0.0.1 --port 4173 > /tmp/marketfa-web.log 2>&1 &
+          (cd apps/web && exec ./node_modules/.bin/vite preview --host 127.0.0.1 --port 4173) > /tmp/marketfa-web.log 2>&1 &
           WEB_PID=$!
           WEB_READY=0
           for attempt in $(seq 1 30); do
