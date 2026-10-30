@@ -3,6 +3,7 @@
 Work is gated by evidence. A phase is not complete because its files exist.
 
 ## M0 — Discovery and legacy baseline
+
 - [x] Audit supplied legacy capabilities and record known architectural risks.
 - [x] Confirm first launch jurisdiction: Iran.
 - [x] Confirm first-release languages: Persian (fa-IR) and English (en).
@@ -18,6 +19,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** signed-off PRD decisions and acceptance scenarios.
 
 ## M1 — Repository and engineering foundation
+
 - [x] Create pnpm workspace and pin Node/pnpm/dependency versions.
 - [x] Add strict TypeScript baseline and lint configuration.
 - [x] Add NestJS API shell and React/Vite web shell.
@@ -33,6 +35,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** clean clone can install from lockfile, test, build, and run locally; CI passes.
 
 ## M2 — Identity and tenancy
+
 - [ ] Authentication/session lifecycle.
 - [ ] Tenant, store, terminal, membership and actor model.
 - [ ] Roles and permissions.
@@ -42,6 +45,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** cross-tenant access tests fail closed.
 
 ## M3 — Accounting kernel
+
 - [x] Define immutable double-entry domain specification.
 - [x] Define logical PostgreSQL accounting data model and constraints.
 - [x] Define accounting golden, property, concurrency, and reconciliation test plan.
@@ -57,6 +61,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** independent ledger fixtures reconcile exactly; no unapproved tax or account-code assumptions.
 
 ## M4 — Catalog and inventory
+
 - [ ] Product, barcode, units and conversion.
 - [ ] Supplier and purchase receipt.
 - [ ] Batch, expiry and stock movement ledger.
@@ -66,6 +71,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** stock ledger and valuation reconcile for defined scenarios.
 
 ## M5 — POS and operations
+
 - [ ] Shift lifecycle and cash counts.
 - [ ] Sale command and tender records.
 - [ ] Atomic inventory/accounting posting.
@@ -76,6 +82,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** sale-to-ledger and return-to-ledger end-to-end tests pass.
 
 ## M6 — Bounded offline and sync
+
 - [ ] Device registration/revocation.
 - [ ] IndexedDB schema and outbox.
 - [ ] Idempotent command protocol.
@@ -86,6 +93,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** documented offline scenarios pass under network interruption and replay.
 
 ## M7 — Pilot readiness
+
 - [ ] Reporting and exports.
 - [ ] Backup and restore rehearsal.
 - [ ] Observability and alerting.
@@ -96,6 +104,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 **Exit:** pilot checklist signed off; no unresolved critical correctness/security defects.
 
 ## M8 — Controlled rollout
+
 - [ ] Pilot metrics review.
 - [ ] Import validation and reconciliation.
 - [ ] Recovery and rollback rehearsal.

@@ -14,4 +14,5 @@ labels: bug
 ## Environment
 
 ## Business impact
+
 Do not include real customer data, credentials, or production secrets.

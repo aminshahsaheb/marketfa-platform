@@ -69,6 +69,7 @@ CREATE TABLE money_amounts (
 ```
 
 In high-volume domain tables, prefer typed columns instead of a generic money table, for example:
+
 - `amount_irr BIGINT NOT NULL`
 - `unit_price_irr BIGINT NOT NULL`
 - `currency_code CHAR(3) NOT NULL DEFAULT 'IRR'` where the schema supports multiple currencies.
@@ -76,6 +77,7 @@ In high-volume domain tables, prefer typed columns instead of a generic money ta
 For a general multi-currency ledger, use `amount_minor BIGINT` plus `currency_code CHAR(3)`, and maintain separate functional-currency amounts and explicit exchange-rate snapshots where required. Do not sum different currencies without a conversion event and recorded rate.
 
 Quantities:
+
 - `quantity NUMERIC(p,s)` with unit code and explicit precision.
 - `unit_price` and derived line totals must use exact decimal arithmetic.
 - Never encode quantity scale in an undocumented integer convention.
@@ -103,6 +105,7 @@ Example request:
 The accounting core stores exact IRR amounts. The Iran tax adapter is responsible for mapping each internal field to the exact amount unit, precision, permitted range, and rounding rule required by the **currently approved version** of the official invoice schema.
 
 Important:
+
 - The law identifies the Moadian system as the final authority for registration, issuance, and inquiry of electronic invoices; local POS receipts are not automatically proof of tax-system acceptance.
 - Publicly accessible older technical documents (including the 1401 technical connection document) show numeric invoice amount fields and describe asynchronous submission and status inquiry. These are historical references, not proof of the current 1405 schema or its exact unit/precision.
 - Do not assume that every amount field is Rial or Toman based on a field name or a third-party implementation.
@@ -129,6 +132,7 @@ Important:
 ## 9. Decisions still requiring external approval
 
 This engineering choice does not determine:
+
 - statutory tax rates, exemptions, or taxpayer eligibility;
 - the exact current Moadian field units and precision;
 - legal rounding/truncation for each invoice field;
@@ -136,7 +140,6 @@ This engineering choice does not determine:
 - treatment of FX gains/losses and foreign-currency subledgers.
 
 These require current official technical documents and review by an Iran tax/accounting specialist.
-
 
 ## 10. Recommended relational schema for the Iran MVP
 
@@ -195,6 +198,7 @@ The public sources located during this review include an older RC_IITP.IS_V6.4 i
 - Obtain the currently effective official technical package and validate field-by-field mappings before enabling the adapter.
 
 References reviewed:
+
 - [Law on Point-of-Sale Terminals and Taxpayer System](https://law-ir.ir/law/cat/1769/)
 - [RC_IITP.IS_V6.4, Khordad 1402 (historical copy)](https://tadbir.biz/Files/Moadian_doc/ruls/E-hesab.pdf)
 - [RC_IITP.IS_V07, Farvardin 1403 (secondary-hosted copy)](https://worldofacc.com/wp-content/uploads/2024/04/%D8%AF%D8%B3%D8%AA%D9%88%D8%B1%D8%A7%D9%84%D8%B9%D9%85%D9%84-%D8%AC%D8%AF%DB%8C%D8%AF-%D8%B5%D9%88%D8%B1%D8%AA%D8%AD%D8%B3%D8%A7%D8%A8-%D8%A7%D9%84%DA%A9%D8%AA%D8%B1%D9%88%D9%86%DB%8C%DA%A9%DB%8C.pdf)

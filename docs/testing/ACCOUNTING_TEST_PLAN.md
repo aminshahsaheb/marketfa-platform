@@ -17,6 +17,7 @@
 ## 2. Property and invariant tests
 
 Generate valid and invalid journals with varied line counts and large amounts:
+
 - Any accepted posted journal balances exactly.
 - Swapping every debit/credit produces an exact full reversal.
 - Reversal of a reversal is rejected unless a separate correction workflow is explicitly designed.
@@ -28,6 +29,7 @@ Generate valid and invalid journals with varied line counts and large amounts:
 ## 3. PostgreSQL integration tests
 
 Must run against real PostgreSQL, not SQLite or mocks:
+
 - Concurrent posting with same idempotency key returns one result and one journal.
 - Concurrent distinct postings allocate unique store sequence numbers.
 - Cross-store account, period, source, and reversal references fail.
@@ -42,6 +44,7 @@ Must run against real PostgreSQL, not SQLite or mocks:
 ## 4. Accounting scenario golden tests
 
 Each scenario must assert source document, journal lines, trial balance, and relevant control-account balance:
+
 1. Opening balances with equal debits/credits.
 2. Cash sale with cost recognition.
 3. Card sale through clearing account.
