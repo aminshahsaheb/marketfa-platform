@@ -144,8 +144,8 @@ AS $function$
 BEGIN
   IF p_token_hash IS NULL
      OR octet_length(p_token_hash) <> 32
-     OR p_idle_timeout_seconds < 60
-     OR p_idle_timeout_seconds > 2592000 THEN
+     OR p_idle_timeout_seconds IS NULL
+     OR p_idle_timeout_seconds <> 604800 THEN
     RETURN;
   END IF;
 
