@@ -4,7 +4,7 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: M1 is merged. M2 tenant-core and provider-neutral session-core are under review in stacked draft PRs. Authentication provider, HTTP login/cookie flows, tenant onboarding, and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
+> Status: M1 and the M2 tenant-core foundation are merged. Provider-neutral session core is under review. Authentication provider, HTTP login/cookie flows, tenant onboarding, and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
 
