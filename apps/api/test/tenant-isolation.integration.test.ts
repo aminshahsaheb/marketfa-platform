@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
@@ -56,7 +56,7 @@ test(
       );
       await owner.query(
         "INSERT INTO terminals (id, tenant_id, store_id, name, credential_hash) VALUES ($1, $2, $3, $4, $5)",
-        [terminalA, tenantA, storeA, "Terminal A", randomUUID().replaceAll("-", "")],
+        [terminalA, tenantA, storeA, "Terminal A", randomBytes(32)],
       );
       await assert.rejects(
         owner.query(
