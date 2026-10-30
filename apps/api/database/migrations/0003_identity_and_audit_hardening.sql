@@ -1,4 +1,5 @@
--- Enforce store/terminal consistency and prevent runtime impersonation in audit rows.
+-- Enforce store/terminal consistency and bind audit attribution to the
+-- transaction-local actor supplied by the trusted API boundary.
 -- Authentication and tenant-administration writes remain disabled until their
 -- dedicated, server-authorized commands are implemented.
 
@@ -12,11 +13,13 @@ ALTER TABLE terminal_assignments
   REFERENCES terminals (tenant_id, store_id, id)
   ON DELETE CASCADE;
 
-ALTER TABLE audit_events
-  ADD CONSTRAINT audit_events_actor_matches_context_ck
-  CHECK (
-    actor_user_id IS NULL
-    OR actor_user_id = app_current_user_id()
+DROP POLICY audit_events_current_tenant_insert ON audit_events;
+
+CREATE POLICY audit_events_current_tenant_insert ON audit_events
+  FOR INSERT
+  WITH CHECK (
+    tenant_id = app_current_tenant_id()
+    AND (actor_user_id IS NULL OR actor_user_id = app_current_user_id())
   );
 
 REVOKE INSERT, UPDATE, DELETE ON
