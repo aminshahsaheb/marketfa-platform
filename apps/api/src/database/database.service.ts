@@ -28,7 +28,9 @@ export class TenantAccessDeniedError extends Error {
 
 export class TenantPermissionDeniedError extends Error {
   constructor(permission: Permission) {
-    super(`The authenticated user's tenant role does not grant: ${permission}`);
+    super(
+      `The authenticated user's tenant role does not grant: ${permission}`,
+    );
     this.name = "TenantPermissionDeniedError";
   }
 }
