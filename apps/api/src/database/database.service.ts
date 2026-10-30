@@ -64,10 +64,7 @@ export class DatabaseService implements OnModuleDestroy {
   private async withTenant<T>(
     actor: AuthenticatedActor,
     tenantId: string,
-    operation: (
-      client: PoolClient,
-      membership: ActiveMembership,
-    ) => Promise<T>,
+    operation: (client: PoolClient, membership: ActiveMembership) => Promise<T>,
   ): Promise<T> {
     const client = await this.pool.connect();
     let transactionStarted = false;
