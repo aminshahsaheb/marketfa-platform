@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Pool } from "pg";
+import type { PoolClient } from "pg";
 
 interface MigrationRecord {
   version: string;
@@ -17,10 +18,13 @@ export async function runMigrations(): Promise<void> {
   }
 
   const pool = new Pool({ connectionString, max: 1 });
-  const client = await pool.connect();
+  let client: PoolClient | undefined;
+  let lockAcquired = false;
 
   try {
+    client = await pool.connect();
     await client.query("SELECT pg_advisory_lock($1)", [724901]);
+    lockAcquired = true;
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version TEXT PRIMARY KEY,
@@ -66,9 +70,11 @@ export async function runMigrations(): Promise<void> {
     }
   } finally {
     try {
-      await client.query("SELECT pg_advisory_unlock($1)", [724901]);
+      if (client && lockAcquired) {
+        await client.query("SELECT pg_advisory_unlock($1)", [724901]);
+      }
     } finally {
-      client.release();
+      client?.release();
       await pool.end();
     }
   }
