@@ -4,8 +4,7 @@ import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
 
-const migrationUrl =
-  process.env.DATABASE_URL_MIGRATION;
+const migrationUrl = process.env.DATABASE_URL_MIGRATION;
 const runtimeUrl = process.env.DATABASE_URL;
 const enabled = Boolean(migrationUrl && runtimeUrl);
 
