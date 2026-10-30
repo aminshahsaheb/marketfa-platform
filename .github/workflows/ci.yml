@@ -43,10 +43,6 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Diagnose canonical tenant service formatting
-        run: |
-          pnpm exec prettier --write apps/api/src/database/database.service.ts
-          git diff -- apps/api/src/database/database.service.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
