@@ -43,10 +43,6 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Show canonical formatting for changed TypeScript files
-        run: |
-          pnpm exec prettier --write apps/api/src/database/database.service.ts apps/api/test/tenant-isolation.integration.test.ts
-          git diff -- apps/api/src/database/database.service.ts apps/api/test/tenant-isolation.integration.test.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
