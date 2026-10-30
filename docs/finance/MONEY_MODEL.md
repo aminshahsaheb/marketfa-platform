@@ -136,3 +136,65 @@ This engineering choice does not determine:
 - treatment of FX gains/losses and foreign-currency subledgers.
 
 These require current official technical documents and review by an Iran tax/accounting specialist.
+
+
+## 10. Recommended relational schema for the Iran MVP
+
+The illustrative `money_amounts` table above is not the recommended default for every amount. Prefer typed amount columns on the business records. This improves constraints, query plans, reporting, and auditability.
+
+Example core tables (simplified; not a complete migration):
+
+```sql
+CREATE TABLE journal_entries (
+  id UUID PRIMARY KEY,
+  store_id UUID NOT NULL,
+  currency_code CHAR(3) NOT NULL DEFAULT 'IRR' CHECK (currency_code = 'IRR'),
+  status TEXT NOT NULL CHECK (status IN ('DRAFT','POSTED','REVERSED')),
+  posted_at TIMESTAMPTZ,
+  rule_version TEXT NOT NULL
+);
+
+CREATE TABLE journal_lines (
+  id UUID PRIMARY KEY,
+  journal_entry_id UUID NOT NULL REFERENCES journal_entries(id),
+  account_id UUID NOT NULL,
+  debit_irr BIGINT NOT NULL DEFAULT 0 CHECK (debit_irr >= 0),
+  credit_irr BIGINT NOT NULL DEFAULT 0 CHECK (credit_irr >= 0),
+  CHECK ((debit_irr = 0) <> (credit_irr = 0))
+);
+
+CREATE TABLE sales_lines (
+  id UUID PRIMARY KEY,
+  sale_id UUID NOT NULL,
+  quantity NUMERIC(24,8) NOT NULL CHECK (quantity > 0),
+  quantity_unit_code TEXT NOT NULL,
+  unit_price_irr BIGINT NOT NULL CHECK (unit_price_irr >= 0),
+  gross_amount_irr BIGINT NOT NULL CHECK (gross_amount_irr >= 0),
+  discount_amount_irr BIGINT NOT NULL CHECK (discount_amount_irr >= 0),
+  net_amount_irr BIGINT NOT NULL CHECK (net_amount_irr >= 0)
+);
+```
+
+Additional constraints must be enforced in the posting transaction or deferred database validation so a POSTED journal is balanced as a whole. A row-level CHECK cannot enforce a sum across journal lines. Use a single transaction plus a deferred constraint trigger or a rigorously controlled posting procedure; the API must not permit direct arbitrary writes to posted lines.
+
+For every posted source event (sale, return, purchase, payment, adjustment), persist the source document ID, journal ID, idempotency command ID, actor, timestamp, and calculation/rule version. Prefer immutable posted records and reversal entries over edits/deletes.
+
+Do not store both a canonical amount and an independently editable display amount. A cached display amount is derived data and must be rebuildable.
+
+## 11. Important refinement: integer storage does not mean integer-only calculations
+
+A weighted sale may have a fractional quantity and a per-unit price. The product can produce a fraction of one Rial. The system must define exactly where that fraction is rounded to an integer Rial, how tax is calculated, and how line-level remainders are allocated. This policy is jurisdiction- and document-specific. Do not choose a generic rounding mode (such as always HALF_UP) without review and golden examples.
+
+## 12. Official-schema evidence boundary
+
+The public sources located during this review include an older RC_IITP.IS_V6.4 instruction dated Khordad 1402 and a secondary-hosted RC_IITP.IS_V07 copy dated Farvardin 1403. They show decimal-number amount fields in the invoice JSON examples, but they are not sufficient to establish the current 1405 schema, current field units, exact decimal precision, or current legal applicability. The law states that the Moadian system is the final authority for registration/issuance/inquiry of electronic invoices. Therefore:
+
+- Treat those older documents as historical engineering references only.
+- Do not use their JSON numeric types as a reason to use floating-point internally.
+- Do not assume every Moadian amount field is a whole Rial or a whole Toman.
+- Obtain the currently effective official technical package and validate field-by-field mappings before enabling the adapter.
+
+References reviewed:
+- [Law on Point-of-Sale Terminals and Taxpayer System](https://law-ir.ir/law/cat/1769/)
+- [RC_IITP.IS_V6.4, Khordad 1402 (historical copy)](https://tadbir.biz/Files/Moadian_doc/ruls/E-hesab.pdf)
+- [RC_IITP.IS_V07, Farvardin 1403 (secondary-hosted copy)](https://worldofacc.com/wp-content/uploads/2024/04/%D8%AF%D8%B3%D8%AA%D9%88%D8%B1%D8%A7%D9%84%D8%B9%D9%85%D9%84-%D8%AC%D8%AF%DB%8C%D8%AF-%D8%B5%D9%88%D8%B1%D8%AA%D8%AD%D8%B3%D8%A7%D8%A8-%D8%A7%D9%84%DA%A9%D8%AA%D8%B1%D9%88%D9%86%DB%8C%DA%A9%DB%8C.pdf)
