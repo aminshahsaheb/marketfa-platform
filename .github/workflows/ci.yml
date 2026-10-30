@@ -43,6 +43,8 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Check formatting for auth session files
+        run: pnpm exec prettier --check apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/session.service.integration.test.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
@@ -55,6 +57,13 @@ jobs:
           APP_PASSWORD="$(openssl rand -hex 32)"
           psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -v app_password="$APP_PASSWORD" -f apps/api/database/bootstrap/create-runtime-role.sql
           echo "DATABASE_URL=postgresql://marketfa_runtime:${APP_PASSWORD}@localhost:5432/marketfa" >> "$GITHUB_ENV"
+      - name: Bootstrap isolated authentication runtime role
+        shell: bash
+        run: |
+          set -euo pipefail
+          AUTH_PASSWORD="$(openssl rand -hex 32)"
+          psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -v auth_password="$AUTH_PASSWORD" -f apps/api/database/bootstrap/create-auth-runtime-role.sql
+          echo "AUTH_DATABASE_URL=postgresql://marketfa_auth_runtime:${AUTH_PASSWORD}@localhost:5432/marketfa" >> "$GITHUB_ENV"
       - name: Apply SQL migrations with owner connection
         run: pnpm --filter @marketfa/api db:migrate
       - run: pnpm test
