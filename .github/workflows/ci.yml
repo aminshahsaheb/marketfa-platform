@@ -21,6 +21,12 @@ jobs:
         with:
           version: 10.20.0
       - run: pnpm install --no-frozen-lockfile
+      - name: Emit generated lockfile for one-time repository bootstrap
+        shell: bash
+        run: |
+          echo MARKETFA_LOCKFILE_BEGIN
+          cat pnpm-lock.yaml
+          echo MARKETFA_LOCKFILE_END
       - name: Preserve generated lockfile for repository review
         uses: actions/upload-artifact@v4
         with:
