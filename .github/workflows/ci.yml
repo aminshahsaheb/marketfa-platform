@@ -21,6 +21,13 @@ jobs:
         with:
           version: 10.20.0
       - run: pnpm install --no-frozen-lockfile
+      - name: Preserve generated lockfile for repository review
+        uses: actions/upload-artifact@v4
+        with:
+          name: pnpm-lockfile
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 3
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
