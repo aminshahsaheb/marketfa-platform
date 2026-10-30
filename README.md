@@ -4,7 +4,7 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: **M1 engineering foundation passed CI on the feature branch; PR #4 awaits review and merge.** This repository is not production-ready and must not be used for live financial records.
+> Status: M1 is merged. M2 tenant and identity design is merged. Tenant-core implementation is in progress. This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
 
@@ -21,7 +21,7 @@ MarketFa is being rebuilt as a secure, testable, multi-store platform. The legac
 - **Web:** React, TypeScript, Vite; Persian and English from the first release.
 - **Local persistence:** IndexedDB and transactional outbox (later milestone).
 - **API:** NestJS, TypeScript, validated DTOs.
-- **Database:** PostgreSQL; Prisma migrations after tenant model approval.
+- **Database:** PostgreSQL; versioned SQL migrations and explicit repositories for RLS-sensitive operations.
 - **Quality:** Node test runner, Vitest/Playwright as later test layers, ESLint, TypeScript, Prettier, GitHub Actions.
 - **Deployment:** Docker Compose for local development.
 
@@ -32,12 +32,13 @@ See [architecture overview](docs/architecture/overview.md), [PRD](docs/product/P
 ## Repository layout
 
 ```text
-apps/api       NestJS API
+apps/api       NestJS API and SQL migrations
 apps/web       React web shell
 packages/domain      framework-independent domain rules
 packages/contracts   shared API contracts
 docs           product, architecture, security, operations
 .github        CI and contribution templates
+infra          PostgreSQL local role bootstrap
 docker-compose.yml   local PostgreSQL
 ```
 
@@ -45,11 +46,12 @@ docker-compose.yml   local PostgreSQL
 
 1. Install Node.js 22.21.1 and pnpm 10.20.0.
 2. Run `pnpm install --frozen-lockfile`.
-3. Copy `.env.example` to `.env` and use local-only credentials.
+3. Copy `.env.example` to `.env`. The example credentials are local-only.
 4. Run `docker compose up -d postgres`.
-5. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
+5. Apply database migrations with `pnpm --filter @marketfa/api db:migrate`.
+6. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
 
-The M1 feature branch passed frozen-lockfile install, formatting, lint, typecheck, tests, build, and API/PostgreSQL/web startup smoke tests in GitHub Actions. Never commit real credentials or customer data.
+The API connects as `marketfa_runtime`, a non-superuser role without RLS bypass. Migrations use the separate `marketfa_owner` connection. Never use the migration owner credentials for normal API requests in production.
 
 ## Non-goals for the first release
 

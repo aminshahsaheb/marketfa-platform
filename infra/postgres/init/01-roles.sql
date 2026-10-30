@@ -1,0 +1,3 @@
+CREATE ROLE marketfa_app NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
+CREATE ROLE marketfa_runtime LOGIN PASSWORD 'marketfa_local_only' NOINHERIT NOSUPERUSER NOBYPASSRLS;
+GRANT marketfa_app TO marketfa_runtime;

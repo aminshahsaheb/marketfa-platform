@@ -21,17 +21,18 @@ jobs:
         image: postgres:17-alpine
         env:
           POSTGRES_DB: marketfa
-          POSTGRES_USER: marketfa
-          POSTGRES_PASSWORD: marketfa_local_only
+          POSTGRES_USER: marketfa_owner
+          POSTGRES_PASSWORD: marketfa_owner_local_only
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U marketfa -d marketfa"
+          --health-cmd "pg_isready -U marketfa_owner -d marketfa"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
     env:
-      DATABASE_URL: postgresql://marketfa:marketfa_local_only@localhost:5432/marketfa?schema=public
+      DATABASE_URL: postgresql://marketfa_runtime:marketfa_local_only@localhost:5432/marketfa
+      DATABASE_URL_MIGRATION: postgresql://marketfa_owner:marketfa_owner_local_only@localhost:5432/marketfa
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -45,6 +46,17 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
+      - name: Bootstrap non-superuser runtime role
+        run: psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -f infra/postgres/init/01-roles.sql
+      - name: Verify runtime role bootstrap and credential rotation
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PASSWORD="$(openssl rand -hex 32)"
+          psql "$DATABASE_URL_MIGRATION" -v ON_ERROR_STOP=1 -v app_password="$APP_PASSWORD" -f apps/api/database/bootstrap/create-runtime-role.sql
+          echo "DATABASE_URL=postgresql://marketfa_runtime:${APP_PASSWORD}@localhost:5432/marketfa" >> "$GITHUB_ENV"
+      - name: Apply SQL migrations with owner connection
+        run: pnpm --filter @marketfa/api db:migrate
       - run: pnpm test
       - run: pnpm build
       - name: Smoke test API and web startup against PostgreSQL

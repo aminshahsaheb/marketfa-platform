@@ -1,6 +1,6 @@
 # Tenant Isolation and Identity Verification Plan
 
-**Status:** Required M2 test specification; not yet executed.
+**Status:** Required M2 test specification; a first PostgreSQL integration slice is implemented on `feat/m2-tenant-core`. Full authorization, session, invitation, worker and API-level coverage remains pending.
 
 ## PostgreSQL isolation tests
 
@@ -12,6 +12,10 @@
 - Transaction-local tenant setting does not leak through pooled connection reuse.
 - Background worker sets tenant context per job; context is cleared on transaction completion.
 - Migration role is distinct from runtime role and never used by API request handling.
+- Runtime login has no inherited application table privileges; the API explicitly switches to the NOLOGIN application role inside the transaction.
+- Audit insert policy rejects an actor ID different from the transaction actor.
+- Terminal assignment composite foreign key rejects a terminal/store mismatch.
+- Session rotation foreign key rejects a parent session belonging to another user.
 
 ## Authorization matrix
 

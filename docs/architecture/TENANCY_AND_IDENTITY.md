@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** M2 design baseline; implementation blocked on M1 acceptance and authentication product decision  
+**Status:** M2 design accepted; schema/RLS foundation is under implementation review. Authentication flows remain blocked on the login/recovery product decision.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts
