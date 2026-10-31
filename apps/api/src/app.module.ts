@@ -25,7 +25,8 @@ import { InvitationService } from "./tenancy/invitation.service";
   ],
   providers: [
     HealthService,
-    TenantBootstrapService,\n    InvitationService,
+    TenantBootstrapService,
+    InvitationService,
     { provide: APP_GUARD, useClass: SessionAuthGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
