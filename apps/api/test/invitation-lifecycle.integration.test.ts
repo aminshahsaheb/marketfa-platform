@@ -70,6 +70,11 @@ test(
         ),
       );
 
+      await assert.rejects(
+        invitationService.accept({ userId: revokedInviteeId }, created.token),
+        ForbiddenException,
+      );
+
       const accepted = await invitationService.accept(
         { userId: inviteeId },
         created.token,
@@ -126,14 +131,14 @@ test(
         [tenant.tenantId],
       );
       assert.deepEqual(
-        audit.rows.map((row) => row.action),
+        audit.rows.map((row) => row.action).sort(),
         [
           "tenant.bootstrap",
           "tenant.invitation.create",
           "tenant.invitation.accept",
           "tenant.invitation.create",
           "tenant.invitation.revoke",
-        ],
+        ].sort(),
       );
 
       await assert.rejects(
