@@ -67,17 +67,17 @@ DECLARE
   inviter_role tenant_role;
   new_invitation_id UUID;
   new_expires_at TIMESTAMPTZ;
-  normalized_identifier TEXT;
+  normalized_invitee_identifier TEXT;
 BEGIN
   actor_id := public.app_current_user_id();
-  normalized_identifier := lower(btrim(p_intended_identifier));
+  normalized_invitee_identifier := lower(btrim(p_intended_identifier));
 
   IF actor_id IS NULL
      OR p_tenant_id IS NULL
      OR p_token_hash IS NULL
      OR octet_length(p_token_hash) <> 32
-     OR normalized_identifier IS NULL
-     OR length(normalized_identifier) NOT BETWEEN 3 AND 320
+     OR normalized_invitee_identifier IS NULL
+     OR length(normalized_invitee_identifier) NOT BETWEEN 3 AND 320
      OR p_role IS NULL
      OR p_role NOT IN ('MANAGER', 'CASHIER', 'ACCOUNTANT', 'VIEWER')
      OR p_ttl_seconds IS NULL
@@ -122,7 +122,7 @@ BEGIN
     WHERE membership.tenant_id = p_tenant_id
       AND membership.status IN ('INVITED', 'ACTIVE')
       AND identity.verified_at IS NOT NULL
-      AND lower(identity.normalized_identifier) = normalized_identifier
+      AND lower(identity.normalized_identifier) = normalized_invitee_identifier
   ) THEN
     RAISE EXCEPTION 'Identity already has a tenant membership'
       USING ERRCODE = '23505';
@@ -159,7 +159,7 @@ BEGIN
   VALUES (
     p_tenant_id,
     p_token_hash,
-    normalized_identifier,
+    normalized_invitee_identifier,
     p_role,
     'PENDING',
     actor_id,
