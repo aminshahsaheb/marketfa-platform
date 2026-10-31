@@ -293,6 +293,14 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Resolve tenant context from the locked invitation before RLS-protected
+  -- identity and tenant checks. The API transaction rolls this setting back.
+  PERFORM set_config(
+    'app.current_tenant_id',
+    invitation_row.tenant_id::TEXT,
+    true
+  );
+
   IF NOT EXISTS (
     SELECT 1
     FROM public.users AS account
@@ -310,12 +318,6 @@ BEGIN
     RAISE EXCEPTION 'Invitation identity does not match a verified identity'
       USING ERRCODE = '42501';
   END IF;
-
-  PERFORM set_config(
-    'app.current_tenant_id',
-    invitation_row.tenant_id::TEXT,
-    true
-  );
 
   IF EXISTS (
     SELECT 1 FROM public.tenant_memberships AS membership
