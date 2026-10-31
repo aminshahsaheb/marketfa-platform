@@ -18,12 +18,12 @@ test("tenant bootstrap endpoint validates and normalizes request fields", async 
   );
   const actor = { userId: "user-1", sessionId: "session-1" };
 
-  await assert.rejects(
-    controller.create(actor, { displayName: " ", storeName: "Main" }),
+  assert.throws(
+    () => controller.create(actor, { displayName: " ", storeName: "Main" }),
     BadRequestException,
   );
-  await assert.rejects(
-    controller.create(actor, { displayName: "Business", storeName: 3 }),
+  assert.throws(
+    () => controller.create(actor, { displayName: "Business", storeName: 3 }),
     BadRequestException,
   );
   await controller.create(actor, {
