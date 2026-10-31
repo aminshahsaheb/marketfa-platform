@@ -31,7 +31,12 @@ test(
       );
       await owner.query(
         "INSERT INTO auth_identities (user_id, provider_key, provider_subject, normalized_identifier, verified_at) VALUES ($1, 'test', $2, $2, now()), ($3, 'test', $4, $4, now())",
-        [inviteeId, "invitee@example.test", revokedInviteeId, "revoked@example.test"],
+        [
+          inviteeId,
+          "invitee@example.test",
+          revokedInviteeId,
+          "revoked@example.test",
+        ],
       );
 
       const database = new DatabaseService(runtime);
@@ -60,14 +65,10 @@ test(
       assert.ok(created.token.length === 43);
 
       await assert.rejects(
-        invitationService.create(
-          { userId: inviterId },
-          tenant.tenantId,
-          {
-            intendedIdentifier: "invitee@example.test",
-            role: "VIEWER",
-          },
-        ),
+        invitationService.create({ userId: inviterId }, tenant.tenantId, {
+          intendedIdentifier: "invitee@example.test",
+          role: "VIEWER",
+        }),
       );
 
       await assert.rejects(
@@ -119,10 +120,7 @@ test(
         { revoked: true },
       );
       await assert.rejects(
-        invitationService.accept(
-          { userId: revokedInviteeId },
-          revoked.token,
-        ),
+        invitationService.accept({ userId: revokedInviteeId }, revoked.token),
         NotFoundException,
       );
 
@@ -142,14 +140,10 @@ test(
       );
 
       await assert.rejects(
-        invitationService.create(
-          { userId: inviteeId },
-          tenant.tenantId,
-          {
-            intendedIdentifier: "another@example.test",
-            role: "VIEWER",
-          },
-        ),
+        invitationService.create({ userId: inviteeId }, tenant.tenantId, {
+          intendedIdentifier: "another@example.test",
+          role: "VIEWER",
+        }),
         ForbiddenException,
       );
     } finally {
