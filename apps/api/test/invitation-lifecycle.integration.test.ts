@@ -151,6 +151,9 @@ test(
         await owner.query("DELETE FROM audit_events WHERE tenant_id = $1", [
           tenantId,
         ]);
+        await owner.query("DELETE FROM stores WHERE tenant_id = $1", [
+          tenantId,
+        ]);
         await owner.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
       }
       await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
