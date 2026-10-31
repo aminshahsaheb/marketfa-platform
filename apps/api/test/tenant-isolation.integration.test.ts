@@ -94,7 +94,14 @@ test(
       const parentSession = randomUUID();
       await owner.query(
         "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, now() + interval '1 day'), ($4, $5, $6, now() + interval '1 day')",
-        [parentSession, userA, randomBytes(32), sessionB, userB, randomBytes(32)],
+        [
+          parentSession,
+          userA,
+          randomBytes(32),
+          sessionB,
+          userB,
+          randomBytes(32),
+        ],
       );
       await assert.rejects(
         owner.query(
