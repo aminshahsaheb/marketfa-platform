@@ -29,6 +29,12 @@ test(
     const storeB = randomUUID();
     const storeA2 = randomUUID();
     const terminalA = randomUUID();
+    const terminalB = randomUUID();
+    const invitationA = randomUUID();
+    const invitationB = randomUUID();
+    const sessionB = randomUUID();
+    const identityA = randomUUID();
+    const identityB = randomUUID();
     const phoneSuffix = randomUUID().replaceAll("-", "").slice(0, 8);
 
     try {
@@ -68,10 +74,34 @@ test(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
         [tenantA, userA, tenantB, userB, userC],
       );
+      await owner.query(
+        "INSERT INTO auth_identities (id, user_id, provider_key, provider_subject, normalized_identifier, verified_at) VALUES ($1, $2, 'test-provider', 'tenant-a-subject', 'tenant-a@example.test', now()), ($3, $4, 'test-provider', 'tenant-b-subject', 'tenant-b@example.test', now())",
+        [identityA, userA, identityB, userB],
+      );
+      await owner.query(
+        "INSERT INTO tenant_invitations (id, tenant_id, token_hash, role, invited_by_user_id, expires_at) VALUES ($1, $2, $3, 'MANAGER', $4, now() + interval '1 day'), ($5, $6, $7, 'MANAGER', $8, now() + interval '1 day')",
+        [
+          invitationA,
+          tenantA,
+          randomBytes(32),
+          userA,
+          invitationB,
+          tenantB,
+          randomBytes(32),
+          userB,
+        ],
+      );
       const parentSession = randomUUID();
       await owner.query(
-        "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, now() + interval '1 day')",
-        [parentSession, userA, randomBytes(32)],
+        "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, now() + interval '1 day'), ($4, $5, $6, now() + interval '1 day')",
+        [
+          parentSession,
+          userA,
+          randomBytes(32),
+          sessionB,
+          userB,
+          randomBytes(32),
+        ],
       );
       await assert.rejects(
         owner.query(
@@ -88,12 +118,27 @@ test(
       );
 
       await owner.query(
-        "INSERT INTO terminals (id, tenant_id, store_id, name, credential_hash) VALUES ($1, $2, $3, $4, $5)",
-        [terminalA, tenantA, storeA, "Terminal A", randomBytes(32)],
+        "INSERT INTO terminals (id, tenant_id, store_id, name, credential_hash) VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10)",
+        [
+          terminalA,
+          tenantA,
+          storeA,
+          "Terminal A",
+          randomBytes(32),
+          terminalB,
+          tenantB,
+          storeB,
+          "Terminal B",
+          randomBytes(32),
+        ],
       );
       await owner.query(
-        "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
-        [tenantA, storeA, terminalA, userA],
+        "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)",
+        [tenantA, storeA, terminalA, userA, tenantB, storeB, terminalB, userB],
+      );
+      await owner.query(
+        "INSERT INTO audit_events (tenant_id, actor_user_id, action, entity_type) VALUES ($1, $2, 'fixture', 'fixture')",
+        [tenantB, userB],
       );
       await assert.rejects(
         owner.query(
@@ -212,6 +257,69 @@ test(
         );
         assert.equal(hiddenMembership.rowCount, 0);
 
+        const hiddenUser = await client.query(
+          "SELECT id FROM users WHERE id = $1",
+          [userB],
+        );
+        assert.equal(hiddenUser.rowCount, 0);
+
+        const hiddenIdentity = await client.query(
+          "SELECT id FROM auth_identities WHERE user_id = $1",
+          [userB],
+        );
+        assert.equal(hiddenIdentity.rowCount, 0);
+
+        const hiddenSession = await client.query(
+          "SELECT id FROM user_sessions WHERE id = $1",
+          [sessionB],
+        );
+        assert.equal(hiddenSession.rowCount, 0);
+
+        const hiddenInvitation = await client.query(
+          "SELECT id FROM tenant_invitations WHERE id = $1",
+          [invitationB],
+        );
+        assert.equal(hiddenInvitation.rowCount, 0);
+
+        const hiddenTerminal = await client.query(
+          "SELECT id FROM terminals WHERE id = $1",
+          [terminalB],
+        );
+        assert.equal(hiddenTerminal.rowCount, 0);
+
+        const hiddenAssignment = await client.query(
+          "SELECT id FROM terminal_assignments WHERE tenant_id = $1",
+          [tenantB],
+        );
+        assert.equal(hiddenAssignment.rowCount, 0);
+
+        const hiddenAudit = await client.query(
+          "SELECT id FROM audit_events WHERE tenant_id = $1",
+          [tenantB],
+        );
+        assert.equal(hiddenAudit.rowCount, 0);
+
+        const visibleSelfIdentity = await client.query(
+          "SELECT id FROM auth_identities WHERE user_id = $1",
+          [userA],
+        );
+        assert.deepEqual(
+          visibleSelfIdentity.rows.map((row) => row.id),
+          [identityA],
+        );
+
+        const visibleSelfSession = await client.query(
+          "SELECT id FROM user_sessions WHERE id = $1",
+          [parentSession],
+        );
+        assert.equal(visibleSelfSession.rowCount, 1);
+
+        const visibleTenantInvitation = await client.query(
+          "SELECT id FROM tenant_invitations WHERE id = $1",
+          [invitationA],
+        );
+        assert.equal(visibleTenantInvitation.rowCount, 1);
+
         await assertDenied(
           "UPDATE stores SET name = 'Cross-tenant mutation' WHERE tenant_id = $1",
           [tenantB],
@@ -278,6 +386,10 @@ test(
         reused.release();
       }
     } finally {
+      await owner.query(
+        "DELETE FROM audit_events WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
       await owner.query(
         "DELETE FROM terminal_assignments WHERE tenant_id = ANY($1::uuid[])",
         [[tenantA, tenantB]],
