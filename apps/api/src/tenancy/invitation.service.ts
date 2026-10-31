@@ -54,7 +54,9 @@ function mapCommandError(error: unknown): never {
     throw new ForbiddenException("You cannot perform this invitation action.");
   }
   if (code === "23505") {
-    throw new ConflictException("A membership or pending invitation already exists.");
+    throw new ConflictException(
+      "A membership or pending invitation already exists.",
+    );
   }
   if (code === "22023") {
     throw new BadRequestException("Invitation input is invalid.");
@@ -82,8 +84,14 @@ export class InvitationService {
       throw new BadRequestException("Invitation input is invalid.");
     }
     const ttlSeconds = input.ttlSeconds ?? 604800;
-    if (!Number.isInteger(ttlSeconds) || ttlSeconds < 3600 || ttlSeconds > 2592000) {
-      throw new BadRequestException("Invitation expiry must be 1 hour to 30 days.");
+    if (
+      !Number.isInteger(ttlSeconds) ||
+      ttlSeconds < 3600 ||
+      ttlSeconds > 2592000
+    ) {
+      throw new BadRequestException(
+        "Invitation expiry must be 1 hour to 30 days.",
+      );
     }
 
     const token = randomBytes(32).toString("base64url");
@@ -132,7 +140,7 @@ export class InvitationService {
         tenantId,
         "members:manage",
         async (client) =>
-          client.query<{ tenant_invitation_revoke: boolean }>(
+          client.query<{ revoked: boolean }>(
             "SELECT public.tenant_invitation_revoke($1, $2) AS revoked",
             [tenantId, invitationId],
           ),
@@ -167,7 +175,9 @@ export class InvitationService {
       );
       const row = result.rows[0];
       if (!row) {
-        throw new NotFoundException("Invitation is invalid, expired, or already used.");
+        throw new NotFoundException(
+          "Invitation is invalid, expired, or already used.",
+        );
       }
       return {
         tenantId: row.tenant_id,
