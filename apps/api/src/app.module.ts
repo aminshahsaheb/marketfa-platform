@@ -8,13 +8,25 @@ import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
 import { TenantBootstrapController } from "./tenancy/tenant-bootstrap.controller";
 import { TenantBootstrapService } from "./tenancy/tenant-bootstrap.service";
+import {
+  InvitationAcceptanceController,
+  TenantInvitationController,
+} from "./tenancy/invitation.controller";
+import { InvitationService } from "./tenancy/invitation.service";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [HealthController, CsrfController, TenantBootstrapController],
+  controllers: [
+    HealthController,
+    CsrfController,
+    TenantBootstrapController,
+    TenantInvitationController,
+    InvitationAcceptanceController,
+  ],
   providers: [
     HealthService,
     TenantBootstrapService,
+    InvitationService,
     { provide: APP_GUARD, useClass: SessionAuthGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],

@@ -1,6 +1,6 @@
 # ADR 0011: Tenant Administration Through Atomic Database Commands
 
-- **Status:** Accepted; atomic tenant bootstrap implemented, remaining commands pending M2
+- **Status:** Accepted; atomic tenant bootstrap and invitation lifecycle commands implemented, membership/terminal commands pending M2
 - **Date:** 2026-10-31
 
 ## Context

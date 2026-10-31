@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, and atomic tenant bootstrap are merged. PostgreSQL tests cover the current identity/tenancy schema and bootstrap command. Invitation/membership/terminal lifecycle and authentication provider/login integration remain open.  
+**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, and invitation create/revoke/accept commands are merged. PostgreSQL integration tests cover bootstrap and invitation lifecycle, including identity binding, one-time acceptance, and audit. Membership/terminal lifecycle, invitation delivery/rate limits, and authentication provider/login integration remain open.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts

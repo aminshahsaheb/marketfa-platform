@@ -40,6 +40,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Provider-neutral opaque session storage, resolution, rotation and revocation core.
 - [x] Server-side request actor resolution and CSRF enforcement primitives.
 - [ ] Authentication provider, login/recovery endpoints, session-cookie issuance/clearing and complete browser integration (login method remains a product decision).
+- [ ] Invitation delivery provider and endpoint abuse controls (delivery and rate limits remain product/security follow-up).
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
 - [x] Exhaustive unit-test matrix for every defined role and permission.
@@ -47,7 +48,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
-- [ ] Invitation create/revoke/accept: hashed token, expiry, identity binding, replay/concurrency protection.
+- [x] Invitation create/revoke/accept commands and API: hashed token, expiry, verified identity binding, replay/concurrency protection, and atomic audit.
 - [ ] Membership role change, suspension and removal; protect the last active OWNER.
 - [ ] Terminal registration, credential rotation, suspension and immediate revocation.
 - [ ] Audit all tenant, membership, invitation and terminal security changes atomically.

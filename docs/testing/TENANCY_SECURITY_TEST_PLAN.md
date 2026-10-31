@@ -1,6 +1,6 @@
 # Tenant Isolation and Identity Verification Plan
 
-**Status:** Required M2 test specification. The PostgreSQL integration slice now covers cross-tenant visibility across users, identities, sessions, tenants, stores, memberships, invitations, terminals, assignments and audit events; write denial through application privileges/RLS; transaction-local context reset and tenant switching on pooled connection reuse; selected composite-FK checks; audit actor attribution; session lifecycle; and atomic tenant bootstrap with first store, OWNER membership, and audit. Full authorization, invitation, worker and API-level coverage remains pending.
+**Status:** Required M2 test specification. The PostgreSQL integration slice now covers cross-tenant visibility across users, identities, sessions, tenants, stores, memberships, invitations, terminals, assignments and audit events; write denial through application privileges/RLS; transaction-local context reset and tenant switching on pooled connection reuse; selected composite-FK checks; audit actor attribution; session lifecycle; atomic tenant bootstrap; and invitation create/revoke/accept with token-hash storage, verified-identity binding, concurrent one-time acceptance, role denial, and audit. Full authorization, worker and API-level coverage remains pending.
 
 ## PostgreSQL isolation tests
 
@@ -49,10 +49,13 @@ Test API endpoints directly; do not rely on UI hiding controls.
 ## Invitation tests
 
 - Expired and revoked invitations fail.
+- Raw token is returned once; only its SHA-256 hash is stored.
 - Token is one-time and replay fails under concurrency.
-- Role grant cannot exceed inviter's permission.
-- Invitation is bound to intended identity where configured.
+- Role grant cannot exceed inviter's permission; OWNER cannot be granted by ordinary invitation.
+- Invitation is bound to the intended verified identity.
+- Revocation and acceptance are atomic and write audit events.
 - Concurrent acceptance creates one membership only.
+- Delivery provider and endpoint rate limiting are verified when selected and implemented.
 
 ## Terminal tests
 
