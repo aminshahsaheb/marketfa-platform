@@ -8,6 +8,18 @@ CREATE POLICY tenant_admin_owner_membership_update ON tenant_memberships
   USING (tenant_id = app_current_tenant_id())
   WITH CHECK (tenant_id = app_current_tenant_id());
 
+CREATE POLICY tenant_admin_owner_identity_tenant_read ON auth_identities
+  FOR SELECT TO marketfa_tenant_admin_owner
+  USING (
+    user_id = app_current_user_id()
+    OR EXISTS (
+      SELECT 1
+      FROM public.tenant_memberships AS membership
+      WHERE membership.user_id = auth_identities.user_id
+        AND membership.tenant_id = app_current_tenant_id()
+    )
+  );
+
 -- A removed or suspended user cannot receive a new ordinary invitation.
 -- Keep this check in the command boundary, not only in the HTTP service.
 CREATE OR REPLACE FUNCTION tenant_invitation_create(
