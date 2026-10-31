@@ -46,7 +46,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] End-to-end API authorization matrix for every role and implemented endpoint.
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
-- [ ] Atomic tenant bootstrap: tenant + first store + OWNER membership.
+- [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
 - [ ] Invitation create/revoke/accept: hashed token, expiry, identity binding, replay/concurrency protection.
 - [ ] Membership role change, suspension and removal; protect the last active OWNER.
 - [ ] Terminal registration, credential rotation, suspension and immediate revocation.
