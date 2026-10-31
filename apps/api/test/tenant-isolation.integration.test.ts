@@ -200,6 +200,35 @@ test(
         );
         assert.equal(hidden.rowCount, 0);
 
+        const hiddenTenant = await client.query(
+          "SELECT id FROM tenants WHERE id = $1",
+          [tenantB],
+        );
+        assert.equal(hiddenTenant.rowCount, 0);
+
+        const hiddenMembership = await client.query(
+          "SELECT user_id FROM tenant_memberships WHERE tenant_id = $1",
+          [tenantB],
+        );
+        assert.equal(hiddenMembership.rowCount, 0);
+
+        const crossTenantUpdate = await client.query(
+          "UPDATE stores SET name = 'Cross-tenant mutation' WHERE tenant_id = $1",
+          [tenantB],
+        );
+        assert.equal(crossTenantUpdate.rowCount, 0);
+
+        const crossTenantDelete = await client.query(
+          "DELETE FROM stores WHERE tenant_id = $1",
+          [tenantB],
+        );
+        assert.equal(crossTenantDelete.rowCount, 0);
+
+        await assertDenied(
+          "INSERT INTO stores (tenant_id, name) VALUES ($1, 'Cross-tenant insert')",
+          [tenantB],
+        );
+
         await assertDenied(
           "UPDATE tenant_memberships SET role = 'OWNER' WHERE tenant_id = $1 AND user_id = $2",
           [tenantA, userC],
@@ -232,8 +261,20 @@ test(
           "SELECT set_config('app.current_user_id', $1, true)",
           [userA],
         );
-        const noTenantContext = await reused.query("SELECT id FROM stores");
+        const noTenantContext = await reused.query(
+          "SELECT id FROM stores",
+        );
         assert.equal(noTenantContext.rowCount, 0);
+        const leakedTenantContext = await reused.query(
+          "SELECT app_current_tenant_id() AS tenant_id",
+        );
+        assert.equal(leakedTenantContext.rows[0]?.tenant_id, null);
+        await reused.query(
+          "SELECT set_config('app.current_tenant_id', $1, true)",
+          [tenantB],
+        );
+        const tenantBOnly = await reused.query("SELECT id FROM stores");
+        assert.deepEqual(tenantBOnly.rows.map((row) => row.id), [storeB]);
         await reused.query("ROLLBACK");
       } finally {
         reused.release();
