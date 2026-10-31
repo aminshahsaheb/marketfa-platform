@@ -111,7 +111,7 @@ test(
         invited_by_user_id: string;
       }>(
         "SELECT role, status, invited_by_user_id FROM tenant_memberships WHERE id = $1",
-        [accepted.membershipId],
+        [accepted.value.membershipId],
       );
       assert.deepEqual(membership.rows[0], {
         role: "CASHIER",
