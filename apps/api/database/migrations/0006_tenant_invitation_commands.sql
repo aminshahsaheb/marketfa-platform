@@ -19,6 +19,17 @@ CREATE POLICY tenant_admin_owner_invitation_read ON tenant_invitations
   FOR SELECT TO marketfa_tenant_admin_owner
   USING (tenant_id = app_current_tenant_id());
 
+-- The acceptance command must locate an invitation by its hash before it
+-- knows the tenant. The hash is high entropy and only the command owner can
+-- use this policy; the ordinary runtime role has no direct table privileges.
+CREATE POLICY tenant_admin_owner_invitation_lookup ON tenant_invitations
+  FOR SELECT TO marketfa_tenant_admin_owner
+  USING (true);
+
+CREATE UNIQUE INDEX tenant_invitations_one_pending_identifier_uq
+  ON tenant_invitations (tenant_id, intended_identifier)
+  WHERE status = 'PENDING';
+
 CREATE POLICY tenant_admin_owner_invitation_insert ON tenant_invitations
   FOR INSERT TO marketfa_tenant_admin_owner
   WITH CHECK (tenant_id = app_current_tenant_id());
@@ -91,7 +102,8 @@ BEGIN
     AND membership.status = 'ACTIVE'
     AND account.status = 'ACTIVE'
     AND tenant.status = 'ACTIVE'
-  FOR SHARE OF membership, tenant;
+  FOR SHARE OF membership
+  FOR UPDATE OF tenant;
 
   IF NOT FOUND OR inviter_role <> 'OWNER' THEN
     RAISE EXCEPTION 'Invitation permission denied'
@@ -112,13 +124,18 @@ BEGIN
       USING ERRCODE = '23505';
   END IF;
 
+  UPDATE public.tenant_invitations
+  SET status = 'EXPIRED'
+  WHERE tenant_id = p_tenant_id
+    AND status = 'PENDING'
+    AND expires_at <= statement_timestamp();
+
   IF EXISTS (
     SELECT 1
     FROM public.tenant_invitations AS invitation
     WHERE invitation.tenant_id = p_tenant_id
       AND invitation.intended_identifier = normalized_identifier
       AND invitation.status = 'PENDING'
-      AND invitation.expires_at > statement_timestamp()
   ) THEN
     RAISE EXCEPTION 'A pending invitation already exists'
       USING ERRCODE = '23505';
