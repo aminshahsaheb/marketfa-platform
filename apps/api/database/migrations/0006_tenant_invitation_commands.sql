@@ -92,6 +92,12 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  -- Serialize invitation creation for this tenant without granting UPDATE
+  -- privileges on membership or tenant tables to the command owner.
+  PERFORM pg_advisory_xact_lock(
+    hashtextextended(p_tenant_id::TEXT, 0)
+  );
+
   SELECT membership.role
   INTO inviter_role
   FROM public.tenant_memberships AS membership
@@ -101,9 +107,7 @@ BEGIN
     AND membership.user_id = actor_id
     AND membership.status = 'ACTIVE'
     AND account.status = 'ACTIVE'
-    AND tenant.status = 'ACTIVE'
-  FOR SHARE OF membership
-  FOR UPDATE OF tenant;
+    AND tenant.status = 'ACTIVE';
 
   IF NOT FOUND OR inviter_role <> 'OWNER' THEN
     RAISE EXCEPTION 'Invitation permission denied'
