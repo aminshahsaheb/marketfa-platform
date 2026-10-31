@@ -1,6 +1,6 @@
 # Tenant Isolation and Identity Verification Plan
 
-**Status:** Required M2 test specification; a first PostgreSQL integration slice is implemented on `feat/m2-tenant-core`. Full authorization, session, invitation, worker and API-level coverage remains pending.
+**Status:** Required M2 test specification. The PostgreSQL integration slice now covers cross-tenant read/write denial, transaction-local context reset on pooled connection reuse, role privilege boundaries, selected composite-FK checks, audit actor attribution, and session lifecycle. Full authorization, invitation, worker and API-level coverage remains pending.
 
 ## PostgreSQL isolation tests
 
