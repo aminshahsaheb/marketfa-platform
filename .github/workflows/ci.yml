@@ -45,10 +45,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check formatting for auth files
         run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
-      - name: Show canonical formatting for RLS test
-        run: |
-          pnpm exec prettier --write apps/api/test/tenant-isolation.integration.test.ts
-          git diff -- apps/api/test/tenant-isolation.integration.test.ts
+      - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - name: Bootstrap non-superuser runtime role
