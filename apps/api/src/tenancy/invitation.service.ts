@@ -7,7 +7,11 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service";
+import {
+  DatabaseService,
+  TenantAccessDeniedError,
+  TenantPermissionDeniedError,
+} from "../database/database.service";
 import type { AuthenticatedActor } from "../database/database.service";
 import type { TenantRole } from "./permissions";
 
@@ -46,6 +50,13 @@ function parseInviteToken(token: unknown): Buffer {
 }
 
 function mapCommandError(error: unknown): never {
+  if (
+    error instanceof TenantAccessDeniedError ||
+    error instanceof TenantPermissionDeniedError
+  ) {
+    throw new ForbiddenException("You cannot perform this invitation action.");
+  }
+
   const code =
     typeof error === "object" && error !== null && "code" in error
       ? String((error as { code: unknown }).code)
