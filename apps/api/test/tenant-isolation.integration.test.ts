@@ -218,11 +218,9 @@ test(
         );
         assert.equal(crossTenantUpdate.rowCount, 0);
 
-        const crossTenantDelete = await client.query(
-          "DELETE FROM stores WHERE tenant_id = $1",
-          [tenantB],
-        );
-        assert.equal(crossTenantDelete.rowCount, 0);
+        await assertDenied("DELETE FROM stores WHERE tenant_id = $1", [
+          tenantB,
+        ]);
 
         await assertDenied(
           "INSERT INTO stores (tenant_id, name) VALUES ($1, 'Cross-tenant insert')",
@@ -261,9 +259,7 @@ test(
           "SELECT set_config('app.current_user_id', $1, true)",
           [userA],
         );
-        const noTenantContext = await reused.query(
-          "SELECT id FROM stores",
-        );
+        const noTenantContext = await reused.query("SELECT id FROM stores");
         assert.equal(noTenantContext.rowCount, 0);
         const leakedTenantContext = await reused.query(
           "SELECT app_current_tenant_id() AS tenant_id",
@@ -274,7 +270,10 @@ test(
           [tenantB],
         );
         const tenantBOnly = await reused.query("SELECT id FROM stores");
-        assert.deepEqual(tenantBOnly.rows.map((row) => row.id), [storeB]);
+        assert.deepEqual(
+          tenantBOnly.rows.map((row) => row.id),
+          [storeB],
+        );
         await reused.query("ROLLBACK");
       } finally {
         reused.release();
