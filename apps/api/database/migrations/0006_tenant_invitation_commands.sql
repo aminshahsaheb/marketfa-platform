@@ -138,7 +138,7 @@ BEGIN
     SELECT 1
     FROM public.tenant_invitations AS invitation
     WHERE invitation.tenant_id = p_tenant_id
-      AND invitation.intended_identifier = normalized_identifier
+      AND invitation.intended_identifier = normalized_invitee_identifier
       AND invitation.status = 'PENDING'
   ) THEN
     RAISE EXCEPTION 'A pending invitation already exists'
