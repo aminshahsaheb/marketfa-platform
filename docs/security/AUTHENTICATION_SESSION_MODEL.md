@@ -16,7 +16,21 @@
 
 These are initial security defaults, not customer-configurable settings yet. Review them before production based on threat model, device persistence, and pilot needs.
 
-Not yet implemented: an AuthProvider, login/registration/recovery endpoints, cookie issuance/clearing, CSRF/origin checks, rate limiting, step-up authentication and global session revocation after credential reset. Do not expose the session service as an HTTP endpoint until those controls are implemented.
+## HTTP request boundary (provider-neutral)
+
+The next implementation slice adds a global session guard that reads only the `marketfa_session` cookie, resolves it through the server-side session store, and attaches the actor to the request. Public routes must be marked explicitly. Tenant membership and permissions remain checked inside the tenant database boundary.
+
+Unsafe cookie-authenticated methods require:
+
+- an exact Origin match from `CSRF_TRUSTED_ORIGINS`;
+- a 256-bit CSRF token in the readable `marketfa_csrf` cookie and matching `X-CSRF-Token` header;
+- constant-time token comparison.
+
+Cookie helpers use `HttpOnly`, `SameSite=Lax`, `Path=/api/v1`, and `Secure` in production for the session cookie. The CSRF cookie is readable by browser code and uses Path=/ so a PWA served from the site root can read it. A public GET `/api/v1/auth/csrf` endpoint sets this cookie with a 24-hour lifetime and `Cache-Control: no-store`. Cookie issuance and clearing are helper functions only; login/logout HTTP endpoints are not implemented.
+
+These guards do not select or verify an authentication provider. The provider must authenticate the identity before calling session creation.
+
+Not yet implemented: an AuthProvider, login/registration/recovery endpoints, cookie issuance/clearing endpoints, rate limiting, step-up authentication and global session revocation after credential reset.
 
 ## Session model
 
