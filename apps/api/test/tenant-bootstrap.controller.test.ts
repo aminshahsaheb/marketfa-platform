@@ -10,7 +10,11 @@ test("tenant bootstrap endpoint validates and normalizes request fields", async 
   const service = {
     create: async (_actor: unknown, input: unknown) => {
       calls.push(input);
-      return { tenantId: "tenant-1", storeId: "store-1", ownerMembershipId: "membership-1" };
+      return {
+        tenantId: "tenant-1",
+        storeId: "store-1",
+        ownerMembershipId: "membership-1",
+      };
     },
   };
   const controller = new TenantBootstrapController(
