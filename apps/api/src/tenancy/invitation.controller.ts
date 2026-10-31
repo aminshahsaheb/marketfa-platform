@@ -63,7 +63,11 @@ function parseToken(value: unknown): string {
   ) {
     throw new BadRequestException("A valid invitation token is required.");
   }
-  return (value as Record<string, string>).token;
+  const token = (value as Record<string, unknown>).token;
+  if (typeof token !== "string") {
+    throw new BadRequestException("A valid invitation token is required.");
+  }
+  return token;
 }
 
 @Controller("tenants/:tenantId/invitations")
