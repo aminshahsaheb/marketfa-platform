@@ -142,7 +142,7 @@ test(
         ForbiddenException,
       );
 
-      const invalidInput = await assert.rejects(
+      await assert.rejects(
         database.withAuthenticatedActor(
           { userId: activeUserId },
           async (client) =>
@@ -152,7 +152,6 @@ test(
             ),
         ),
       );
-      assert.ok(invalidInput);
     } finally {
       if (createdTenantId) {
         await owner.query(
