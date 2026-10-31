@@ -16,6 +16,13 @@
 - Audit insert policy rejects an actor ID different from the transaction actor.
 - Terminal assignment composite foreign key rejects a terminal/store mismatch.
 - Session rotation foreign key rejects a parent session belonging to another user.
+- Ordinary runtime cannot execute the session-creation function; the separate auth-runtime role can execute it but cannot read/write session tables directly.
+- Auth-runtime resolves only verified provider identities; unverified or inactive identities cannot issue sessions.
+- Session API stores only a SHA-256 hash of the 256-bit raw token.
+- Session resolve enforces active user, absolute expiry, and idle expiry.
+- Session rotation revokes the parent and creates a same-user child atomically.
+- Reuse of a rotated parent token revokes the descendant session family.
+- User deactivation revokes all active sessions; reactivation does not revive them.
 
 ## Authorization matrix
 

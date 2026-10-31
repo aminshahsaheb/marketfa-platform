@@ -37,10 +37,11 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 ## M2 — Identity and tenancy
 
-- [ ] Authentication/session lifecycle and server-side actor resolution.
+- [x] Provider-neutral opaque session storage, resolution, rotation and revocation core.
+- [ ] Authentication provider, login/recovery endpoints, HTTP cookie/CSRF integration and server-derived request actor.
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
-- [ ] Complete PostgreSQL RLS, privilege, composite-FK and pooled-connection verification.
+- [ ] Complete PostgreSQL RLS, privilege, composite-FK and pooled-connection verification across all business endpoints and background jobs.
 - [ ] Invitation, membership lifecycle, terminal revocation and audit use cases.
 - [ ] End-to-end API authorization matrix for every role.
 

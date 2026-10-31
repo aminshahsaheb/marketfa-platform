@@ -4,7 +4,7 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: M1 is merged. M2 tenant and identity design is merged. Tenant-core implementation is in progress. This repository is not production-ready and must not be used for live financial records.
+> Status: M1 and the M2 tenant-core foundation are merged. Provider-neutral session core is under review. Authentication provider, HTTP login/cookie flows, tenant onboarding, and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
 
@@ -51,7 +51,7 @@ docker-compose.yml   local PostgreSQL
 5. Apply database migrations with `pnpm --filter @marketfa/api db:migrate`.
 6. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
 
-The API connects as `marketfa_runtime`, a non-superuser role without RLS bypass. Migrations use the separate `marketfa_owner` connection. Never use the migration owner credentials for normal API requests in production.
+Normal tenant-scoped API operations use `marketfa_runtime`, a non-inheriting non-superuser role without RLS bypass. Session resolution/rotation/revocation use that role; session creation uses a separate `marketfa_auth_runtime` login with execute-only access to the session-creation function. Both roles have no direct session-table access. Migrations use the separate `marketfa_owner` connection. Never use migration-owner credentials for application traffic.
 
 ## Non-goals for the first release
 

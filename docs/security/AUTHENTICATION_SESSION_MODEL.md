@@ -1,6 +1,22 @@
 # Authentication and Session Security Model
 
-**Status:** Security requirements accepted; login mechanism not selected.
+**Status:** Provider-neutral opaque session core implemented; authentication provider and HTTP cookie integration remain open.
+
+## Implemented session core
+
+- Generate 256-bit cryptographically random base64url bearer tokens.
+- Store only SHA-256 token hashes in PostgreSQL; the raw token is returned once to the trusted API caller.
+- Enforce a 30-day absolute lifetime and a 7-day idle timeout as initial engineering defaults.
+- Rotate a session atomically: revoke the old token and create a same-user child session in one database function call.
+- Detect reuse of a rotated token and revoke the descendant session family. Clients must serialize refresh attempts; duplicate refreshes intentionally require reauthentication.
+- Revoke a session on logout.
+- Reject malformed, expired, idle, revoked, or suspended-user sessions.
+- Automatically revoke all sessions when a user changes from ACTIVE to a non-active status.
+- Use a non-login, non-superuser, non-BYPASSRLS function-owner role with narrowly scoped RLS policies. The ordinary runtime login can resolve, rotate, and revoke sessions but cannot create them or directly read/write session rows. A separate non-inheriting auth-runtime login can resolve verified provider identities and execute session creation; session creation accepts a verified auth-identity record rather than an arbitrary user ID. The auth-runtime login has no direct table access.
+
+These are initial security defaults, not customer-configurable settings yet. Review them before production based on threat model, device persistence, and pilot needs.
+
+Not yet implemented: an AuthProvider, login/registration/recovery endpoints, cookie issuance/clearing, CSRF/origin checks, rate limiting, step-up authentication and global session revocation after credential reset. Do not expose the session service as an HTTP endpoint until those controls are implemented.
 
 ## Session model
 
