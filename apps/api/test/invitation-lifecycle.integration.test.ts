@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Pool } from "pg";
 import test from "node:test";
@@ -63,6 +63,16 @@ test(
       assert.equal(created.intendedIdentifier, "invitee@example.test");
       assert.equal(created.role, "CASHIER");
       assert.ok(created.token.length === 43);
+      const storedToken = await owner.query<{ token_hash: Buffer }>(
+        "SELECT token_hash FROM tenant_invitations WHERE id = $1",
+        [created.invitationId],
+      );
+      assert.deepEqual(
+        storedToken.rows[0]?.token_hash,
+        createHash("sha256")
+          .update(Buffer.from(created.token, "base64url"))
+          .digest(),
+      );
 
       await assert.rejects(
         invitationService.create({ userId: inviterId }, tenant.tenantId, {
