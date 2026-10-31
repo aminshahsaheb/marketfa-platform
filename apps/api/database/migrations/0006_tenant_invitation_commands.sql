@@ -128,11 +128,11 @@ BEGIN
       USING ERRCODE = '23505';
   END IF;
 
-  UPDATE public.tenant_invitations
+  UPDATE public.tenant_invitations AS invitation
   SET status = 'EXPIRED'
-  WHERE tenant_id = p_tenant_id
-    AND status = 'PENDING'
-    AND expires_at <= statement_timestamp();
+  WHERE invitation.tenant_id = p_tenant_id
+    AND invitation.status = 'PENDING'
+    AND invitation.expires_at <= statement_timestamp();
 
   IF EXISTS (
     SELECT 1
