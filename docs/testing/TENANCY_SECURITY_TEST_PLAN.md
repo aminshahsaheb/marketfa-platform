@@ -1,6 +1,6 @@
 # Tenant Isolation and Identity Verification Plan
 
-**Status:** Required M2 test specification. The PostgreSQL integration slice now covers cross-tenant visibility across users, identities, sessions, tenants, stores, memberships, invitations, terminals, assignments and audit events; write denial through application privileges/RLS; transaction-local context reset and tenant switching on pooled connection reuse; selected composite-FK checks; audit actor attribution; and session lifecycle. Full authorization, invitation, worker and API-level coverage remains pending.
+**Status:** Required M2 test specification. The PostgreSQL integration slice now covers cross-tenant visibility across users, identities, sessions, tenants, stores, memberships, invitations, terminals, assignments and audit events; write denial through application privileges/RLS; transaction-local context reset and tenant switching on pooled connection reuse; selected composite-FK checks; audit actor attribution; session lifecycle; and atomic tenant bootstrap with first store, OWNER membership, and audit. Full authorization, invitation, worker and API-level coverage remains pending.
 
 ## PostgreSQL isolation tests
 
