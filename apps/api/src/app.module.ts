@@ -13,6 +13,8 @@ import {
   TenantInvitationController,
 } from "./tenancy/invitation.controller";
 import { InvitationService } from "./tenancy/invitation.service";
+import { MembershipController } from "./tenancy/membership.controller";
+import { MembershipService } from "./tenancy/membership.service";
 
 @Module({
   imports: [DatabaseModule],
@@ -22,11 +24,13 @@ import { InvitationService } from "./tenancy/invitation.service";
     TenantBootstrapController,
     TenantInvitationController,
     InvitationAcceptanceController,
+    MembershipController,
   ],
   providers: [
     HealthService,
     TenantBootstrapService,
     InvitationService,
+    MembershipService,
     { provide: APP_GUARD, useClass: SessionAuthGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
