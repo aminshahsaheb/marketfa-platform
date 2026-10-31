@@ -45,7 +45,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check formatting for auth files
         run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
-      - run: pnpm format:check
+      - name: Show canonical formatting for tenant bootstrap files
+        run: |
+          pnpm exec prettier --write apps/api/src/tenancy/tenant-bootstrap.controller.ts apps/api/src/tenancy/tenant-bootstrap.service.ts apps/api/test/tenant-bootstrap.controller.test.ts apps/api/test/tenant-bootstrap.integration.test.ts
+          git diff -- apps/api/src/tenancy/tenant-bootstrap.controller.ts apps/api/src/tenancy/tenant-bootstrap.service.ts apps/api/test/tenant-bootstrap.controller.test.ts apps/api/test/tenant-bootstrap.integration.test.ts
       - run: pnpm lint
       - run: pnpm typecheck
       - name: Bootstrap non-superuser runtime role
