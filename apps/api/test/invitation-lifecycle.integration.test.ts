@@ -18,7 +18,7 @@ test(
   async () => {
     await runMigrations();
     const owner = new Pool({ connectionString: migrationUrl, max: 1 });
-    const runtime = new Pool({ connectionString: runtimeUrl, max: 1 });
+    const runtime = new Pool({ connectionString: runtimeUrl, max: 4 });
     const inviterId = randomUUID();
     const inviteeId = randomUUID();
     const revokedInviteeId = randomUUID();
@@ -86,13 +86,19 @@ test(
         ForbiddenException,
       );
 
-      const accepted = await invitationService.accept(
-        { userId: inviteeId },
-        created.token,
+      const acceptanceResults = await Promise.allSettled([
+        invitationService.accept({ userId: inviteeId }, created.token),
+        invitationService.accept({ userId: inviteeId }, created.token),
+      ]);
+      const successfulAcceptances = acceptanceResults.filter(
+        (result) => result.status === "fulfilled",
       );
-      assert.equal(accepted.tenantId, tenant.tenantId);
-      assert.equal(accepted.role, "CASHIER");
-      assert.ok(accepted.membershipId);
+      assert.equal(successfulAcceptances.length, 1);
+      const accepted = successfulAcceptances[0];
+      assert.ok(accepted && accepted.status === "fulfilled");
+      assert.equal(accepted.value.tenantId, tenant.tenantId);
+      assert.equal(accepted.value.role, "CASHIER");
+      assert.ok(accepted.value.membershipId);
 
       await assert.rejects(
         invitationService.accept({ userId: inviteeId }, created.token),
