@@ -31,10 +31,11 @@ export class TenantBootstrapService {
           created_tenant_id: string;
           created_store_id: string;
           owner_membership_id: string;
-        }>(
-          "SELECT * FROM public.tenant_bootstrap($1, $2, $3)",
-          [input.displayName, input.legalName, input.storeName],
-        ),
+        }>("SELECT * FROM public.tenant_bootstrap($1, $2, $3)", [
+          input.displayName,
+          input.legalName,
+          input.storeName,
+        ]),
     );
 
     const row = result.rows[0];
