@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { hasPermission } from "../src/tenancy/permissions";
+import type { Permission, TenantRole } from "../src/tenancy/permissions";
 
 test("owner can access all defined permissions", () => {
   const permissions = [
@@ -67,4 +68,70 @@ test("viewer is read-only and cannot execute financial or operational writes", (
   assert.equal(hasPermission("VIEWER", "pos:sell"), false);
   assert.equal(hasPermission("VIEWER", "ledger:read"), false);
   assert.equal(hasPermission("VIEWER", "reports:financial"), false);
+});
+
+test("every role matches the complete permission matrix", () => {
+  const permissions: readonly Permission[] = [
+    "tenant:manage",
+    "members:manage",
+    "catalog:read",
+    "catalog:write",
+    "purchasing:write",
+    "inventory:read",
+    "inventory:write",
+    "pos:sell",
+    "pos:discount",
+    "refund:request",
+    "refund:approve",
+    "shift:operate",
+    "shift:manage",
+    "ledger:read",
+    "journal:draft",
+    "journal:approve",
+    "period:close",
+    "reports:read",
+    "reports:financial",
+    "backup:manage",
+  ];
+
+  const expected: Readonly<Record<TenantRole, ReadonlySet<Permission>>> = {
+    OWNER: new Set(permissions),
+    MANAGER: new Set([
+      "catalog:read",
+      "catalog:write",
+      "purchasing:write",
+      "inventory:read",
+      "inventory:write",
+      "pos:sell",
+      "pos:discount",
+      "refund:request",
+      "refund:approve",
+      "shift:operate",
+      "shift:manage",
+      "reports:read",
+    ]),
+    CASHIER: new Set([
+      "catalog:read",
+      "pos:sell",
+      "refund:request",
+      "shift:operate",
+    ]),
+    ACCOUNTANT: new Set([
+      "ledger:read",
+      "journal:draft",
+      "reports:read",
+      "reports:financial",
+    ]),
+    VIEWER: new Set(["catalog:read", "inventory:read", "reports:read"]),
+  };
+
+  for (const role of Object.keys(expected) as TenantRole[]) {
+    for (const permission of permissions) {
+      assert.equal(
+        hasPermission(role, permission),
+        expected[role].has(permission),
+        `${role} -> ${permission}`,
+      );
+    }
+  }
 });
