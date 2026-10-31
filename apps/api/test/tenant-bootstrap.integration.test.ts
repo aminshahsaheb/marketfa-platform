@@ -146,18 +146,18 @@ test(
         database.withAuthenticatedActor(
           { userId: activeUserId },
           async (client) =>
-            client.query(
-              "SELECT * FROM public.tenant_bootstrap($1, $2, $3)",
-              ["   ", null, "Store"],
-            ),
+            client.query("SELECT * FROM public.tenant_bootstrap($1, $2, $3)", [
+              "   ",
+              null,
+              "Store",
+            ]),
         ),
       );
     } finally {
       if (createdTenantId) {
-        await owner.query(
-          "DELETE FROM audit_events WHERE tenant_id = $1",
-          [createdTenantId],
-        );
+        await owner.query("DELETE FROM audit_events WHERE tenant_id = $1", [
+          createdTenantId,
+        ]);
         await owner.query("DELETE FROM stores WHERE tenant_id = $1", [
           createdTenantId,
         ]);
