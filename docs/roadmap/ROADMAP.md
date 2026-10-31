@@ -39,17 +39,24 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 - [x] Provider-neutral opaque session storage, resolution, rotation and revocation core.
 - [x] Server-side request actor resolution and CSRF enforcement primitives.
-- [ ] Authentication provider, login/recovery endpoints, cookie issuance/clearing and complete browser integration.
+- [ ] Authentication provider, login/recovery endpoints, session-cookie issuance/clearing and complete browser integration (login method remains a product decision).
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
 - [x] Exhaustive unit-test matrix for every defined role and permission.
 - [ ] End-to-end API authorization matrix for every role and implemented endpoint.
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
-- [ ] Invitation, membership lifecycle, terminal revocation and audit use cases.
+- [ ] Atomic tenant bootstrap: tenant + first store + OWNER membership.
+- [ ] Invitation create/revoke/accept: hashed token, expiry, identity binding, replay/concurrency protection.
+- [ ] Membership role change, suspension and removal; protect the last active OWNER.
+- [ ] Terminal registration, credential rotation, suspension and immediate revocation.
+- [ ] Audit all tenant, membership, invitation and terminal security changes atomically.
+
 - [ ] End-to-end API authorization matrix for every role.
 
-**Exit:** cross-tenant access tests fail closed.
+**Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → audit coverage → authentication provider and browser login integration. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
+
+**Exit:** cross-tenant access tests fail closed; membership and terminal revocation take effect immediately; invitation acceptance is atomic; the API authorization matrix passes.
 
 ## M3 — Accounting kernel
 
