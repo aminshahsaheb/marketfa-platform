@@ -28,21 +28,14 @@ function readText(
   }
 
   const normalized = value.trim();
-  if (
-    (required && normalized.length === 0) ||
-    normalized.length > maxLength
-  ) {
+  if ((required && normalized.length === 0) || normalized.length > maxLength) {
     throw new BadRequestException(`${field} has an invalid length.`);
   }
   return normalized || null;
 }
 
 function parseInput(value: unknown): TenantBootstrapInput {
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    Array.isArray(value)
-  ) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new BadRequestException("A JSON object is required.");
   }
 
@@ -66,10 +59,7 @@ export class TenantBootstrapController {
   ) {}
 
   @Post()
-  create(
-    @CurrentActor() actor: RequestActor,
-    @Body() body: unknown,
-  ) {
+  create(@CurrentActor() actor: RequestActor, @Body() body: unknown) {
     return this.tenants.create(actor, parseInput(body));
   }
 }
