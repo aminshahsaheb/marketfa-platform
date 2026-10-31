@@ -39,6 +39,14 @@ CREATE POLICY tenant_admin_owner_invitation_update ON tenant_invitations
   USING (tenant_id = app_current_tenant_id())
   WITH CHECK (tenant_id = app_current_tenant_id());
 
+-- Acceptance must lock a token-hash match before it knows the tenant context.
+-- This broad policy is only for the non-login command owner; the function
+-- validates the token, status, identity, and tenant before each state change.
+CREATE POLICY tenant_admin_owner_invitation_command_update ON tenant_invitations
+  FOR UPDATE TO marketfa_tenant_admin_owner
+  USING (true)
+  WITH CHECK (true);
+
 CREATE POLICY tenant_admin_owner_identity_read ON auth_identities
   FOR SELECT TO marketfa_tenant_admin_owner
   USING (user_id = app_current_user_id());
