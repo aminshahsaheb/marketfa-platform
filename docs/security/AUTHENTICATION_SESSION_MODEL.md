@@ -1,6 +1,6 @@
 # Authentication and Session Security Model
 
-**Status:** Provider-neutral opaque session core implemented; authentication provider and HTTP cookie integration remain open.
+**Status:** Provider-neutral opaque session core, server-side request actor guard, CSRF guard, cookie helpers, and CSRF bootstrap endpoint are implemented and merged. Authentication provider and login/session issuance endpoints remain open.
 
 ## Implemented session core
 
@@ -18,7 +18,7 @@ These are initial security defaults, not customer-configurable settings yet. Rev
 
 ## HTTP request boundary (provider-neutral)
 
-The next implementation slice adds a global session guard that reads only the `marketfa_session` cookie, resolves it through the server-side session store, and attaches the actor to the request. Public routes must be marked explicitly. Tenant membership and permissions remain checked inside the tenant database boundary.
+The global session guard reads only the `marketfa_session` cookie, resolves it through the server-side session store, and attaches the actor to the request. Public routes must be marked explicitly. Tenant membership and permissions remain checked inside the tenant database boundary. The global CSRF guard rejects unsafe methods unless the request has an exact trusted Origin and matching readable-cookie/header token.
 
 Unsafe cookie-authenticated methods require:
 
