@@ -143,4 +143,4 @@ REVOKE CREATE ON SCHEMA public FROM marketfa_tenant_admin_owner;
 
 REVOKE ALL ON FUNCTION tenant_bootstrap(TEXT, TEXT, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION tenant_bootstrap(TEXT, TEXT, TEXT)
-  TO marketfa_runtime;
+  TO marketfa_app;
