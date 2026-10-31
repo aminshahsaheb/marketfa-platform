@@ -16,7 +16,13 @@ import { InvitationService } from "./tenancy/invitation.service";
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [\n    HealthController,\n    CsrfController,\n    TenantBootstrapController,\n    TenantInvitationController,\n    InvitationAcceptanceController,\n  ],
+  controllers: [
+    HealthController,
+    CsrfController,
+    TenantBootstrapController,
+    TenantInvitationController,
+    InvitationAcceptanceController,
+  ],
   providers: [
     HealthService,
     TenantBootstrapService,\n    InvitationService,
