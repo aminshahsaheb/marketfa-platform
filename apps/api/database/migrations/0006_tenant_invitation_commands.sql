@@ -177,8 +177,7 @@ BEGIN
     'tenant.invitation.create',
     'tenant_invitation',
     new_invitation_id,
-    jsonb_build_object('role', p_role, 'intended_identifier', normalized_identifier,
-                       'expires_at', new_expires_at)
+    jsonb_build_object('role', p_role, 'expires_at', new_expires_at)
   );
 
   RETURN QUERY SELECT new_invitation_id, new_expires_at;
@@ -290,6 +289,11 @@ BEGIN
       AND account.status = 'ACTIVE'
       AND identity.verified_at IS NOT NULL
       AND lower(identity.normalized_identifier) = invitation_row.intended_identifier
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM public.tenants AS tenant
+    WHERE tenant.id = invitation_row.tenant_id
+      AND tenant.status = 'ACTIVE'
   ) THEN
     RAISE EXCEPTION 'Invitation identity does not match a verified identity'
       USING ERRCODE = '42501';
