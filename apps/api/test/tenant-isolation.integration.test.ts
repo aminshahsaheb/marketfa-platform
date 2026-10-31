@@ -212,11 +212,10 @@ test(
         );
         assert.equal(hiddenMembership.rowCount, 0);
 
-        const crossTenantUpdate = await client.query(
+        await assertDenied(
           "UPDATE stores SET name = 'Cross-tenant mutation' WHERE tenant_id = $1",
           [tenantB],
         );
-        assert.equal(crossTenantUpdate.rowCount, 0);
 
         await assertDenied("DELETE FROM stores WHERE tenant_id = $1", [
           tenantB,
