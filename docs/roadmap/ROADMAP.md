@@ -42,7 +42,10 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Authentication provider, login/recovery endpoints, cookie issuance/clearing and complete browser integration.
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
-- [ ] Complete PostgreSQL RLS, privilege, composite-FK and pooled-connection verification across all business endpoints and background jobs.
+- [x] Exhaustive unit-test matrix for every defined role and permission.
+- [ ] End-to-end API authorization matrix for every role and implemented endpoint.
+- [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
+- [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [ ] Invitation, membership lifecycle, terminal revocation and audit use cases.
 - [ ] End-to-end API authorization matrix for every role.
 
