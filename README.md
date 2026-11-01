@@ -4,7 +4,7 @@
 
 MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
-> Status: M1 and the M2 tenant-core foundation are merged. Provider-neutral session core and request actor/CSRF guard are under review in stacked M2 PRs. Authentication provider, HTTP login/cookie flows, tenant onboarding, and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
+> Status: M1 and the M2 tenant-administration foundation are merged (PRs #4, #8–#15, #17–#20). Authentication provider, login/recovery and browser cookie flows are not complete. M3 accounting schema foundation is under review in PR #21; posting commands and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
 
@@ -27,7 +27,7 @@ MarketFa is being rebuilt as a secure, testable, multi-store platform. The legac
 
 **Launch profile:** Iran-first; Persian (fa-IR) and English (en). Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian. UI locale is independent from store jurisdiction, currency, timezone and tax profile. See [localization](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).
 
-See [architecture overview](docs/architecture/overview.md), [PRD](docs/product/PRD.md), [ADRs](docs/architecture/adr/), and [roadmap](docs/roadmap/ROADMAP.md).
+See [architecture overview](docs/architecture/overview.md), [PRD](docs/product/PRD.md), [ADRs](docs/architecture/adr/), [roadmap](docs/roadmap/ROADMAP.md), and [completion plan](docs/roadmap/COMPLETION_PLAN.md).
 
 ## Repository layout
 
