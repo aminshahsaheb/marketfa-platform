@@ -1,10 +1,3 @@
-pnpm exec prettier apps/api/test/industry-catalog.service.test.ts
-shell: /usr/bin/bash -e {0}
-env:
-  DATABASE_URL: ***localhost:5432/marketfa
-  DATABASE_URL_MIGRATION: ***localhost:5432/marketfa
-  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
-##[endgroup]
 import assert from "node:assert/strict";
 import test from "node:test";
 import { IndustryCatalogService } from "../src/tenancy/industry-catalog.service";

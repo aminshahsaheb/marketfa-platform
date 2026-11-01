@@ -43,7 +43,8 @@ export class TenantBootstrapService {
     actor: AuthenticatedActor,
     input: TenantBootstrapInput,
   ): Promise<TenantBootstrapResult> {
-    const locationName = input.locationName ?? input.storeName;
+    const locationName =
+      input.locationName ?? input.storeName;
     if (!locationName) {
       throw new BadRequestException(
         "A business location name is required.",
