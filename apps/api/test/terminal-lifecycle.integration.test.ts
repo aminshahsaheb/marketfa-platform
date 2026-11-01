@@ -131,6 +131,26 @@ test(
       );
       assert.equal(suspendedAgain.status, "SUSPENDED");
 
+      const activated = await terminals.activate(
+        { userId: ownerId },
+        tenant.tenantId,
+        created.terminalId,
+      );
+      assert.equal(activated.status, "ACTIVE");
+      const activatedAgain = await terminals.activate(
+        { userId: ownerId },
+        tenant.tenantId,
+        created.terminalId,
+      );
+      assert.equal(activatedAgain.status, "ACTIVE");
+
+      const suspendedAfterActivation = await terminals.suspend(
+        { userId: ownerId },
+        tenant.tenantId,
+        created.terminalId,
+      );
+      assert.equal(suspendedAfterActivation.status, "SUSPENDED");
+
       const revoked = await terminals.revoke(
         { userId: ownerId },
         tenant.tenantId,
@@ -171,6 +191,8 @@ test(
         [
           "tenant.terminal.register",
           "tenant.terminal.credential.rotate",
+          "tenant.terminal.suspend",
+          "tenant.terminal.activate",
           "tenant.terminal.suspend",
           "tenant.terminal.revoke",
         ].sort(),
