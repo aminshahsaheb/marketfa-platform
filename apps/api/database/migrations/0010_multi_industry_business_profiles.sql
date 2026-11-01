@@ -508,6 +508,20 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  IF p_store_name IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.industry_capability_defaults AS defaults
+    JOIN public.capability_catalog AS capability
+      ON capability.capability_key = defaults.capability_key
+     AND capability.status = 'ACTIVE'
+    WHERE defaults.industry_key = btrim(p_industry_key)
+      AND defaults.profile_version = selected_profile_version
+      AND defaults.capability_key = 'point_of_sale'
+  ) THEN
+    RAISE EXCEPTION 'Selected industry profile does not support a retail store/POS'
+      USING ERRCODE = '22023';
+  END IF;
+
   actor_id := public.app_current_user_id();
   IF actor_id IS NULL OR NOT EXISTS (
     SELECT 1
