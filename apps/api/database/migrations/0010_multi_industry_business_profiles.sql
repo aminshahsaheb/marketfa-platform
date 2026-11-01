@@ -674,7 +674,7 @@ BEGIN
     new_tenant_id,
     new_business_profile_id,
     btrim(p_location_name),
-    'OTHER',
+    CASE WHEN new_store_id IS NOT NULL THEN 'BRANCH' ELSE 'OTHER' END,
     new_store_id,
     actor_id
   )
