@@ -25,6 +25,8 @@ test(
     const userC = randomUUID();
     const tenantA = randomUUID();
     const tenantB = randomUUID();
+    const profileA = randomUUID();
+    const profileB = randomUUID();
     const storeA = randomUUID();
     const storeB = randomUUID();
     const storeA2 = randomUUID();
@@ -57,22 +59,29 @@ test(
         [tenantA, "Tenant A", userA, tenantB, "Tenant B", userB],
       );
       await owner.query(
-        "INSERT INTO stores (id, tenant_id, name) VALUES ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)",
+        "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
+        [tenantA, userA, tenantB, userB, userC],
+      );
+      await owner.query(
+        "INSERT INTO business_profiles (id, tenant_id, display_name, industry_key, industry_profile_version, created_by_user_id) VALUES ($1, $2, 'Tenant A', 'general-retail', 1, $3), ($4, $5, 'Tenant B', 'general-retail', 1, $6)",
+        [profileA, tenantA, userA, profileB, tenantB, userB],
+      );
+      await owner.query(
+        "INSERT INTO stores (id, tenant_id, name, business_profile_id) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)",
         [
           storeA,
           tenantA,
           "Store A",
+          profileA,
           storeB,
           tenantB,
           "Store B",
+          profileB,
           storeA2,
           tenantA,
           "Store A2",
+          profileA,
         ],
-      );
-      await owner.query(
-        "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($3, $4, 'OWNER', 'ACTIVE'), ($1, $5, 'CASHIER', 'ACTIVE')",
-        [tenantA, userA, tenantB, userB, userC],
       );
       await owner.query(
         "INSERT INTO auth_identities (id, user_id, provider_key, provider_subject, normalized_identifier, verified_at) VALUES ($1, $2, 'test-provider', 'tenant-a-subject', 'tenant-a@example.test', now()), ($3, $4, 'test-provider', 'tenant-b-subject', 'tenant-b@example.test', now())",
@@ -250,6 +259,11 @@ test(
           [tenantB],
         );
         assert.equal(hiddenTenant.rowCount, 0);
+        const hiddenBusinessProfile = await client.query(
+          "SELECT id FROM business_profiles WHERE id = $1",
+          [profileB],
+        );
+        assert.equal(hiddenBusinessProfile.rowCount, 0);
 
         const hiddenMembership = await client.query(
           "SELECT user_id FROM tenant_memberships WHERE tenant_id = $1",
@@ -330,8 +344,8 @@ test(
         ]);
 
         await assertDenied(
-          "INSERT INTO stores (tenant_id, name) VALUES ($1, 'Cross-tenant insert')",
-          [tenantB],
+          "INSERT INTO stores (tenant_id, name, business_profile_id) VALUES ($1, 'Cross-tenant insert', $2)",
+          [tenantB, profileB],
         );
 
         await assertDenied(
@@ -400,6 +414,14 @@ test(
       );
       await owner.query(
         "DELETE FROM stores WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
+      await owner.query(
+        "DELETE FROM business_profile_capabilities WHERE tenant_id = ANY($1::uuid[])",
+        [[tenantA, tenantB]],
+      );
+      await owner.query(
+        "DELETE FROM business_profiles WHERE tenant_id = ANY($1::uuid[])",
         [[tenantA, tenantB]],
       );
       await owner.query("DELETE FROM tenants WHERE id = ANY($1::uuid[])", [
