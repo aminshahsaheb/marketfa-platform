@@ -54,6 +54,7 @@ These are domain packs. A business may enable more than one pack. Do not force e
 ## Data model direction
 
 Add a business-profile aggregate under tenant scope. At minimum it needs:
+
 - business_profiles: tenant, display name, industry key, profile version, status and legal-profile references.
 - business_locations: business profile, address/timezone and operational settings.
 - business_profile_capabilities: enabled capability key, configuration version, activation actor/time and status.
