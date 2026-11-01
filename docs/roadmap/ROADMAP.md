@@ -67,7 +67,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 
 ## M0.5 — Multi-industry business model
 
-**Status on main:** architecture baseline is merged in PR #27. The first implementation slice is in draft PR #28 with exact-head CI green; it is not merged.
+**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes additional store-eligibility and frontend-version safeguards. CI for that exact head is pending.
 
 - [x] Define tenant → business profile → business location boundaries in the merged architecture baseline.
 - [x] Keep retail store/POS terminal concepts optional in the PR #28 implementation.
@@ -80,9 +80,9 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 - [ ] Select first pilot verticals and complete their workflows end to end.
 - [ ] Test profile migration without changing historical records.
 
-**Open PR #28:** draft; head `6ad518ad4f70188579c3bb594a922400df96b218`; based directly on current `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`), 21 commits ahead / 0 behind. Exact-head CI run `41347180026` passed all quality, migration, integration, build and smoke steps. Final architecture review remains open. PR #26 is a stale draft with an obsolete base and is superseded by PR #28.
+**Open PR #28:** ready for review; latest head `ab81586a189c1360497303249c844571f42b3ef0`; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`), 27 commits ahead / 0 behind. CI is running on this exact head. The previous head passed CI, but that result does not verify the latest safeguards. CodeRabbit's review quota is currently exhausted; no completed human architecture review is recorded. PR #26 is closed as superseded.
 
-**Exit:** profile, location and capability contracts are implemented; the server exposes only supported and authorized modules; at least two pilot workflows pass end-to-end tests.
+**Exit:** the profile, location and capability contracts are merged; capability activation is enforced server-side with release, profile, dependency, entitlement, permission, setup, jurisdiction and specialist-approval gates; the UI renders only active, authorized module routes and actions; historical profile changes are explicit; and at least two selected pilot workflows pass end-to-end tests.
 
 ## M3 — Accounting kernel
 
