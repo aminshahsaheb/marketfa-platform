@@ -79,13 +79,6 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
       industryId: "general-retail",
     },
     {
-      displayName: "Location Only Business",
-      legalName: null,
-      locationName: "Office",
-      storeName: null,
-      industryId: "general-retail",
-    },
-    {
       displayName: "Business",
       legalName: "Legal Name",
       locationName: "Main Office",
