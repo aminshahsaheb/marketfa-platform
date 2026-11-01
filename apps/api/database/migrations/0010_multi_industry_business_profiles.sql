@@ -126,9 +126,8 @@ CREATE TABLE business_profiles (
   FOREIGN KEY (industry_key, industry_profile_version)
     REFERENCES industry_catalog (industry_key, profile_version)
     ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, created_by_user_id)
-    REFERENCES tenant_memberships (tenant_id, user_id)
-    ON DELETE RESTRICT,
+  FOREIGN KEY (created_by_user_id)
+    REFERENCES users (id) ON DELETE RESTRICT,
   CHECK (length(btrim(display_name)) BETWEEN 1 AND 160)
 );
 
@@ -150,9 +149,8 @@ CREATE TABLE business_profile_capabilities (
   FOREIGN KEY (capability_key)
     REFERENCES capability_catalog (capability_key)
     ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, assigned_by_user_id)
-    REFERENCES tenant_memberships (tenant_id, user_id)
-    ON DELETE RESTRICT,
+  FOREIGN KEY (assigned_by_user_id)
+    REFERENCES users (id) ON DELETE RESTRICT,
   CHECK (status IN ('SUGGESTED', 'PENDING_APPROVAL', 'ENABLED', 'DISABLED'))
 );
 
@@ -291,8 +289,8 @@ CREATE TABLE business_locations (
     REFERENCES business_profiles (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, business_profile_id, store_id)
     REFERENCES stores (tenant_id, business_profile_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, created_by_user_id)
-    REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
+  FOREIGN KEY (created_by_user_id)
+    REFERENCES users (id) ON DELETE RESTRICT,
   CHECK (length(btrim(name)) BETWEEN 1 AND 160),
   CHECK (location_type IN (
     'BRANCH', 'OFFICE', 'WORKSHOP', 'WAREHOUSE',
