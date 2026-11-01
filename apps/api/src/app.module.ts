@@ -6,6 +6,8 @@ import { SessionAuthGuard } from "./auth/session-auth.guard";
 import { DatabaseModule } from "./database/database.module";
 import { HealthController } from "./health/health.controller";
 import { HealthService } from "./health/health.service";
+import { IndustryCatalogController } from "./tenancy/industry-catalog.controller";
+import { IndustryCatalogService } from "./tenancy/industry-catalog.service";
 import { TenantBootstrapController } from "./tenancy/tenant-bootstrap.controller";
 import { TenantBootstrapService } from "./tenancy/tenant-bootstrap.service";
 import {
@@ -23,6 +25,7 @@ import { TerminalService } from "./tenancy/terminal.service";
   controllers: [
     HealthController,
     CsrfController,
+    IndustryCatalogController,
     TenantBootstrapController,
     TenantInvitationController,
     InvitationAcceptanceController,
@@ -31,6 +34,7 @@ import { TerminalService } from "./tenancy/terminal.service";
   ],
   providers: [
     HealthService,
+    IndustryCatalogService,
     TenantBootstrapService,
     InvitationService,
     MembershipService,

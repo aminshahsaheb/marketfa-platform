@@ -42,12 +42,22 @@ function parseInput(value: unknown): TenantBootstrapInput {
   const body = value as Record<string, unknown>;
   const displayName = readText(body, "displayName", 160, true);
   const legalName = readText(body, "legalName", 200, false);
-  const storeName = readText(body, "storeName", 160, true);
+  const locationName = readText(body, "locationName", 160, false);
+  const storeName = readText(body, "storeName", 160, false);
+  const industryId = readText(body, "industryId", 80, true);
+
+  if (!locationName && !storeName) {
+    throw new BadRequestException(
+      "locationName is required when storeName is not provided.",
+    );
+  }
 
   return {
     displayName: displayName!,
     legalName,
-    storeName: storeName!,
+    locationName: locationName ?? storeName!,
+    storeName,
+    industryId: industryId!,
   };
 }
 
