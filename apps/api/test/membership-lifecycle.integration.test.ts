@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import {
-  ConflictException,
-  ForbiddenException,
-} from "@nestjs/common";
+import { ConflictException, ForbiddenException } from "@nestjs/common";
 import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
@@ -65,7 +62,9 @@ test(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'OWNER', 'ACTIVE'), ($1, $3, 'MANAGER', 'ACTIVE'), ($1, $4, 'CASHIER', 'ACTIVE') RETURNING id, user_id, role, status",
         [tenant.tenantId, ownerBId, managerId, cashierId],
       );
-      const ownerBMembership = extra.rows.find((row) => row.user_id === ownerBId);
+      const ownerBMembership = extra.rows.find(
+        (row) => row.user_id === ownerBId,
+      );
       const managerMembership = extra.rows.find(
         (row) => row.user_id === managerId,
       );
@@ -119,14 +118,10 @@ test(
         TenantAccessDeniedError,
       );
       await assert.rejects(
-        invitations.create(
-          { userId: ownerAId },
-          tenant.tenantId,
-          {
-            intendedIdentifier: "cashier@example.test",
-            role: "VIEWER",
-          },
-        ),
+        invitations.create({ userId: ownerAId }, tenant.tenantId, {
+          intendedIdentifier: "cashier@example.test",
+          role: "VIEWER",
+        }),
         ConflictException,
       );
 
@@ -147,14 +142,10 @@ test(
       );
 
       await assert.rejects(
-        invitations.create(
-          { userId: ownerAId },
-          tenant.tenantId,
-          {
-            intendedIdentifier: "manager@example.test",
-            role: "VIEWER",
-          },
-        ),
+        invitations.create({ userId: ownerAId }, tenant.tenantId, {
+          intendedIdentifier: "manager@example.test",
+          role: "VIEWER",
+        }),
         ConflictException,
       );
 
@@ -209,23 +200,42 @@ test(
       );
       const auditActions = audit.rows.map((row) => row.action);
       assert.equal(auditActions.length, 5);
-      assert.equal(auditActions.filter((action) => action === "tenant.bootstrap").length, 1);
       assert.equal(
-        auditActions.filter((action) => action === "tenant.membership.role_change").length,
+        auditActions.filter((action) => action === "tenant.bootstrap").length,
         1,
       );
       assert.equal(
-        auditActions.filter((action) => action === "tenant.membership.suspend").length +
-          auditActions.filter((action) => action === "tenant.membership.remove").length,
+        auditActions.filter(
+          (action) => action === "tenant.membership.role_change",
+        ).length,
+        1,
+      );
+      assert.equal(
+        auditActions.filter((action) => action === "tenant.membership.suspend")
+          .length +
+          auditActions.filter((action) => action === "tenant.membership.remove")
+            .length,
         3,
       );
       assert.equal(
-        auditActions.filter((action) => action === "tenant.membership.suspend").length,
-        1 + concurrent.filter((result) => result.status === "fulfilled" && result.value.status === "SUSPENDED").length,
+        auditActions.filter((action) => action === "tenant.membership.suspend")
+          .length,
+        1 +
+          concurrent.filter(
+            (result) =>
+              result.status === "fulfilled" &&
+              result.value.status === "SUSPENDED",
+          ).length,
       );
       assert.equal(
-        auditActions.filter((action) => action === "tenant.membership.remove").length,
-        1 + concurrent.filter((result) => result.status === "fulfilled" && result.value.status === "REMOVED").length,
+        auditActions.filter((action) => action === "tenant.membership.remove")
+          .length,
+        1 +
+          concurrent.filter(
+            (result) =>
+              result.status === "fulfilled" &&
+              result.value.status === "REMOVED",
+          ).length,
       );
     } finally {
       for (const tenantId of tenantIds) {
