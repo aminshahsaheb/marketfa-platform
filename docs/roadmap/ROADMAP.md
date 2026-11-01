@@ -44,7 +44,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
 - [x] Exhaustive unit-test matrix for every defined role and permission.
-- [x] End-to-end HTTP authorization matrix for every role and implemented endpoint (implemented in the open API authorization PR; pending CI and merge).
+- [x] End-to-end HTTP authorization matrix for every role and implemented endpoint (merged in PR #20; future business endpoints require their own coverage).
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
@@ -63,10 +63,10 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Define logical PostgreSQL accounting data model and constraints.
 - [x] Define accounting golden, property, concurrency, and reconciliation test plan.
 - [x] Record ADR-0007 for immutable double-entry posting.
-- [ ] Align schema with M2 tenant/store/membership contracts.
+- [x] Align schema with M2 tenant/store/membership contracts (implemented in the open M3 schema PR; pending CI and merge).
 - [ ] Approve chart-of-accounts starter template and fiscal-period policy with Iran accountant.
 - [ ] Approve inventory costing and COGS timing.
-- [ ] Implement journal/account/period schema and migrations.
+- [x] Implement initial journal/account/period schema and migrations (implemented in the open M3 schema PR; posting commands remain pending).
 - [ ] Implement posting, idempotency, reversal, and period locking.
 - [ ] Implement general ledger and trial balance.
 - [ ] Pass PostgreSQL integration, property, tenant-isolation, and golden tests.
