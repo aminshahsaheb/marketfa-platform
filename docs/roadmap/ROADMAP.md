@@ -44,7 +44,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
 - [x] Exhaustive unit-test matrix for every defined role and permission.
-- [x] End-to-end HTTP authorization matrix for every role and implemented endpoint (implemented in the open API authorization PR; pending CI and merge).
+- [x] End-to-end HTTP authorization matrix for every role and implemented endpoint (merged in PR #20; future business endpoints require their own coverage).
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
@@ -53,7 +53,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Terminal listing, registration, credential rotation, suspension/reactivation and revocation (merged in PR #19; device-auth/sync enforcement remains future work).
 - [x] Audit tenant bootstrap, invitation, membership, and terminal lifecycle security changes atomically (merged in PRs #18 and #19).
 
-**Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → audit coverage → authentication provider and browser login integration. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
+**Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → current HTTP authorization matrix → authentication provider and browser login integration. PR #16's remaining diff appears to be present in `main`; verify and close it as superseded. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
 
 **Exit:** cross-tenant access tests fail closed; membership changes take effect on the next request; terminal state and assignment revocation are atomic; device-auth/sync endpoints reject suspended or revoked terminals when implemented; invitation acceptance is atomic; the API authorization matrix passes.
 
@@ -63,10 +63,10 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Define logical PostgreSQL accounting data model and constraints.
 - [x] Define accounting golden, property, concurrency, and reconciliation test plan.
 - [x] Record ADR-0007 for immutable double-entry posting.
-- [ ] Align schema with M2 tenant/store/membership contracts.
+- [x] Align schema with M2 tenant/store/membership contracts (implemented in open PR #21; pending CI/review/merge).
 - [ ] Approve chart-of-accounts starter template and fiscal-period policy with Iran accountant.
 - [ ] Approve inventory costing and COGS timing.
-- [ ] Implement journal/account/period schema and migrations.
+- [ ] Implement journal/account/period schema and migrations (implemented in open PR #21; pending CI/review/merge).
 - [ ] Implement posting, idempotency, reversal, and period locking.
 - [ ] Implement general ledger and trial balance.
 - [ ] Pass PostgreSQL integration, property, tenant-isolation, and golden tests.
@@ -125,3 +125,6 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Release notes and versioning.
 
 **Exit:** evidence supports expansion beyond the pilot.
+
+
+See [evidence-based completion plan](COMPLETION_PLAN.md) for the full dependency order, architecture risks, and exit criteria.
