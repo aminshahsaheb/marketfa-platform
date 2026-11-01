@@ -9,8 +9,16 @@ interface MigrationRecord {
   checksum: string;
 }
 
-export async function runMigrations(): Promise<void> {
-  const connectionString = process.env.DATABASE_URL_MIGRATION;
+export interface MigrationOptions {
+  readonly connectionString?: string;
+  readonly targetVersion?: string;
+}
+
+export async function runMigrations(
+  options: MigrationOptions = {},
+): Promise<void> {
+  const connectionString =
+    options.connectionString ?? process.env.DATABASE_URL_MIGRATION;
   if (!connectionString) {
     throw new Error(
       "DATABASE_URL_MIGRATION is required; migrations must never use the runtime connection.",
