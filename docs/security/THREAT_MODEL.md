@@ -32,7 +32,7 @@
 | Secret leakage              | Secret scanning, env-only secrets, rotation procedure                                         |
 | Backup theft                | Encryption, least privilege, restore drills                                                   |
 | Malicious dependencies      | Lockfile, dependency review, automated vulnerability checks                                   |
-| Device loss                 | Minimal local data, device revocation, local cache protection assessment                      |
+| Device loss                 | Hashed terminal credentials, OWNER-only revoke, atomic assignment revocation, local cache protection assessment |
 
 ## Release security gates
 
@@ -42,6 +42,8 @@
 - Secret scan clean.
 - Backup restore test documented.
 - Audit coverage for privileged and financial actions.
+- Terminal credentials are returned once, stored only as hashes, and excluded from logs/audit metadata.
+- Device-authentication and sync endpoints must fail closed for suspended/revoked terminals before offline sync is enabled.
 - Offline replay cannot bypass current server authorization or stock policy.
 
 This is not a formal security certification or penetration test.
