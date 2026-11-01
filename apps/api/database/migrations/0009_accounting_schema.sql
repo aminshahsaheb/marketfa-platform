@@ -425,6 +425,79 @@ CREATE TRIGGER journal_lines_immutable_trg
   BEFORE INSERT OR UPDATE OR DELETE ON journal_lines
   FOR EACH ROW EXECUTE FUNCTION accounting_prevent_posted_line_mutation();
 
+CREATE OR REPLACE FUNCTION accounting_validate_account_parent()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $function$
+DECLARE
+  parent_postable BOOLEAN;
+  parent_status accounting_account_status;
+  has_cycle BOOLEAN;
+BEGIN
+  IF NEW.parent_account_id IS NOT NULL THEN
+    SELECT parent.is_postable, parent.status
+    INTO parent_postable, parent_status
+    FROM public.accounts AS parent
+    WHERE parent.tenant_id = NEW.tenant_id
+      AND parent.store_id = NEW.store_id
+      AND parent.id = NEW.parent_account_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Parent account must belong to the same store'
+        USING ERRCODE = '23503';
+    END IF;
+
+    IF parent_postable OR parent_status <> 'ACTIVE' THEN
+      RAISE EXCEPTION 'Parent account must be active and non-postable'
+        USING ERRCODE = '23514';
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+      WITH RECURSIVE ancestors(id, parent_account_id) AS (
+        SELECT account.id, account.parent_account_id
+        FROM public.accounts AS account
+        WHERE account.tenant_id = NEW.tenant_id
+          AND account.store_id = NEW.store_id
+          AND account.id = NEW.parent_account_id
+        UNION ALL
+        SELECT account.id, account.parent_account_id
+        FROM public.accounts AS account
+        JOIN ancestors AS ancestor
+          ON account.id = ancestor.parent_account_id
+        WHERE account.tenant_id = NEW.tenant_id
+          AND account.store_id = NEW.store_id
+      )
+      SELECT EXISTS (SELECT 1 FROM ancestors WHERE id = NEW.id)
+      INTO has_cycle;
+
+      IF has_cycle THEN
+        RAISE EXCEPTION 'Account hierarchy cannot contain a cycle'
+          USING ERRCODE = '23514';
+      END IF;
+    END IF;
+  END IF;
+
+  IF NEW.is_postable AND EXISTS (
+    SELECT 1
+    FROM public.accounts AS child
+    WHERE child.tenant_id = NEW.tenant_id
+      AND child.store_id = NEW.store_id
+      AND child.parent_account_id = NEW.id
+  ) THEN
+    RAISE EXCEPTION 'An account with children must be non-postable'
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+CREATE TRIGGER accounts_parent_rules_trg
+  BEFORE INSERT OR UPDATE OF parent_account_id, is_postable ON accounts
+  FOR EACH ROW EXECUTE FUNCTION accounting_validate_account_parent();
+
 CREATE OR REPLACE FUNCTION accounting_prevent_used_account_reclassification()
 RETURNS TRIGGER
 LANGUAGE plpgsql
