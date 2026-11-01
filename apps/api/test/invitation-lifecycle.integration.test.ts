@@ -48,6 +48,7 @@ test(
           displayName: "Invitation Test",
           legalName: null,
           storeName: "Main Store",
+          industryId: "general-retail",
         },
       );
       tenantIds.push(tenant.tenantId);
