@@ -20,6 +20,10 @@ test("terminal controller validates tenant, store, terminal UUIDs, and names", a
       calls.push(args);
       return { terminalId: "terminal-1", status: "SUSPENDED" };
     },
+    activate: async (...args: unknown[]) => {
+      calls.push(args);
+      return { terminalId: "terminal-1", status: "ACTIVE" };
+    },
     revoke: async (...args: unknown[]) => {
       calls.push(args);
       return { terminalId: "terminal-1", status: "REVOKED" };
@@ -49,8 +53,9 @@ test("terminal controller validates tenant, store, terminal UUIDs, and names", a
   await controller.register(actor, tenantId, storeId, { name: " Front POS " });
   await controller.rotateCredential(actor, tenantId, terminalId);
   await controller.suspend(actor, tenantId, terminalId);
+  await controller.activate(actor, tenantId, terminalId);
   await controller.revoke(actor, tenantId, terminalId);
 
   assert.deepEqual(calls[0]?.slice(1), [tenantId, storeId, "Front POS"]);
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
 });
