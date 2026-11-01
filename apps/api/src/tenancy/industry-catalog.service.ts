@@ -51,14 +51,17 @@ export class IndustryCatalogService {
       ),
     );
 
-    const profiles = new Map<string, {
-      id: string;
-      profileVersion: number;
-      labelKey: string;
-      group: string;
-      regulated: boolean;
-      capabilities: string[];
-    }>();
+    const profiles = new Map<
+      string,
+      {
+        id: string;
+        profileVersion: number;
+        labelKey: string;
+        group: string;
+        regulated: boolean;
+        capabilities: string[];
+      }
+    >();
 
     for (const row of result.rows) {
       const key = `${row.industry_key}:${row.profile_version}`;
