@@ -95,13 +95,14 @@ BEGIN
       USING ERRCODE = '23503';
   END IF;
 
-  INSERT INTO public.terminals (
+  INSERT INTO public.terminals AS inserted (
     tenant_id, store_id, name, credential_hash, status
   )
   VALUES (
     p_tenant_id, p_store_id, normalized_name, p_credential_hash, 'ACTIVE'
   )
-  RETURNING id, registered_at INTO new_terminal_id, new_registered_at;
+  RETURNING inserted.id, inserted.registered_at
+  INTO new_terminal_id, new_registered_at;
 
   INSERT INTO public.audit_events (
     tenant_id, store_id, actor_user_id, action, entity_type, entity_id, metadata
