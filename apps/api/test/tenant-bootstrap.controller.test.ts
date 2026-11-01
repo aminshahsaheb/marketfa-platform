@@ -5,7 +5,7 @@ import test from "node:test";
 import { TenantBootstrapController } from "../src/tenancy/tenant-bootstrap.controller";
 import type { TenantBootstrapService } from "../src/tenancy/tenant-bootstrap.service";
 
-test("tenant bootstrap endpoint validates and normalizes request fields", async () => {
+test("tenant bootstrap requires a valid industry selection", async () => {
   const calls: unknown[] = [];
   const service = {
     create: async (_actor: unknown, input: unknown) => {
@@ -14,6 +14,7 @@ test("tenant bootstrap endpoint validates and normalizes request fields", async 
         tenantId: "tenant-1",
         storeId: "store-1",
         ownerMembershipId: "membership-1",
+        businessProfileId: "business-profile-1",
       };
     },
   };
@@ -27,19 +28,36 @@ test("tenant bootstrap endpoint validates and normalizes request fields", async 
     BadRequestException,
   );
   assert.throws(
-    () => controller.create(actor, { displayName: "Business", storeName: 3 }),
+    () =>
+      controller.create(actor, {
+        displayName: "Business",
+        storeName: "Main",
+        industryId: 42,
+      }),
     BadRequestException,
   );
+  assert.throws(
+    () =>
+      controller.create(actor, {
+        displayName: "Business",
+        storeName: "Main",
+      }),
+    BadRequestException,
+  );
+
   await controller.create(actor, {
     displayName: "  Business  ",
     legalName: "  Legal Name ",
     storeName: " Main Store ",
+    industryId: " professional-services ",
   });
+
   assert.deepEqual(calls, [
     {
       displayName: "Business",
       legalName: "Legal Name",
       storeName: "Main Store",
+      industryId: "professional-services",
     },
   ]);
 });
