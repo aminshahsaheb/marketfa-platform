@@ -49,9 +49,9 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
 - [x] Invitation create/revoke/accept commands and API: hashed token, expiry, verified identity binding, replay/concurrency protection, and atomic audit.
-- [ ] Membership role change, suspension and removal; protect the last active OWNER.
+- [x] Membership role change, suspension and removal; protect the last active OWNER (implemented in PR #18; pending review and merge).
 - [ ] Terminal registration, credential rotation, suspension and immediate revocation.
-- [ ] Audit all tenant, membership, invitation and terminal security changes atomically.
+- [ ] Audit all tenant, membership, invitation and terminal security changes atomically (bootstrap, invitation, and membership command audit are implemented; terminal audit remains pending).
 
 - [ ] End-to-end API authorization matrix for every role.
 
