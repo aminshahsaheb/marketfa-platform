@@ -49,6 +49,7 @@ test(
           displayName: "Membership Test",
           legalName: null,
           storeName: "Main Store",
+          industryId: "general-retail",
         },
       );
       tenantIds.push(tenant.tenantId);
