@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, invitation lifecycle, and membership lifecycle are merged. Membership commands enforce last-active-OWNER protection and atomic audit. Terminal listing, registration, credential rotation, suspension/reactivation, revocation, and audit are implemented in the open terminal-lifecycle PR; integration tests cover hash-only credential storage, OWNER authorization, state transitions, assignment revocation, and audit. Terminal-device authentication/sync enforcement, invitation delivery/rate limits, and authentication provider/login integration remain open.  
+**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, invitation lifecycle, and membership lifecycle are merged. Membership commands enforce last-active-OWNER protection and atomic audit. Terminal listing, registration, credential rotation, suspension/reactivation, revocation, and atomic audit are merged in PR #19. Integration tests cover hash-only credential storage, OWNER authorization, state transitions, assignment revocation, and audit. Terminal-device authentication/sync enforcement, invitation delivery/rate limits, and authentication provider/login integration remain open.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts
