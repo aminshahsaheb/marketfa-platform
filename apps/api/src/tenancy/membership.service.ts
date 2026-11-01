@@ -14,11 +14,7 @@ import {
 import type { AuthenticatedActor } from "../database/database.service";
 import type { TenantRole } from "./permissions";
 
-export type MembershipStatus =
-  | "INVITED"
-  | "ACTIVE"
-  | "SUSPENDED"
-  | "REMOVED";
+export type MembershipStatus = "INVITED" | "ACTIVE" | "SUSPENDED" | "REMOVED";
 
 export type ChangeableMembershipRole = Exclude<TenantRole, "OWNER">;
 
@@ -75,7 +71,9 @@ export class MembershipService {
     newRole: ChangeableMembershipRole,
   ): Promise<MembershipCommandResult> {
     if (!CHANGEABLE_ROLES.has(newRole)) {
-      throw new BadRequestException("OWNER cannot be assigned by this command.");
+      throw new BadRequestException(
+        "OWNER cannot be assigned by this command.",
+      );
     }
     try {
       const result = await this.database.withTenantPermission(
@@ -164,7 +162,9 @@ export class MembershipService {
       | undefined,
   ): MembershipCommandResult {
     if (!row) {
-      throw new NotFoundException("An eligible tenant membership was not found.");
+      throw new NotFoundException(
+        "An eligible tenant membership was not found.",
+      );
     }
     return {
       membershipId: row.membership_id,
