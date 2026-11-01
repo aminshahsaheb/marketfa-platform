@@ -1,3 +1,10 @@
+pnpm exec prettier apps/api/test/industry-catalog.service.test.ts
+shell: /usr/bin/bash -e {0}
+env:
+  DATABASE_URL: ***localhost:5432/marketfa
+  DATABASE_URL_MIGRATION: ***localhost:5432/marketfa
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+##[endgroup]
 import assert from "node:assert/strict";
 import test from "node:test";
 import { IndustryCatalogService } from "../src/tenancy/industry-catalog.service";
@@ -15,41 +22,41 @@ test("industry catalogue groups server capabilities by versioned profile", async
         query: async (query: string) => {
           queryText = query;
           return {
-          rows: [
-            {
-              industry_key: "professional-services",
-              profile_version: 1,
-              display_name_key: "industry.professional_services",
-              group_key: "services",
-              is_regulated: false,
-              capability_key: "customers",
-            },
-            {
-              industry_key: "professional-services",
-              profile_version: 1,
-              display_name_key: "industry.professional_services",
-              group_key: "services",
-              is_regulated: false,
-              capability_key: "projects",
-            },
-            {
-              industry_key: "pharmacy",
-              profile_version: 1,
-              display_name_key: "industry.pharmacy",
-              group_key: "regulated-retail",
-              is_regulated: true,
-              capability_key: null,
-            },
-            {
-              industry_key: "custom",
-              profile_version: 1,
-              display_name_key: "industry.custom",
-              group_key: "custom",
-              is_regulated: false,
-              capability_key: null,
-            },
-          ],
-        };
+            rows: [
+              {
+                industry_key: "professional-services",
+                profile_version: 1,
+                display_name_key: "industry.professional_services",
+                group_key: "services",
+                is_regulated: false,
+                capability_key: "customers",
+              },
+              {
+                industry_key: "professional-services",
+                profile_version: 1,
+                display_name_key: "industry.professional_services",
+                group_key: "services",
+                is_regulated: false,
+                capability_key: "projects",
+              },
+              {
+                industry_key: "pharmacy",
+                profile_version: 1,
+                display_name_key: "industry.pharmacy",
+                group_key: "regulated-retail",
+                is_regulated: true,
+                capability_key: null,
+              },
+              {
+                industry_key: "custom",
+                profile_version: 1,
+                display_name_key: "industry.custom",
+                group_key: "custom",
+                is_regulated: false,
+                capability_key: null,
+              },
+            ],
+          };
         },
       };
       return operation(client);

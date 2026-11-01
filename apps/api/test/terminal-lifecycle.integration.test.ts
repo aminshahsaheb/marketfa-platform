@@ -41,6 +41,8 @@ test(
         },
       );
       tenantIds.push(tenant.tenantId);
+      assert.ok(storeId);
+      const storeId = storeId;
 
       await owner.query(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'MANAGER', 'ACTIVE')",
@@ -50,7 +52,7 @@ test(
       const created = await terminals.register(
         { userId: ownerId },
         tenant.tenantId,
-        tenant.storeId,
+        storeId,
         "Front POS",
       );
       assert.equal(created.status, "ACTIVE");
@@ -69,14 +71,14 @@ test(
       const listed = await terminals.list(
         { userId: ownerId },
         tenant.tenantId,
-        tenant.storeId,
+        storeId,
       );
       assert.equal(listed.length, 1);
       assert.equal(listed[0]?.terminalId, created.terminalId);
       assert.equal(listed[0]?.status, "ACTIVE");
       assert.equal("credential" in (listed[0] ?? {}), false);
       await assert.rejects(
-        terminals.list({ userId: managerId }, tenant.tenantId, tenant.storeId),
+        terminals.list({ userId: managerId }, tenant.tenantId, storeId),
         ForbiddenException,
       );
 
@@ -84,7 +86,7 @@ test(
         terminals.register(
           { userId: managerId },
           tenant.tenantId,
-          tenant.storeId,
+          storeId,
           "Manager POS",
         ),
         ForbiddenException,
@@ -142,7 +144,7 @@ test(
 
       await owner.query(
         "INSERT INTO terminal_assignments (tenant_id, store_id, terminal_id, user_id) VALUES ($1, $2, $3, $4)",
-        [tenant.tenantId, tenant.storeId, created.terminalId, ownerId],
+        [tenant.tenantId, storeId, created.terminalId, ownerId],
       );
 
       const suspended = await terminals.suspend(
