@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Inject,
   Param,
   Post,
@@ -44,6 +45,19 @@ export class TerminalController {
     @Inject(TerminalService)
     private readonly terminals: TerminalService,
   ) {}
+
+  @Get("stores/:storeId/terminals")
+  list(
+    @CurrentActor() actor: RequestActor,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+  ) {
+    return this.terminals.list(
+      actor,
+      readUuid(tenantId, "tenantId"),
+      readUuid(storeId, "storeId"),
+    );
+  }
 
   @Post("stores/:storeId/terminals")
   register(
