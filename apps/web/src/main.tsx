@@ -31,13 +31,21 @@ function App(): React.JSX.Element {
   const [selectedId, setSelectedId] = useState("general-retail");
   const [language, setLanguage] = useState<"fa" | "en">("fa");
   const isPersian = language === "fa";
-  const selected = INDUSTRY_PROFILES.find((profile) => profile.id === selectedId);
+  const selected = INDUSTRY_PROFILES.find(
+    (profile) => profile.id === selectedId,
+  );
 
   const visibleProfiles = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     if (!query) return INDUSTRY_PROFILES;
+
     return INDUSTRY_PROFILES.filter((profile) =>
-      [profile.labelFa, profile.labelEn, profile.descriptionFa, profile.group]
+      [
+        profile.labelFa,
+        profile.labelEn,
+        profile.descriptionFa,
+        profile.group,
+      ]
         .join(" ")
         .toLocaleLowerCase()
         .includes(query),
@@ -61,8 +69,14 @@ function App(): React.JSX.Element {
       </header>
 
       <section className="intro">
-        <p className="eyebrow">{isPersian ? "فضای کاری کسب‌وکار شما" : "Your business workspace"}</p>
-        <h1>{isPersian ? "کسب‌وکار شما در چه حوزه‌ای است؟" : "What type of business do you run?"}</h1>
+        <p className="eyebrow">
+          {isPersian ? "فضای کاری کسب‌وکار شما" : "Your business workspace"}
+        </p>
+        <h1>
+          {isPersian
+            ? "کسب‌وکار شما در چه حوزه‌ای است؟"
+            : "What type of business do you run?"}
+        </h1>
         <p className="intro-copy">
           {isPersian
             ? "صنف خود را انتخاب کنید. MarketFa ابزارها و بخش‌های مرتبط را برای شما آماده می‌کند."
@@ -70,37 +84,64 @@ function App(): React.JSX.Element {
         </p>
       </section>
 
-      <section className="workspace-layout" aria-label={isPersian ? "انتخاب صنف و پیش‌نمایش پنل" : "Industry selection and workspace preview"}>
+      <section
+        className="workspace-layout"
+        aria-label={
+          isPersian
+            ? "انتخاب صنف و پیش‌نمایش پنل"
+            : "Industry selection and workspace preview"
+        }
+      >
         <div className="industry-picker">
           <div className="picker-heading">
             <h2>{isPersian ? "انتخاب نوع فعالیت" : "Choose an industry"}</h2>
-            <span>{visibleProfiles.length} {isPersian ? "حوزه" : "industries"}</span>
+            <span>
+              {visibleProfiles.length} {isPersian ? "حوزه" : "industries"}
+            </span>
           </div>
           <label className="search-box">
-            <span className="search-icon" aria-hidden="true">⌕</span>
+            <span className="search-icon" aria-hidden="true">
+              ⌕
+            </span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={isPersian ? "جست‌وجوی شغل یا صنف..." : "Search an industry..."}
+              placeholder={
+                isPersian ? "جست‌وجوی شغل یا صنف..." : "Search an industry..."
+              }
               aria-label={isPersian ? "جست‌وجوی صنف" : "Search industries"}
             />
           </label>
           <div className="industry-grid">
             {visibleProfiles.map((profile) => {
               const active = profile.id === selectedId;
+
               return (
                 <button
-                  className={active ? "industry-card selected" : "industry-card"}
+                  className={
+                    active ? "industry-card selected" : "industry-card"
+                  }
                   type="button"
                   key={profile.id}
                   aria-pressed={active}
                   onClick={() => setSelectedId(profile.id)}
                 >
                   <span className="industry-card-top">
-                    <span className="industry-symbol" aria-hidden="true">{profile.labelFa.slice(0, 1)}</span>
-                    {active ? <span className="selected-mark" aria-label={isPersian ? "انتخاب‌شده" : "Selected"}>✓</span> : null}
+                    <span className="industry-symbol" aria-hidden="true">
+                      {profile.labelFa.slice(0, 1)}
+                    </span>
+                    {active ? (
+                      <span
+                        className="selected-mark"
+                        aria-label={isPersian ? "انتخاب‌شده" : "Selected"}
+                      >
+                        ✓
+                      </span>
+                    ) : null}
                   </span>
-                  <strong>{isPersian ? profile.labelFa : profile.labelEn}</strong>
+                  <strong>
+                    {isPersian ? profile.labelFa : profile.labelEn}
+                  </strong>
                   <span className="industry-description">
                     {isPersian ? profile.descriptionFa : profile.labelEn}
                   </span>
@@ -110,34 +151,50 @@ function App(): React.JSX.Element {
           </div>
           {visibleProfiles.length === 0 ? (
             <p className="empty-state">
-              {isPersian ? "نتیجه‌ای پیدا نشد. «سایر مشاغل» را انتخاب کنید." : "No results. Choose Other business to start with core tools."}
+              {isPersian
+                ? "نتیجه‌ای پیدا نشد. «سایر مشاغل» را انتخاب کنید."
+                : "No results. Choose Other business to start with core tools."}
             </p>
           ) : null}
         </div>
 
         <aside className="workspace-preview" aria-live="polite">
-          <div className="preview-kicker">{isPersian ? "پیش‌نمایش فضای کاری" : "WORKSPACE PREVIEW"}</div>
+          <div className="preview-kicker">
+            {isPersian ? "پیش‌نمایش فضای کاری" : "WORKSPACE PREVIEW"}
+          </div>
           {selected ? (
             <>
               <div className="preview-title-row">
                 <div>
-                  <p className="preview-label">{isPersian ? "قالب انتخاب‌شده" : "Selected profile"}</p>
+                  <p className="preview-label">
+                    {isPersian ? "قالب انتخاب‌شده" : "Selected profile"}
+                  </p>
                   <h2>{isPersian ? selected.labelFa : selected.labelEn}</h2>
                 </div>
-                <span className="preview-icon" aria-hidden="true">✳</span>
+                <span className="preview-icon" aria-hidden="true">
+                  ✳
+                </span>
               </div>
               <p className="preview-description">
-                {isPersian ? selected.descriptionFa : "A workspace configured for this type of business."}
+                {isPersian
+                  ? selected.descriptionFa
+                  : "A workspace configured for this type of business."}
               </p>
               <div className="module-heading">
-                <strong>{isPersian ? "بخش‌های پیشنهادی پنل" : "Suggested workspace modules"}</strong>
+                <strong>
+                  {isPersian
+                    ? "بخش‌های پیشنهادی پنل"
+                    : "Suggested workspace modules"}
+                </strong>
                 <span>{selected.capabilities.length}</span>
               </div>
               <ul className="module-list">
                 {selected.capabilities.map((capability) => (
                   <li key={capability}>
                     <span className="module-check">✓</span>
-                    {isPersian ? capabilityLabels[capability] : capability.replaceAll("_", " ")}
+                    {isPersian
+                      ? capabilityLabels[capability]
+                      : capability.replaceAll("_", " ")}
                   </li>
                 ))}
               </ul>
