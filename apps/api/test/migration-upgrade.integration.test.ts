@@ -52,10 +52,11 @@ test(
           created_tenant_id: string;
           created_store_id: string;
           owner_membership_id: string;
-        }>(
-          "SELECT * FROM public.tenant_bootstrap($1, $2, $3)",
-          ["Legacy Retail", null, "Legacy Main Store"],
-        );
+        }>("SELECT * FROM public.tenant_bootstrap($1, $2, $3)", [
+          "Legacy Retail",
+          null,
+          "Legacy Main Store",
+        ]);
         const row = result.rows[0];
         assert.ok(row?.created_tenant_id);
         assert.ok(row?.created_store_id);
@@ -108,10 +109,9 @@ test(
       const store = await legacy.query<{
         id: string;
         business_profile_id: string;
-      }>(
-        "SELECT id, business_profile_id FROM stores WHERE tenant_id = $1",
-        [tenantId],
-      );
+      }>("SELECT id, business_profile_id FROM stores WHERE tenant_id = $1", [
+        tenantId,
+      ]);
       assert.equal(store.rowCount, 1);
       assert.equal(store.rows[0]?.id, storeId);
       assert.equal(store.rows[0]?.business_profile_id, profile.rows[0]?.id);
@@ -149,3 +149,11 @@ test(
     }
   },
 );
+##[group]Run pnpm format:check
+[36;1mpnpm format:check[0m
+shell: /usr/bin/bash -e {0}
+env:
+  DATABASE_URL: ***localhost:5432/marketfa
+  DATABASE_URL_MIGRATION: ***localhost:5432/marketfa
+  MIGRATION_TEST_DATABASE_CREATION: true
+  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
