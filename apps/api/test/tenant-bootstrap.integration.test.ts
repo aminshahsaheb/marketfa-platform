@@ -127,6 +127,13 @@ test(
       });
 
       await assert.rejects(
+        owner.query(
+          "INSERT INTO stores (tenant_id, name, business_profile_id) VALUES ($1, 'Direct Invalid Store', $2)",
+          [serviceBusiness.tenantId, serviceBusiness.businessProfileId],
+        ),
+      );
+
+      await assert.rejects(
         service.create(
           { userId: activeUserId },
           {
