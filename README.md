@@ -1,12 +1,17 @@
 # MarketFa Platform
 
-**An offline-capable retail operations platform with point of sale, inventory, and double-entry accounting.**
+**A configurable business operations platform for multiple industries, with shared finance and industry-specific workspaces.**
 
-MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
+MarketFa is being built as a secure, testable, multi-industry platform. Each business selects its industry and receives a workspace based on enabled capabilities. Retail POS and inventory are one vertical pack, not the universal product model. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
 
 > Status: M1 and the M2 tenant-administration foundation are merged (PRs #4, #8–#15, #17–#20). Authentication provider, login/recovery and browser cookie flows are not complete. M3 accounting schema foundation is under review in PR #21; posting commands and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
 
 ## Product principles
+
+- One shared core; industry-specific capability packs.
+- Industry, user role, commercial entitlement, jurisdiction and UI locale are separate concepts.
+- A business profile selects workflows; it does not grant permissions or claim legal compliance.
+- Do not force service businesses into retail stock or POS workflows.
 
 - Accounting correctness before convenience.
 - Server-authoritative financial and inventory state.
