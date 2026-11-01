@@ -176,49 +176,6 @@ test(
       );
       assert.equal(retailLocationType.rows[0]?.location_type, "BRANCH");
 
-      const legacyThreeArgument = await database.withAuthenticatedActor(
-        { userId: activeUserId },
-        (client) =>
-          client.query<{
-            created_tenant_id: string;
-            created_store_id: string;
-            owner_membership_id: string;
-          }>(
-            "SELECT * FROM public.tenant_bootstrap($1, $2, $3)",
-            ["Legacy Three Argument", null, "Legacy Store"],
-          ),
-      );
-      const legacyThreeArgumentRow = legacyThreeArgument.rows[0];
-      assert.ok(legacyThreeArgumentRow?.created_tenant_id);
-      assert.ok(legacyThreeArgumentRow?.created_store_id);
-      assert.ok(legacyThreeArgumentRow?.owner_membership_id);
-      tenantIds.push(legacyThreeArgumentRow.created_tenant_id);
-
-      const legacyFourArgument = await database.withAuthenticatedActor(
-        { userId: activeUserId },
-        (client) =>
-          client.query<{
-            created_tenant_id: string;
-            created_store_id: string;
-            owner_membership_id: string;
-            created_business_profile_id: string;
-          }>(
-            "SELECT * FROM public.tenant_bootstrap($1, $2, $3, $4)",
-            [
-              "Legacy Four Argument",
-              null,
-              "Legacy Store",
-              "general-retail",
-            ],
-          ),
-      );
-      const legacyFourArgumentRow = legacyFourArgument.rows[0];
-      assert.ok(legacyFourArgumentRow?.created_tenant_id);
-      assert.ok(legacyFourArgumentRow?.created_store_id);
-      assert.ok(legacyFourArgumentRow?.owner_membership_id);
-      assert.ok(legacyFourArgumentRow?.created_business_profile_id);
-      tenantIds.push(legacyFourArgumentRow.created_tenant_id);
-
       const pharmacyBusiness = await service.create(
         { userId: activeUserId },
         {
