@@ -54,10 +54,14 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
     storeName: "Legacy Store",
   });
 
-  await controller.create(actor, {
-    displayName: "Location Only Business",
-    locationName: "Office",
-  });
+  assert.throws(
+    () =>
+      controller.create(actor, {
+        displayName: "Location Only Business",
+        locationName: "Office",
+      }),
+    BadRequestException,
+  );
 
   await controller.create(actor, {
     displayName: "  Business  ",
