@@ -309,6 +309,17 @@ test(
           ),
         "23514",
       );
+
+      await expectSqlState(
+        () =>
+          withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+            client.query(
+              "UPDATE accounts SET status = 'INACTIVE' WHERE tenant_id = $1 AND id = $2",
+              [tenantA.tenantId, groupAccount],
+            ),
+          ),
+        "23514",
+      );
       await expectSqlState(
         () =>
           withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
