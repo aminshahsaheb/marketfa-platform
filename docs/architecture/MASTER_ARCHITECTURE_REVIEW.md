@@ -1,8 +1,8 @@
 # MarketFa — Master Architecture and Engineering Review
 
-**Review date:** 2026-11-01  
+**Review date:** 2026-11-02  
 **Repository:** `aminshahsaheb/marketfa-platform`  
-**Main snapshot:** `59d78332d0605d4e97e3cec4f320dcb588bdf3e7`  
+**Main snapshot:** `ed0e37c44b7358d2e77e7f62978bfce43966594c`  
 **Review method:** ten specialist engineering perspectives, repository evidence, open-PR/CI inspection and explicit decision gates.
 
 > This is a structured architecture review performed by one assistant using ten specialist viewpoints. It is not a real ten-person peer review, legal opinion, accountant approval, penetration test or production-readiness certification.
@@ -21,36 +21,39 @@ The safest next step is to agree the business-profile/location/accounting-book b
 
 ### Main branch
 
-- `main` is `59d78332d0605d4e97e3cec4f320dcb588bdf3e7`.
-- M1 foundation is merged.
-- M2 tenant/identity administration slices through PR #20 are merged.
-- The README and some architecture status text on main had fallen behind the merged work and the updated multi-industry product direction. This review updates the canonical documents.
+- `main` is `ed0e37c44b7358d2e77e7f62978bfce43966594c` as of 2026-11-02.
+- M1 and the M2 tenant/identity administration slices through PR #20 are merged.
+- PR #21 accounting schema foundation is merged.
+- PR #27 multi-industry architecture baseline is merged.
+- Main does not yet contain the PR #28 profile/onboarding implementation.
 
-### Open PR #21 — accounting schema
+### Merged PR #21 — accounting schema
 
-- Head: `c0b7939042345858f3329d820b41a76c03dbde41`.
-- CI passed on this exact head in runs `41304490000` and `41301981703`.
-- It adds schema and PostgreSQL integration tests. It does not add posting application services, durable command-result idempotency, sequence allocation, period close/reopen commands, general-ledger/trial-balance read models or source-module integration.
-- The schema scopes accounts, periods, journals and sequences by `store_id`. That is not yet proven correct for service and project businesses that have no retail store.
-- Approved posting-rule effective-date overlap policy is not enforced by the schema.
-- Accounting-owner command/runtime access remains a design gate.
+- Merged to `main`; the schema scopes accounts, periods, journals and sequences by `accounting_book_id`, not by `store_id`.
+- It adds database invariants and PostgreSQL integration coverage for accounting schema behavior.
+- It does not add posting application services, durable command-result idempotency, sequence allocation commands, period close/reopen commands, general-ledger/trial-balance read models or source-module integration.
+- Approved chart of accounts, fiscal calendar, rounding/tax and inventory costing policies remain open.
 
-### Open PR #26 — multi-industry profile/onboarding
+### Open PR #28 — multi-industry profile/onboarding
 
-- Head: `07247a5035f3942e7ba3b2a542bf296f6a6bdc17`.
-- It is Draft. No CI run exists for this exact head.
-- The branch's declared base is PR #21, but GitHub compare reports divergent ancestry: 79 commits ahead and 37 behind. Rebuild/rebase onto the exact intended base and run CI before review.
-- The profile picker and catalog are only a first selection/preview step. They do not implement every profession-specific workflow.
-- The migration marks pharmacy and health/wellness as regulated but still seeds default capabilities as ENABLED during bootstrap. There is no specialist approval gate in that command.
-- Bootstrap creates a store for every profile. This forces non-retail businesses into a retail-shaped concept.
-- The profile catalog permits multiple ACTIVE versions, while the UI selection is keyed only by industry ID. Version selection and display must be explicit.
-- Capability rows have no full server-side activation command enforcing release support, dependencies, entitlement, permission and jurisdiction.
-- The catalog frontend uses a compiled presentation list and filters unknown capability keys. Contract drift can therefore be hidden rather than reported.
-- The PR adds `ADR-0008-MULTI-INDUSTRY-PROFILES.md`, while main already has ADR-0008 for tenant RLS. ADR numbering must be unique; the canonical multi-industry decision is recorded here as ADR-0012.
+- PR: https://github.com/aminshahsaheb/marketfa-platform/pull/28
+- Branch: `feat/multi-industry-foundation`.
+- Latest head at review: `a559216174ea639d27420ee85397f35e724e8838`.
+- Base: current `main` at `ed0e37c44b7358d2e77e7f62978bfce43966594c`; 29 commits ahead / 0 behind.
+- The branch is cleanly based on current main. The PR is open and ready for review, not merged.
+- Earlier exact-head CI passed. CI for the latest head is queued/running; do not reuse an earlier green result as proof for this head.
+- It adds versioned industry/capability catalogues, business profiles, accounting-book links, generic business locations, optional stores, legacy backfill, public catalogue API and bilingual selection/preview UI.
+- Regulated profiles start with `PENDING_APPROVAL` capability states. There is no specialist approval workflow or capability activation command.
+- Store creation is now rejected unless the selected profile has an active `point_of_sale` default. This safeguard has an integration test.
+- The frontend now rejects unsupported profile versions and duplicate active industry IDs. It supports only presentation version 1 at this stage.
+- The picker is still a selection/preview screen. It does not create a complete workspace dashboard or implement any profession-specific end-to-end workflow.
+- Authentication-provider/login/recovery, statutory tax workflows, posting services, module-owned dashboard routes/actions and offline sync remain incomplete.
+- CodeRabbit produced a summary but did not complete a full review because of its review quota. Its path filter excluded `pnpm-lock.yaml`. A completed human architecture review remains required.
 
 ### Duplicate PR cleanup
 
-PRs #22, #24 and #25 are closed as superseded/duplicates. PRs #21 and #26 remain open. Neither has been merged by this review.
+PRs #22, #24, #25 and #26 are closed as superseded/duplicates. PR #26's obsolete/divergent branch was replaced by PR #28. PR #21 and PR #27 are merged. PR #28 is the only current multi-industry implementation PR described here.
+
 
 ## 3. Ten specialist perspectives
 
@@ -134,18 +137,20 @@ PRs #22, #24 and #25 are closed as superseded/duplicates. PRs #21 and #26 remain
 
 **Acceptance:** clean migration run, tested restore with ledger/audit verification, actionable alerts, documented incident process, supported-browser matrix, pilot load profile and no unresolved critical defect.
 
-## 4. Critical architecture corrections before merging PRs
+## 4. Critical architecture corrections and remaining gates
 
-| ID   | Finding                                                           | Required action                                                            | Gate                                    |
-| ---- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------- |
-| A-01 | PR #26 branch ancestry is divergent from its declared PR #21 base | Rebuild/rebase branch and inspect the exact diff                           | Before CI/review                        |
-| A-02 | Regulated profile defaults are inserted as ENABLED                | Add explicit approval state and fail-closed bootstrap/activation           | Before regulated profile can be enabled |
-| A-03 | Every profile creates a store                                     | Add generic business locations; keep store/POS optional                    | Before non-retail onboarding            |
-| A-04 | Accounting is scoped by store                                     | Define AccountingBook and revise schema before posting services            | Before M3 schema merge                  |
-| A-05 | Capability activation gates are incomplete                        | Add release/dependency/entitlement/permission/jurisdiction checks          | Before module APIs are exposed          |
-| A-06 | Multiple active profile versions can be returned ambiguously      | Define one selectable version per key and carry version in UI/API identity | Before catalog release                  |
-| A-07 | Unknown capabilities can be silently filtered in UI               | Fail visibly and log contract mismatch; do not imply activation            | Before catalog release                  |
-| A-08 | ADR numbering collides; docs have stale PR status                 | Use ADR-0012 and align README, PRD, roadmap and status                     | In this architecture baseline           |
+| ID | Finding | Current evidence / required action | Gate |
+| --- | --- | --- | --- |
+| A-01 | Earlier multi-industry PR ancestry was divergent | Resolved by closing PR #26 and rebuilding the implementation in PR #28 directly on current main. | Resolved for PR #28 branch hygiene |
+| A-02 | Regulated defaults must not activate during onboarding | PR #28 sets regulated profile capabilities to `PENDING_APPROVAL`. Specialist evidence/reviewer workflow and server activation gates are still absent. | Before any regulated workflow is enabled |
+| A-03 | Every business must not require a retail store | PR #28 adds generic locations and optional stores. Latest head rejects Store creation when the profile lacks active `point_of_sale`. Verify latest-head CI and retain integration coverage. | Before non-retail onboarding merge |
+| A-04 | Accounting must not be scoped by POS store | PR #21's merged schema uses `accounting_book_id`. PR #28 links profiles to books and creates one book per profile at bootstrap. Legal-entity mapping and shared-book policy remain open. | Before accounting posting services |
+| A-05 | Capability activation gates are incomplete | Implement release support, profile eligibility, dependencies, entitlement, permission, setup, jurisdiction, location scope and specialist approval. | Before module APIs are exposed |
+| A-06 | Profile versions must be explicit | PR #28 has one ACTIVE version per industry in the database and rejects frontend versions other than the supported presentation version. Add migration and historical-record tests before version upgrades. | Before profile-version rollout |
+| A-07 | Unknown capability contracts must not disappear silently | PR #28 rejects unknown capability keys and unsupported profile versions. Add observability and browser tests for contract mismatch and localized failure states. | Before catalogue release |
+| A-08 | Documentation must report real repository state | README, roadmap and this review are updated on the PR branch. Keep the main snapshot separate from unmerged PR state. | Before merge |
+
+
 
 ## 5. Target data boundaries
 
@@ -165,7 +170,7 @@ Do not over-normalize before pilot evidence. Do not collapse distinct concepts j
 ## 6. Delivery sequence
 
 1. **Product gate:** select pilot verticals, legal entity model, location model, book scope and acceptance scenarios.
-2. **Branch hygiene:** reconstruct PR #26 from the exact intended base; resolve duplicate ADR numbering and stale documentation; run CI on exact head.
+2. **Branch hygiene:** keep PR #28 based on current main; verify latest-head CI, resolve actionable review findings, and retain accurate PR/roadmap evidence.
 3. **Identity completion:** authentication provider, login/recovery/cookies, rate limits, invitation delivery and support controls.
 4. **Profile foundation:** profile version, location, capability lifecycle and regulated approval gate.
 5. **Accounting kernel:** book-scoped schema, command owner boundary, idempotency, sequences, period locks, reversals, audit/outbox and read models.
