@@ -86,7 +86,8 @@ function App(): React.JSX.Element {
           ];
         });
 
-        if (mapped.length === 0) {
+        const firstProfile = mapped[0];
+        if (!firstProfile) {
           throw new Error(
             "The industry catalogue is empty or has no supported profiles.",
           );
@@ -97,7 +98,7 @@ function App(): React.JSX.Element {
           setSelectedId((current) =>
             mapped.some((profile) => profile.id === current)
               ? current
-              : mapped[0].id,
+              : firstProfile.id,
           );
         }
       } catch {
