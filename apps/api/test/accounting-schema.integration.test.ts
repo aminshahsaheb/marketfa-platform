@@ -281,7 +281,7 @@ test(
               (tenant_id, store_id, code, name_key, account_type, normal_balance,
                parent_account_id, is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1101', 'account.cash.drawer', 'ASSET', 'DEBIT',
-                     $3, TRUE, 'ACTIVE', $4)
+                     $3, FALSE, 'ACTIVE', $4)
              RETURNING id`,
             [tenantA.tenantId, tenantA.storeId, groupAccount, ownerId],
           );
