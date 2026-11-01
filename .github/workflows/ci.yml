@@ -43,6 +43,8 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Print Prettier-formatted industry picker for review
+        run: pnpm exec prettier apps/web/src/main.tsx
       - name: Check formatting for auth files
         run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
       - name: Check formatting for membership lifecycle files
