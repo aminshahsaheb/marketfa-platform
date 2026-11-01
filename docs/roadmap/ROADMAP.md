@@ -2,13 +2,15 @@
 
 Work is gated by evidence. A phase is not complete because its files exist.
 
+**Product scope:** MarketFa is a multi-industry business operations platform. Retail POS, inventory and accounting are the first vertical pack, not the only supported business model. See [multi-industry architecture](../architecture/MULTI_INDUSTRY_PLATFORM.md) and [ADR-0008](../architecture/adr/ADR-0008-MULTI-INDUSTRY-PROFILES.md).
+
 ## M0 — Discovery and legacy baseline
 
 - [x] Audit supplied legacy capabilities and record known architectural risks.
 - [x] Confirm first launch jurisdiction: Iran.
 - [x] Confirm first-release languages: Persian (fa-IR) and English (en).
 - [x] Decide canonical Iran ledger unit: integer IRR; Toman is explicit input/display (1 Toman = 10 Rial).
-- [ ] Identify first retail segment and pilot operator.
+- [ ] Select the first two vertical packs and pilot operators. Do not assume all businesses need inventory or POS.
 - [ ] Approve fractional quantity, line rounding, tax rounding, and deterministic remainder allocation with an Iran accountant.
 - [ ] Verify current tax rules, invoice types, exemptions, thresholds, and Moadian schema against official primary sources.
 - [ ] Confirm timezone, fiscal calendar, tax and legal reporting policy.
@@ -17,6 +19,18 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Approve MVP scenarios and measurable pilot outcomes.
 
 **Exit:** signed-off PRD decisions and acceptance scenarios.
+
+## M0.5 — Multi-industry foundation
+
+- [x] Confirm the product direction: one shared platform for multiple industries.
+- [x] Define industry profiles, capability packs, business profiles and the separation from role, entitlement and jurisdiction.
+- [x] Add the first extensible industry catalogue and selection preview to the web shell.
+- [ ] Define tenant-scoped business-profile and location schema.
+- [ ] Define server-side capability activation, dependencies, entitlements and permission checks.
+- [ ] Define dashboard composition contracts for module-owned cards, routes, actions and empty states.
+- [ ] Select the first two production vertical packs using pilot evidence.
+- [ ] Add business-profile isolation, profile-version and capability authorization tests.
+- **Exit:** an owner can create a business profile, select a supported industry, see only permitted capabilities, and use a dashboard that does not force retail workflows.
 
 ## M1 — Repository and engineering foundation
 
@@ -73,7 +87,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 **Exit:** independent ledger fixtures reconcile exactly; no unapproved tax or account-code assumptions.
 
-## M4 — Catalog and inventory
+## M4 — Retail vertical pack: catalog and inventory
 
 - [ ] Product, barcode, units and conversion.
 - [ ] Supplier and purchase receipt.
@@ -83,7 +97,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 **Exit:** stock ledger and valuation reconcile for defined scenarios.
 
-## M5 — POS and operations
+## M5 — Retail vertical pack: POS and operations
 
 - [ ] Shift lifecycle and cash counts.
 - [ ] Sale command and tender records.
@@ -94,7 +108,7 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 **Exit:** sale-to-ledger and return-to-ledger end-to-end tests pass.
 
-## M6 — Bounded offline and sync
+## M6 — Bounded offline and sync (capability-specific policies)
 
 - [ ] Device registration/revocation.
 - [ ] IndexedDB schema and outbox.
