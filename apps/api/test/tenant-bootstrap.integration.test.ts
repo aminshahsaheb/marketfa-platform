@@ -170,6 +170,11 @@ test(
         store_id: retailBusiness.storeId,
         business_profile_id: retailBusiness.businessProfileId,
       });
+      const retailLocationType = await owner.query<{ location_type: string }>(
+        "SELECT location_type FROM business_locations WHERE id = $1",
+        [retailBusiness.businessLocationId],
+      );
+      assert.equal(retailLocationType.rows[0]?.location_type, "BRANCH");
 
       const pharmacyBusiness = await service.create(
         { userId: activeUserId },
