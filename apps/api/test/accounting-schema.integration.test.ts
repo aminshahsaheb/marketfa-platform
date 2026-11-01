@@ -357,6 +357,16 @@ test(
           ),
         "55000",
       );
+      await expectSqlState(
+        () =>
+          withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+            client.query(
+              "UPDATE posting_rule_versions SET approved_at = approved_at + interval '1 second' WHERE tenant_id = $1 AND id = $2",
+              [tenantA.tenantId, ruleId],
+            ),
+          ),
+        "55000",
+      );
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           "UPDATE posting_rule_versions SET status = 'RETIRED' WHERE tenant_id = $1 AND id = $2",
@@ -590,6 +600,159 @@ test(
             reversesEntryId: originalId,
           }),
         "23505",
+      );
+
+      const saleRuleId = randomUUID();
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          `INSERT INTO posting_rule_versions
+            (id, tenant_id, store_id, rule_key, version, effective_from,
+             effective_to, configuration, status)
+           VALUES ($1, $2, $3, 'sale.posting', '1', DATE '2026-01-01',
+                   DATE '2026-01-31', '{"rule":"sale"}'::jsonb, 'DRAFT')`,
+          [saleRuleId, tenantA.tenantId, tenantA.storeId],
+        ),
+      );
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          `UPDATE posting_rule_versions
+           SET status = 'APPROVED', approved_by_user_id = $2, approved_at = now()
+           WHERE tenant_id = $1 AND id = $3`,
+          [tenantA.tenantId, ownerId, saleRuleId],
+        ),
+      );
+      const saleSourceId = randomUUID();
+      const saleJournalId = await createDraftJournal({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        periodId: accounts.periodId,
+        createdBy: ownerId,
+        idempotencyKey: "sale-source-001",
+        sourceType: "SALE",
+        sourceId: saleSourceId,
+        postingPurpose: "sale",
+        postingRuleVersionId: saleRuleId,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: saleJournalId,
+        lineNumber: 1,
+        accountId: accounts.cashId,
+        accountCode: "1000",
+        accountNameKey: "account.cash",
+        accountType: "ASSET",
+        normalBalance: "DEBIT",
+        debit: 200,
+        credit: 0,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: saleJournalId,
+        lineNumber: 2,
+        accountId: accounts.revenueId,
+        accountCode: "4000",
+        accountNameKey: "account.revenue",
+        accountType: "REVENUE",
+        normalBalance: "CREDIT",
+        debit: 0,
+        credit: 200,
+      });
+      await postJournal({
+        tenantId: tenantA.tenantId,
+        journalId: saleJournalId,
+        entryNumber: 3,
+        postedBy: ownerId,
+      });
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          "UPDATE accounting_sequences SET next_entry_number = 4 WHERE tenant_id = $1 AND store_id = $2",
+          [tenantA.tenantId, tenantA.storeId],
+        ),
+      );
+      await expectSqlState(
+        () =>
+          createDraftJournal({
+            tenantId: tenantA.tenantId,
+            storeId: tenantA.storeId,
+            periodId: accounts.periodId,
+            createdBy: ownerId,
+            idempotencyKey: "sale-source-duplicate",
+            sourceType: "SALE",
+            sourceId: saleSourceId,
+            postingPurpose: "sale",
+            postingRuleVersionId: saleRuleId,
+          }),
+        "23505",
+      );
+
+      const futureRuleId = randomUUID();
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          `INSERT INTO posting_rule_versions
+            (id, tenant_id, store_id, rule_key, version, effective_from,
+             configuration, status)
+           VALUES ($1, $2, $3, 'sale.future', '1', DATE '2026-02-01',
+                   '{"rule":"future"}'::jsonb, 'DRAFT')`,
+          [futureRuleId, tenantA.tenantId, tenantA.storeId],
+        ),
+      );
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          `UPDATE posting_rule_versions
+           SET status = 'APPROVED', approved_by_user_id = $2, approved_at = now()
+           WHERE tenant_id = $1 AND id = $3`,
+          [tenantA.tenantId, ownerId, futureRuleId],
+        ),
+      );
+      const futureSourceId = randomUUID();
+      const futureRuleJournalId = await createDraftJournal({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        periodId: accounts.periodId,
+        createdBy: ownerId,
+        idempotencyKey: "sale-future-rule-001",
+        sourceType: "SALE",
+        sourceId: futureSourceId,
+        postingPurpose: "sale",
+        postingRuleVersionId: futureRuleId,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: futureRuleJournalId,
+        lineNumber: 1,
+        accountId: accounts.cashId,
+        accountCode: "1000",
+        accountNameKey: "account.cash",
+        accountType: "ASSET",
+        normalBalance: "DEBIT",
+        debit: 50,
+        credit: 0,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: futureRuleJournalId,
+        lineNumber: 2,
+        accountId: accounts.revenueId,
+        accountCode: "4000",
+        accountNameKey: "account.revenue",
+        accountType: "REVENUE",
+        normalBalance: "CREDIT",
+        debit: 0,
+        credit: 50,
+      });
+      await expectSqlState(
+        () =>
+          postJournal({
+            tenantId: tenantA.tenantId,
+            journalId: futureRuleJournalId,
+            entryNumber: 4,
+            postedBy: ownerId,
+          }),
+        "23514",
       );
 
       await expectSqlState(
