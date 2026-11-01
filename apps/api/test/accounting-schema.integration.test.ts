@@ -846,7 +846,7 @@ test(
           postJournal({
             tenantId: tenantA.tenantId,
             journalId: outOfPeriodId,
-            entryNumber: 3,
+            entryNumber: 99,
             postedBy: ownerId,
           }),
         "23514",
