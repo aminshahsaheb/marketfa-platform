@@ -49,6 +49,8 @@ jobs:
         run: pnpm exec prettier --check apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
       - name: Check formatting for terminal lifecycle files
         run: pnpm exec prettier --check apps/api/src/tenancy/terminal.controller.ts apps/api/src/tenancy/terminal.service.ts apps/api/test/terminal.controller.test.ts apps/api/test/terminal-lifecycle.integration.test.ts
+      - name: Check formatting for HTTP authorization matrix
+        run: pnpm exec prettier --check apps/api/test/api-authorization.integration.test.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

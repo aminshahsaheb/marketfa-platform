@@ -44,16 +44,14 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Initial tenant, store, terminal, membership and session schema.
 - [x] Fixed role/permission map and tenant transaction boundary.
 - [x] Exhaustive unit-test matrix for every defined role and permission.
-- [ ] End-to-end API authorization matrix for every role and implemented endpoint.
+- [x] End-to-end HTTP authorization matrix for every role and implemented endpoint (implemented in the open API authorization PR; pending CI and merge).
 - [x] PostgreSQL RLS, privilege, composite-FK and pooled-connection integration checks for the current identity/tenancy schema.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
 - [x] Invitation create/revoke/accept commands and API: hashed token, expiry, verified identity binding, replay/concurrency protection, and atomic audit.
 - [x] Membership role change, suspension and removal; protect the last active OWNER (merged in PR #18).
-- [ ] Terminal registration, credential rotation, suspension/reactivation and revocation (implemented in the open terminal-lifecycle PR; device-auth/sync enforcement remains future work).
-- [ ] Audit all tenant, membership, invitation and terminal security changes atomically (bootstrap, invitation, membership, and terminal lifecycle commands write audit events atomically; terminal PR is pending review and merge).
-
-- [ ] End-to-end API authorization matrix for every role.
+- [x] Terminal listing, registration, credential rotation, suspension/reactivation and revocation (merged in PR #19; device-auth/sync enforcement remains future work).
+- [x] Audit tenant bootstrap, invitation, membership, and terminal lifecycle security changes atomically (merged in PRs #18 and #19).
 
 **Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → audit coverage → authentication provider and browser login integration. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
 
