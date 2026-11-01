@@ -31,7 +31,9 @@ function App(): React.JSX.Element {
   const [selectedId, setSelectedId] = useState("general-retail");
   const [language, setLanguage] = useState<"fa" | "en">("fa");
   const isPersian = language === "fa";
-  const selected = INDUSTRY_PROFILES.find((profile) => profile.id === selectedId);
+  const selected = INDUSTRY_PROFILES.find(
+    (profile) => profile.id === selectedId,
+  );
 
   const visibleProfiles = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -137,7 +139,9 @@ function App(): React.JSX.Element {
                       </span>
                     ) : null}
                   </span>
-                  <strong>{isPersian ? profile.labelFa : profile.labelEn}</strong>
+                  <strong>
+                    {isPersian ? profile.labelFa : profile.labelEn}
+                  </strong>
                   <span className="industry-description">
                     {isPersian ? profile.descriptionFa : profile.labelEn}
                   </span>
