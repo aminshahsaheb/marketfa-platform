@@ -63,7 +63,9 @@ function App(): React.JSX.Element {
           headers: { Accept: "application/json" },
         });
         if (!response.ok) {
-          throw new Error(`Industry catalogue request failed (${response.status}).`);
+          throw new Error(
+            `Industry catalogue request failed (${response.status}).`,
+          );
         }
 
         const catalog = (await response.json()) as IndustryCatalogItem[];
@@ -85,7 +87,9 @@ function App(): React.JSX.Element {
         });
 
         if (mapped.length === 0) {
-          throw new Error("The industry catalogue is empty or has no supported profiles.");
+          throw new Error(
+            "The industry catalogue is empty or has no supported profiles.",
+          );
         }
 
         if (!cancelled) {
@@ -122,12 +126,7 @@ function App(): React.JSX.Element {
     if (!query) return profiles;
 
     return profiles.filter((profile) =>
-      [
-        profile.labelFa,
-        profile.labelEn,
-        profile.descriptionFa,
-        profile.group,
-      ]
+      [profile.labelFa, profile.labelEn, profile.descriptionFa, profile.group]
         .join(" ")
         .toLocaleLowerCase()
         .includes(query),
@@ -214,7 +213,9 @@ function App(): React.JSX.Element {
 
           {loading ? (
             <p className="empty-state">
-              {isPersian ? "در حال آماده‌سازی فهرست صنف‌ها..." : "Loading industries..."}
+              {isPersian
+                ? "در حال آماده‌سازی فهرست صنف‌ها..."
+                : "Loading industries..."}
             </p>
           ) : null}
 
