@@ -126,5 +126,4 @@ Work is gated by evidence. A phase is not complete because its files exist.
 
 **Exit:** evidence supports expansion beyond the pilot.
 
-
 See [evidence-based completion plan](COMPLETION_PLAN.md) for the full dependency order, architecture risks, and exit criteria.
