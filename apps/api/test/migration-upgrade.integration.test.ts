@@ -114,10 +114,7 @@ test(
       );
       assert.equal(store.rowCount, 1);
       assert.equal(store.rows[0]?.id, storeId);
-      assert.equal(
-        store.rows[0]?.business_profile_id,
-        profile.rows[0]?.id,
-      );
+      assert.equal(store.rows[0]?.business_profile_id, profile.rows[0]?.id);
 
       const location = await legacy.query<{
         business_profile_id: string;
