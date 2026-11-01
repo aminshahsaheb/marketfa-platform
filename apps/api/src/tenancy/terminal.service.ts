@@ -170,6 +170,28 @@ export class TerminalService {
     }
   }
 
+  async activate(
+    actor: AuthenticatedActor,
+    tenantId: string,
+    terminalId: string,
+  ): Promise<TerminalCommandResult> {
+    try {
+      const result = await this.database.withTenantPermission(
+        actor,
+        tenantId,
+        "tenant:manage",
+        async (client) =>
+          client.query<TerminalRow>(
+            "SELECT * FROM public.tenant_terminal_activate($1, $2)",
+            [tenantId, terminalId],
+          ),
+      );
+      return readRow(result.rows[0]);
+    } catch (error) {
+      mapCommandError(error);
+    }
+  }
+
   async revoke(
     actor: AuthenticatedActor,
     tenantId: string,
