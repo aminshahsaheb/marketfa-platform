@@ -86,6 +86,19 @@ export class TerminalController {
     );
   }
 
+  @Post("terminals/:terminalId/activate")
+  activate(
+    @CurrentActor() actor: RequestActor,
+    @Param("tenantId") tenantId: string,
+    @Param("terminalId") terminalId: string,
+  ) {
+    return this.terminals.activate(
+      actor,
+      readUuid(tenantId, "tenantId"),
+      readUuid(terminalId, "terminalId"),
+    );
+  }
+
   @Delete("terminals/:terminalId")
   revoke(
     @CurrentActor() actor: RequestActor,
