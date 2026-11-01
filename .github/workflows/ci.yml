@@ -51,13 +51,6 @@ jobs:
         run: pnpm exec prettier --check apps/api/src/tenancy/terminal.controller.ts apps/api/src/tenancy/terminal.service.ts apps/api/test/terminal.controller.test.ts apps/api/test/terminal-lifecycle.integration.test.ts
       - name: Check formatting for HTTP authorization matrix
         run: pnpm exec prettier --check apps/api/test/api-authorization.integration.test.ts
-      - name: Temporary Prettier output for changed files
-        run: |
-          pnpm exec prettier apps/api/src/tenancy/industry-catalog.service.ts
-          pnpm exec prettier apps/api/src/tenancy/tenant-bootstrap.service.ts
-          pnpm exec prettier apps/api/test/industry-catalog.service.test.ts
-          pnpm exec prettier apps/api/test/tenant-bootstrap.integration.test.ts
-          pnpm exec prettier apps/web/src/main.tsx
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
