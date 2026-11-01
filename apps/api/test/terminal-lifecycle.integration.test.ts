@@ -242,8 +242,14 @@ test(
           "DELETE FROM terminal_assignments WHERE tenant_id = $1",
           [tenantId],
         );
-        await owner.query("DELETE FROM terminals WHERE tenant_id = $1", [tenantId]);
-        await owner.query("DELETE FROM stores WHERE tenant_id = $1", [tenantId]);
+        await owner.query(
+          "DELETE FROM terminals WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await owner.query(
+          "DELETE FROM stores WHERE tenant_id = $1",
+          [tenantId],
+        );
         await owner.query(
           "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
           [tenantId],
@@ -258,7 +264,10 @@ test(
         );
         await owner.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
       }
-      await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [[ownerId, managerId]]);
+      await owner.query(
+        "DELETE FROM users WHERE id = ANY($1::uuid[])",
+        [[ownerId, managerId]],
+      );
       await Promise.all([owner.end(), runtime.end()]);
     }
   },
