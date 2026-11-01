@@ -50,7 +50,7 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
     () =>
       controller.create(actor, {
         displayName: "Business",
-        locationName: "Office",
+        industryId: "professional-services",
       }),
     BadRequestException,
   );
@@ -60,6 +60,11 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
     displayName: "Legacy Business",
     legalName: null,
     storeName: "Legacy Store",
+  });
+
+  await controller.create(actor, {
+    displayName: "Location Only Business",
+    locationName: "Office",
   });
 
   await controller.create(actor, {
@@ -75,6 +80,13 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
       legalName: null,
       locationName: "Legacy Store",
       storeName: "Legacy Store",
+      industryId: "general-retail",
+    },
+    {
+      displayName: "Location Only Business",
+      legalName: null,
+      locationName: "Office",
+      storeName: null,
       industryId: "general-retail",
     },
     {
