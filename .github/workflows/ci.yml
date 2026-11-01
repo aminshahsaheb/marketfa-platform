@@ -47,8 +47,6 @@ jobs:
         run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
       - name: Check formatting for membership lifecycle files
         run: pnpm exec prettier --check apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
-      - name: Temporary terminal formatter output
-        run: pnpm exec prettier apps/api/test/terminal-lifecycle.integration.test.ts
       - name: Check formatting for terminal lifecycle files
         run: pnpm exec prettier --check apps/api/src/tenancy/terminal.controller.ts apps/api/src/tenancy/terminal.service.ts apps/api/test/terminal.controller.test.ts apps/api/test/terminal-lifecycle.integration.test.ts
       - name: Check formatting for HTTP authorization matrix
