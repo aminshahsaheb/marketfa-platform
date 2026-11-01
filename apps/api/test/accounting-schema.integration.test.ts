@@ -1022,6 +1022,120 @@ test(
         postClient.release();
       }
 
+      // If posting owns the parent row first, a later line write must wait
+      // and then fail after the committed POSTED state becomes visible.
+      const postedFirstJournalId = await createDraftJournal({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        periodId: accounts.periodId,
+        createdBy: ownerId,
+        idempotencyKey: "posting-line-race-002",
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: postedFirstJournalId,
+        lineNumber: 1,
+        accountId: accounts.cashId,
+        accountCode: "1000",
+        accountNameKey: "account.cash",
+        accountType: "ASSET",
+        normalBalance: "DEBIT",
+        debit: 200,
+        credit: 0,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: postedFirstJournalId,
+        lineNumber: 2,
+        accountId: accounts.revenueId,
+        accountCode: "4000",
+        accountNameKey: "account.revenue",
+        accountType: "REVENUE",
+        normalBalance: "CREDIT",
+        debit: 0,
+        credit: 200,
+      });
+
+      const postedFirstPostClient = await raceDb.connect();
+      const postedFirstLineClient = await raceDb.connect();
+      try {
+        await postedFirstPostClient.query("BEGIN");
+        await postedFirstPostClient.query(
+          "SET LOCAL ROLE marketfa_accounting_owner",
+        );
+        await postedFirstPostClient.query(
+          "SELECT set_config('app.current_tenant_id', $1, true)",
+          [tenantA.tenantId],
+        );
+        await postedFirstPostClient.query(
+          `UPDATE journal_entries
+           SET status = 'POSTED', entry_number = 11,
+               posted_at = now(), posted_by_user_id = $3
+           WHERE tenant_id = $1 AND id = $2`,
+          [tenantA.tenantId, postedFirstJournalId, ownerId],
+        );
+
+        await postedFirstLineClient.query("BEGIN");
+        await postedFirstLineClient.query(
+          "SET LOCAL ROLE marketfa_accounting_owner",
+        );
+        await postedFirstLineClient.query(
+          "SELECT set_config('app.current_tenant_id', $1, true)",
+          [tenantA.tenantId],
+        );
+        const linePidResult = await postedFirstLineClient.query<{ pid: number }>(
+          "SELECT pg_backend_pid() AS pid",
+        );
+        const linePid = linePidResult.rows[0]!.pid;
+        const lateLinePromise = postedFirstLineClient.query(
+          `INSERT INTO journal_lines
+            (tenant_id, store_id, journal_entry_id, line_number, account_id,
+             account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
+             normal_balance_snapshot, debit_irr, credit_irr)
+           VALUES ($1, $2, $3, 3, $4, '1000', 'account.cash', 'ASSET', 'DEBIT', 1, 0)`,
+          [
+            tenantA.tenantId,
+            tenantA.storeId,
+            postedFirstJournalId,
+            accounts.cashId,
+          ],
+        ).then(
+          () => null,
+          (error: unknown) => (error as DbError).code ?? "UNKNOWN",
+        );
+
+        let observedLineLock = false;
+        for (let attempt = 0; attempt < 100; attempt += 1) {
+          const activity = await ownerDb.query<{ waiting: boolean }>(
+            "SELECT wait_event_type = 'Lock' AS waiting FROM pg_stat_activity WHERE pid = $1",
+            [linePid],
+          );
+          if (activity.rows[0]?.waiting) {
+            observedLineLock = true;
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        assert.equal(
+          observedLineLock,
+          true,
+          "line mutation must wait while posting holds the journal row lock",
+        );
+
+        await postedFirstPostClient.query("COMMIT");
+        assert.equal(await lateLinePromise, "55000");
+        await postedFirstLineClient.query("ROLLBACK");
+      } catch (error) {
+        await postedFirstPostClient.query("ROLLBACK").catch(() => undefined);
+        await postedFirstLineClient.query("ROLLBACK").catch(() => undefined);
+        throw error;
+      } finally {
+        postedFirstPostClient.release();
+        postedFirstLineClient.release();
+      }
+
       const auditId = randomUUID();
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
