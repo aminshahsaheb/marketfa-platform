@@ -125,10 +125,7 @@ test(
         [tenantId],
       );
       assert.equal(location.rowCount, 1);
-      assert.equal(
-        location.rows[0]?.business_profile_id,
-        profile.rows[0]?.id,
-      );
+      assert.equal(location.rows[0]?.business_profile_id, profile.rows[0]?.id);
       assert.equal(location.rows[0]?.store_id, storeId);
       assert.equal(location.rows[0]?.location_type, "BRANCH");
 
