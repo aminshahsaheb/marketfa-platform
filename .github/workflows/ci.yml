@@ -45,10 +45,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check formatting for auth files
         run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
-      - name: Format membership lifecycle files and show patch
-        run: |
-          pnpm exec prettier --write apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
-          git --no-pager diff -- apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
+      - name: Check formatting for membership lifecycle files
+        run: pnpm exec prettier --check apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
