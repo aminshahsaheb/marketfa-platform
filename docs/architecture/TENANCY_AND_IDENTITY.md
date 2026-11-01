@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, and invitation create/revoke/accept commands are merged. PostgreSQL integration tests cover bootstrap and invitation lifecycle, including identity binding, one-time acceptance, and audit. Membership/terminal lifecycle, invitation delivery/rate limits, and authentication provider/login integration remain open.  
+**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, and invitation create/revoke/accept commands are merged. Membership role change, suspension, removal, last-active-OWNER protection, and atomic membership audit are implemented in open PR #18; integration tests cover immediate access loss, re-invitation denial, audit, and concurrent OWNER suspension/removal. PR #18 remains pending review and merge. Terminal lifecycle, invitation delivery/rate limits, and authentication provider/login integration remain open.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts
@@ -157,7 +157,7 @@ Regardless of mechanism:
 - Fixed role/permission matrix implemented and tested.
 - Tenant RLS and composite foreign keys active in PostgreSQL.
 - Cross-tenant access tests pass for reads, writes, IDs, joins, exports, and background jobs.
-- Membership removal and terminal revocation take effect immediately.
+- Membership removal/suspension and role changes take effect on the next request; terminal revocation takes effect immediately once terminal lifecycle is implemented.
 - Invitation acceptance is atomic and replay-safe.
 - Audit events cover role, membership, session, terminal, and tenant-setting changes.
 - No sensitive secrets appear in logs, error responses, or audit payloads.
