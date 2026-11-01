@@ -158,6 +158,18 @@ button {
   color: #17211d;
 }
 
+.search-box:focus-within {
+  border-color: #286044;
+  box-shadow: 0 0 0 3px rgb(40 96 68 / 16%);
+}
+
+.industry-card:focus-visible,
+.language-button:focus-visible,
+.catalog-error button:focus-visible {
+  outline: 3px solid #286044;
+  outline-offset: 3px;
+}
+
 .industry-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -384,5 +396,17 @@ button {
 
   .module-list {
     grid-template-columns: 1fr;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
