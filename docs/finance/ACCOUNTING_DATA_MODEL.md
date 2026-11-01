@@ -33,6 +33,7 @@ erDiagram
 - Stable UUID, tenant_id, store_id.
 - Code (32 chars), name_key (120 chars), account_type, normal_balance.
 - Optional parent_account_id; composite FK keeps parent in the same store.
+- Parent/group accounts must be non-postable; hierarchy cycles are rejected.
 - is_postable, status (ACTIVE/INACTIVE), created_by_user_id, timestamps.
 - Unique code within tenant/store.
 - Used account classification (account_type and normal_balance) cannot change after a posted journal references it.
