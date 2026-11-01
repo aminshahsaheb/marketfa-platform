@@ -80,7 +80,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 - [ ] Select first pilot verticals and complete their workflows end to end.
 - [ ] Test profile migration without changing historical records.
 
-**Open PR #28:** ready for review; latest head `ab81586a189c1360497303249c844571f42b3ef0`; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`), 27 commits ahead / 0 behind. CI is running on this exact head. The previous head passed CI, but that result does not verify the latest safeguards. CodeRabbit's review quota is currently exhausted; no completed human architecture review is recorded. PR #26 is closed as superseded.
+**Open PR #28:** ready for review; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`). Check the live PR for the current head and exact-head CI result. Earlier heads passed CI, but those results do not verify later changes. CodeRabbit's review quota is currently exhausted; no completed human architecture review is recorded. PR #26 is closed as superseded.
 
 **Exit:** the profile, location and capability contracts are merged; capability activation is enforced server-side with release, profile, dependency, entitlement, permission, setup, jurisdiction and specialist-approval gates; the UI renders only active, authorized module routes and actions; historical profile changes are explicit; and at least two selected pilot workflows pass end-to-end tests.
 
