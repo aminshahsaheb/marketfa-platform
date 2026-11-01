@@ -8,6 +8,10 @@ import type { TerminalService } from "../src/tenancy/terminal.service";
 test("terminal controller validates tenant, store, terminal UUIDs, and names", async () => {
   const calls: unknown[][] = [];
   const service = {
+    list: async (...args: unknown[]) => {
+      calls.push(args);
+      return [];
+    },
     register: async (...args: unknown[]) => {
       calls.push(args);
       return { terminalId: "terminal-1", credential: "secret-once" };
@@ -50,12 +54,13 @@ test("terminal controller validates tenant, store, terminal UUIDs, and names", a
     BadRequestException,
   );
 
+  await controller.list(actor, tenantId, storeId);
   await controller.register(actor, tenantId, storeId, { name: " Front POS " });
   await controller.rotateCredential(actor, tenantId, terminalId);
   await controller.suspend(actor, tenantId, terminalId);
   await controller.activate(actor, tenantId, terminalId);
   await controller.revoke(actor, tenantId, terminalId);
 
-  assert.deepEqual(calls[0]?.slice(1), [tenantId, storeId, "Front POS"]);
-  assert.equal(calls.length, 5);
+  assert.deepEqual(calls[1]?.slice(1), [tenantId, storeId, "Front POS"]);
+  assert.equal(calls.length, 6);
 });
