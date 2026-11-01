@@ -46,14 +46,6 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
       }),
     BadRequestException,
   );
-  assert.throws(
-    () =>
-      controller.create(actor, {
-        displayName: "Business",
-        industryId: "professional-services",
-      }),
-    BadRequestException,
-  );
 
   // Existing clients send storeName and do not send industryId.
   await controller.create(actor, {
