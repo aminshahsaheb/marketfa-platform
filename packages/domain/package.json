@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./industries": "./dist/industries.js"
+    "./industries": "./src/industries.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
