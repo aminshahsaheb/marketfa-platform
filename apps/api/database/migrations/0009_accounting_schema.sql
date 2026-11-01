@@ -506,12 +506,23 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
 
+  IF NEW.status <> 'ACTIVE' AND EXISTS (
+    SELECT 1
+    FROM public.accounts AS child
+    WHERE child.tenant_id = NEW.tenant_id
+      AND child.store_id = NEW.store_id
+      AND child.parent_account_id = NEW.id
+  ) THEN
+    RAISE EXCEPTION 'An account with children cannot be deactivated'
+      USING ERRCODE = '23514';
+  END IF;
+
   RETURN NEW;
 END;
 $function$;
 
 CREATE TRIGGER accounts_parent_rules_trg
-  BEFORE INSERT OR UPDATE OF parent_account_id, is_postable ON accounts
+  BEFORE INSERT OR UPDATE OF parent_account_id, is_postable, status ON accounts
   FOR EACH ROW EXECUTE FUNCTION accounting_validate_account_parent();
 
 CREATE OR REPLACE FUNCTION accounting_prevent_used_account_reclassification()
@@ -638,7 +649,8 @@ BEGIN
   FROM public.fiscal_periods AS period
   WHERE period.tenant_id = NEW.tenant_id
     AND period.store_id = NEW.store_id
-    AND period.id = NEW.period_id;
+    AND period.id = NEW.period_id
+  FOR UPDATE;
 
   IF period_state IS DISTINCT FROM 'OPEN' THEN
     RAISE EXCEPTION 'Journal cannot post to a non-open fiscal period'
