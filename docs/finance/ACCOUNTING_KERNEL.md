@@ -1,6 +1,6 @@
 # Accounting Kernel — Domain Specification
 
-**Status:** Domain specification; tenant-scoped schema foundation is implemented in the open M3 PR, while posting commands and read models remain unimplemented  
+**Status:** Domain specification; tenant/accounting-book schema foundation is implemented in the open M3 PR, while posting commands and read models remain unimplemented  
 **Initial jurisdiction:** Iran  
 **Functional currency for the initial Iran ledger:** IRR  
 **Accounting model:** double-entry, accrual-capable, immutable posted journal

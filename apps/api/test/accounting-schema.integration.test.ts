@@ -54,16 +54,15 @@ test(
     async function createAccountingBook(
       tenantId: string,
       createdBy: string,
-      code: string,
       name: string,
     ): Promise<string> {
       return withRole("marketfa_accounting_owner", tenantId, async (client) => {
         const result = await client.query<{ id: string }>(
           `INSERT INTO accounting_books
-            (tenant_id, code, name, created_by_user_id)
-           VALUES ($1, $2, $3, $4)
+            (tenant_id, name, created_by_user_id)
+           VALUES ($1, $2, $3)
            RETURNING id`,
-          [tenantId, code, name, createdBy],
+          [tenantId, name, createdBy],
         );
         return result.rows[0]!.id;
       });
@@ -202,19 +201,16 @@ test(
       const accountingBookA = await createAccountingBook(
         tenantA.tenantId,
         ownerId,
-        "MAIN",
         "Main accounting book",
       );
       const accountingBookA2 = await createAccountingBook(
         tenantA.tenantId,
         ownerId,
-        "SECOND",
         "Second accounting book",
       );
       const accountingBookB = await createAccountingBook(
         tenantB.tenantId,
         secondOwnerId,
-        "MAIN",
         "Main accounting book",
       );
 

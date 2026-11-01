@@ -27,19 +27,16 @@ CREATE TYPE accounting_journal_status AS ENUM ('DRAFT', 'POSTED');
 CREATE TABLE accounting_books (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  code VARCHAR(32) NOT NULL,
   name VARCHAR(160) NOT NULL,
   currency_code CHAR(3) NOT NULL DEFAULT 'IRR',
   status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
-  created_by_user_id UUID NOT NULL,
+  created_by_user_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (tenant_id, id),
-  UNIQUE (tenant_id, code),
   FOREIGN KEY (tenant_id, created_by_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
   CHECK (currency_code = 'IRR'),
   CHECK (status IN ('ACTIVE', 'INACTIVE')),
-  CHECK (length(btrim(code)) BETWEEN 1 AND 32),
   CHECK (length(btrim(name)) BETWEEN 1 AND 160)
 );
 
