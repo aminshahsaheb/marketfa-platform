@@ -6,7 +6,9 @@ import type { DatabaseService } from "../src/database/database.service";
 test("industry catalogue groups server capabilities by versioned profile", async () => {
   let readOnly = false;
   const database = {
-    withPublicReader: async (operation: (client: unknown) => Promise<unknown>) => {
+    withPublicReader: async (
+      operation: (client: unknown) => Promise<unknown>,
+    ) => {
       readOnly = true;
       const client = {
         query: async () => ({
