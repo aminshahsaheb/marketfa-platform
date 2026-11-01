@@ -168,7 +168,9 @@ test(
       const terminalListPath = `${tenantPath}/stores/${tenant.storeId}/terminals`;
 
       assert.equal((await fetch(`${baseUrl}/api/v1/health/live`)).status, 200);
-      const industryCatalogResponse = await fetch(`${baseUrl}/api/v1/industries`);
+      const industryCatalogResponse = await fetch(
+        `${baseUrl}/api/v1/industries`,
+      );
       assert.equal(industryCatalogResponse.status, 200);
       const industryCatalog = (await industryCatalogResponse.json()) as Array<{
         id: string;
@@ -178,7 +180,8 @@ test(
       }>;
       assert.ok(
         industryCatalog.some(
-          (profile) => profile.id === "general-retail" && profile.profileVersion === 1,
+          (profile) =>
+            profile.id === "general-retail" && profile.profileVersion === 1,
         ),
       );
       assert.ok(
@@ -492,12 +495,14 @@ test(
           "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
           [tenantId],
         );
-        await ownerDb.query("DELETE FROM business_profiles WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM accounting_books WHERE tenant_id = $1", [
-          tenantId,
-        ]);
+        await ownerDb.query(
+          "DELETE FROM business_profiles WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await ownerDb.query(
+          "DELETE FROM accounting_books WHERE tenant_id = $1",
+          [tenantId],
+        );
         await ownerDb.query(
           "DELETE FROM tenant_memberships WHERE tenant_id = $1",
           [tenantId],
