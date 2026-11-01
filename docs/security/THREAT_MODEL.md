@@ -32,7 +32,7 @@
 | Secret leakage              | Secret scanning, env-only secrets, rotation procedure                                         |
 | Backup theft                | Encryption, least privilege, restore drills                                                   |
 | Malicious dependencies      | Lockfile, dependency review, automated vulnerability checks                                   |
-| Device loss                 | Hashed terminal credentials, OWNER-only revoke, atomic assignment revocation, local cache protection assessment |
+| Device loss                 | Hash-only credentials, owner revoke, assignment revoke, cache protection                              |
 
 ## Release security gates
 
