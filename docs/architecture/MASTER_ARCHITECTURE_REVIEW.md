@@ -38,8 +38,8 @@ The safest next step is to agree the business-profile/location/accounting-book b
 
 - PR: https://github.com/aminshahsaheb/marketfa-platform/pull/28
 - Branch: `feat/multi-industry-foundation`.
-- Latest head at review: `a559216174ea639d27420ee85397f35e724e8838`.
-- Base: current `main` at `ed0e37c44b7358d2e77e7f62978bfce43966594c`; 29 commits ahead / 0 behind.
+- Base: current `main` at `ed0e37c44b7358d2e77e7f62978bfce43966594c`.
+- The live PR page is the source of truth for the current head SHA and ahead/behind count.
 - The branch is cleanly based on current main. The PR is open and ready for review, not merged.
 - Earlier exact-head CI passed. CI for the latest head is queued/running; do not reuse an earlier green result as proof for this head.
 - It adds versioned industry/capability catalogues, business profiles, accounting-book links, generic business locations, optional stores, legacy backfill, public catalogue API and bilingual selection/preview UI.
