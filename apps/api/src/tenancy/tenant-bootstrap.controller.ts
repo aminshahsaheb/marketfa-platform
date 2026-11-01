@@ -44,7 +44,7 @@ function parseInput(value: unknown): TenantBootstrapInput {
   const legalName = readText(body, "legalName", 200, false);
   const locationName = readText(body, "locationName", 160, false);
   const storeName = readText(body, "storeName", 160, false);
-  const industryId = readText(body, "industryId", 80, true);
+  const industryId = readText(body, "industryId", 80, false) ?? "general-retail";
 
   if (!locationName && !storeName) {
     throw new BadRequestException(
