@@ -59,10 +59,17 @@ Test API endpoints directly; do not rely on UI hiding controls.
 
 ## Terminal tests
 
-- Terminal secret is never stored or returned after creation.
-- Revoked/rotated terminal credential fails immediately.
-- Terminal from store A cannot send commands to store B.
-- Terminal identity is separate from cashier actor identity.
+- Only an active OWNER can register, rotate credentials, suspend, reactivate, or revoke a terminal.
+- Registration requires an active store in the selected tenant; cross-tenant or inactive stores fail closed.
+- A 256-bit credential is returned only at registration/rotation; PostgreSQL stores only its SHA-256 hash.
+- Credential rotation replaces the stored hash; the previous credential no longer matches.
+- Suspension blocks the terminal state; reactivation is allowed only from SUSPENDED.
+- Revoked terminals cannot rotate or reactivate; repeated suspend/activate/revoke commands are safe and do not create duplicate audit events.
+- Revocation marks active terminal assignments revoked in the same transaction.
+- Terminal lifecycle audit events are atomic and contain no raw credential or hash.
+- Runtime role cannot write terminal/assignment tables directly; only the scoped command functions can perform administration.
+- Terminal from store A cannot send commands to store B; terminal identity is separate from cashier actor identity.
+- Device-authentication and sync endpoints must reject suspended/revoked terminals and are not yet implemented; last-seen update tests remain pending.
 
 ## Evidence
 
