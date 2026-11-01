@@ -827,7 +827,7 @@ test(
             accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
-            idempotencyKey: "cross-store-line-001",
+            idempotencyKey: "cross-book-line-001",
           }).then(async (journalId) => {
             await insertLine({
               tenantId: tenantA.tenantId,
@@ -1316,15 +1316,15 @@ test(
             [tenantId],
           );
           await cleanupClient.query(
-            "DELETE FROM stores WHERE tenant_id = $1 AND name = 'Store A2'",
-            [tenantId],
-          );
-          await cleanupClient.query(
             "DELETE FROM audit_events WHERE tenant_id = $1",
             [tenantId],
           );
           await cleanupClient.query(
             "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM accounting_books WHERE tenant_id = $1",
             [tenantId],
           );
           await cleanupClient.query("DELETE FROM stores WHERE tenant_id = $1", [

@@ -6,7 +6,7 @@
 
 ## 1. Scope and tenant/accounting-book boundary
 
-Every accounting table carries both `tenant_id` and `accounting_book_id`. Composite foreign keys bind accounts, periods, posting rules, journal entries, lines, sequences, and audit events to the same tenant and store. RLS uses the M2 transaction-local tenant context.
+Every accounting table carries both `tenant_id` and `accounting_book_id`. Composite foreign keys bind accounts, periods, posting rules, journal entries, lines, sequences, and audit events to the same tenant and accounting book. RLS uses the M2 transaction-local tenant context.
 
 The first migration uses accounting-book-scoped posting-rule versions. Global templates are deferred until a reviewed template workflow exists. No chart-of-accounts template or fiscal calendar is seeded.
 
