@@ -17,7 +17,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 ### Merged foundation
 
 - M1 workspace, NestJS API shell, React/Vite shell, PostgreSQL, CI and smoke checks (PR #4).
-- Tenant/store identity schema, RLS and pooled-connection isolation tests (PRs #8, #11, #12; the remaining PR #16 appears to duplicate test changes already present on `main`).
+- Tenant/store identity schema, RLS and pooled-connection isolation tests (PRs #8, #11, #12). PR #16 was verified as duplicate and closed as superseded.
 - Provider-neutral server-side session lifecycle and actor/CSRF guards (PRs #9, #10).
 - Tenant bootstrap (PR #15), invitation lifecycle (PR #17), membership lifecycle (PR #18), terminal lifecycle (PR #19), and current tenant-admin HTTP authorization matrix (PR #20).
 - Integer IRR money primitive with explicit Toman conversion.
@@ -26,7 +26,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 ### In progress
 
 - **PR #21 — M3 accounting schema foundation.** The branch contains accounts, fiscal periods, posting-rule versions, journals/lines, sequences, audit events, RLS, database constraints and PostgreSQL integration tests. It does not implement posting application services, durable command idempotency, sequence allocation, period close/reopen commands, ledger/trial-balance queries, or source-module integration.
-- The latest observed CI run was still running at review time. An earlier run failed in the closed-period test because its journal number collided with an existing number. The assertion fixture was changed to use a unique number; the rerun must be confirmed before merge.
+- CI passes on exact PR #21 head `fbac60de7788f2257b2f79335670cee135106f66` (format, lint, typecheck, migrations, PostgreSQL integration tests, build, API+Web smoke). An earlier run exposed a duplicate journal-number fixture in the closed-period test; the fixture was corrected and the exact-head rerun passed.
 
 ### Not implemented or not approved
 
@@ -74,13 +74,13 @@ The correct sequence is to close product/legal decisions and identity entry poin
 - [ ] Add abuse controls: rate limits, enumeration-resistant responses, invitation delivery and resend limits, audit and alerting.
 - [ ] Implement tenant/store onboarding UI and secure first-owner flow.
 - [ ] Define ownership transfer, account deletion/disable, support recovery and shared-device behavior.
-- [ ] Close or mark PR #16 superseded after confirming its diff is already in `main`.
+- [x] Close PR #16 as superseded after verifying its test changes are already in `main`.
 - [ ] Extend auth/authorization tests to login/recovery and future endpoint families.
 - **Exit:** user can securely create/recover an account, create a tenant/store, invite users and revoke access; tests prove session and membership revocation.
 
 ### Phase 2 — Finish M3 accounting schema foundation
 
-- [ ] Confirm PR #21 CI passes on the exact head and review migration privilege/RLS behavior.
+- [x] Confirm PR #21 CI passes on exact head; migration privilege/RLS review is recorded as a follow-up gate.
 - [ ] Add/verify rule effective-date overlap semantics and account hierarchy policy.
 - [ ] Confirm deferred constraints, rollback behavior, audit immutability and test cleanup.
 - [ ] Merge PR #21 only after review and green CI.
@@ -169,8 +169,8 @@ A feature is complete only when it has:
 
 ## Recommended immediate next actions
 
-1. Resolve the remaining PR #21 CI failure (or confirm the latest rerun passes); do not merge on stale green status.
-2. Review PR #21 migration and tests against the period-close race, posting-rule overlap, hierarchy and RLS controls above.
-3. Update stale README/roadmap M2 status and close/supersede PR #16.
+1. Complete human review of PR #21 migration/RLS and schema invariants; CI is green on its exact head.
+2. Merge PR #21 only after review; then implement Phase 3 accounting commands.
+3. Review/merge PR #22, which updates the roadmap and records this plan.
 4. Make Phase 0 decisions with the pilot operator/accountant before implementing posting behavior.
-5. Build Phase 3 accounting commands before starting POS, so sales cannot invent their own financial writes.
+5. Build accounting commands before starting POS, so sales cannot invent their own financial writes.
