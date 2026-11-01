@@ -33,7 +33,7 @@ erDiagram
 - Stable UUID, tenant_id, store_id.
 - Code (32 chars), name_key (120 chars), account_type, normal_balance.
 - Optional parent_account_id; composite FK keeps parent in the same store.
-- Parent/group accounts must be non-postable; hierarchy cycles are rejected.
+- Parent/group accounts must be active and non-postable while they have children; a parent with children cannot be deactivated. Hierarchy cycles are rejected.
 - is_postable, status (ACTIVE/INACTIVE), created_by_user_id, timestamps.
 - Unique code within tenant/store.
 - Used account classification (account_type and normal_balance) cannot change after a posted journal references it.
@@ -47,7 +47,7 @@ erDiagram
 - Close and reopen metadata, including actor membership.
 - Start date must be on or before end date.
 - Periods cannot overlap within a store. A transaction-scoped advisory lock serializes overlap checks.
-- Posting must use an OPEN period and an entry date inside its boundaries.
+- Posting must use an OPEN period and an entry date inside its boundaries. The deferred posting guard locks the period row so a close/reopen transaction can serialize against posting.
 - Fiscal-year start and period length remain an accountant-approved decision.
 
 ### posting_rule_versions
@@ -56,7 +56,7 @@ erDiagram
 - rule_key, version, effective_from/effective_to, configuration JSONB, source_reference.
 - Status: DRAFT, APPROVED, RETIRED; approval actor and timestamp are required for APPROVED/RETIRED.
 - Unique tenant/store/rule/version.
-- A rule is created as DRAFT. Approved configuration is immutable; an approved rule can only move to RETIRED.
+- A rule is created as DRAFT. Only an approved rule can move to RETIRED. Approved configuration is immutable; a retired rule is immutable.
 - Automated journals require an approved rule effective on the journal date. JSONB still requires typed application validation.
 
 ### journal_entries
