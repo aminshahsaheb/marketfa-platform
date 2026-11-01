@@ -139,16 +139,14 @@ PRs #22, #24, #25 and #26 are closed as superseded/duplicates. PR #26's obsolete
 
 ## 4. Critical architecture corrections and remaining gates
 
-| ID   | Finding                                                  | Current evidence / required action                                                                                                                                                                         | Gate                                     |
-| ---- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| A-01 | Earlier multi-industry PR ancestry was divergent         | Resolved by closing PR #26 and rebuilding the implementation in PR #28 directly on current main.                                                                                                           | Resolved for PR #28 branch hygiene       |
-| A-02 | Regulated defaults must not activate during onboarding   | PR #28 sets regulated profile capabilities to `PENDING_APPROVAL`. Specialist evidence/reviewer workflow and server activation gates are still absent.                                                      | Before any regulated workflow is enabled |
-| A-03 | Every business must not require a retail store           | PR #28 adds generic locations and optional stores. Latest head rejects Store creation when the profile lacks active `point_of_sale`. Verify latest-head CI and retain integration coverage.                | Before non-retail onboarding merge       |
-| A-04 | Accounting must not be scoped by POS store               | PR #21's merged schema uses `accounting_book_id`. PR #28 links profiles to books and creates one book per profile at bootstrap. Legal-entity mapping and shared-book policy remain open.                   | Before accounting posting services       |
-| A-05 | Capability activation gates are incomplete               | Implement release support, profile eligibility, dependencies, entitlement, permission, setup, jurisdiction, location scope and specialist approval.                                                        | Before module APIs are exposed           |
-| A-06 | Profile versions must be explicit                        | PR #28 has one ACTIVE version per industry in the database and rejects frontend versions other than the supported presentation version. Add migration and historical-record tests before version upgrades. | Before profile-version rollout           |
-| A-07 | Unknown capability contracts must not disappear silently | PR #28 rejects unknown capability keys and unsupported profile versions. Add observability and browser tests for contract mismatch and localized failure states.                                           | Before catalogue release                 |
-| A-08 | Documentation must report real repository state          | README, roadmap and this review are updated on the PR branch. Keep the main snapshot separate from unmerged PR state.                                                                                      | Before merge                             |
+- **A-01 — Branch ancestry:** Resolved for the current implementation. PR #26 is closed. PR #28 is based directly on current main.
+- **A-02 — Regulated profiles:** PR #28 starts regulated capabilities in `PENDING_APPROVAL`. Specialist approval workflow and activation gates remain open.
+- **A-03 — Optional stores:** PR #28 supports generic locations. A database trigger rejects store writes when the linked profile does not include the active `point_of_sale` capability.
+- **A-04 — Accounting scope:** Merged PR #21 uses `accounting_book_id`. PR #28 links profiles to books and creates one book per profile. Shared-book and legal-entity policy remain open.
+- **A-05 — Capability activation:** Release support, profile eligibility, dependencies, entitlement, permission, setup, jurisdiction, location scope and specialist approval must be enforced before a module API is exposed.
+- **A-06 — Profile versions:** The database allows one ACTIVE version per industry. The current frontend supports presentation version 1 and fails closed on other versions. Historical profile migration tests are still required.
+- **A-07 — Capability contract drift:** The frontend rejects unknown capability keys. Add observability and browser tests for contract mismatch and localized failure states.
+- **A-08 — Documentation:** README, roadmap and this review separate merged main from open PR state. Keep the live PR as the source of truth for its current head and CI.
 
 
 
