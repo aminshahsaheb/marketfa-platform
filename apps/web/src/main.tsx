@@ -95,6 +95,12 @@ function App(): React.JSX.Element {
             throw new Error(`Invalid industry profile version: ${item.id}`);
           }
 
+          if (item.profileVersion !== 1) {
+            throw new Error(
+              `Unsupported industry profile version: ${item.id}:${item.profileVersion}`,
+            );
+          }
+
           const capabilities = item.capabilities.map((capability) => {
             if (!isIndustryCapability(capability)) {
               throw new Error(`Unsupported capability: ${capability}`);
@@ -115,6 +121,13 @@ function App(): React.JSX.Element {
         if (new Set(profileKeys).size !== profileKeys.length) {
           throw new Error(
             "The industry catalogue contains duplicate versions.",
+          );
+        }
+
+        const industryIds = mapped.map((profile) => profile.id);
+        if (new Set(industryIds).size !== industryIds.length) {
+          throw new Error(
+            "The industry catalogue contains multiple active versions.",
           );
         }
 
