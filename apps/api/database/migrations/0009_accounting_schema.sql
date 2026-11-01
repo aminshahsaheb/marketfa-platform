@@ -407,12 +407,23 @@ BEGIN
     parent_entry_id := NEW.journal_entry_id;
   END IF;
 
+  IF TG_OP = 'UPDATE'
+     AND (
+       NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+       OR NEW.store_id IS DISTINCT FROM OLD.store_id
+       OR NEW.journal_entry_id IS DISTINCT FROM OLD.journal_entry_id
+     ) THEN
+    RAISE EXCEPTION 'Journal line parent is immutable'
+      USING ERRCODE = '55000';
+  END IF;
+
   SELECT entry.status
   INTO parent_status
   FROM public.journal_entries AS entry
   WHERE entry.tenant_id = parent_tenant_id
     AND entry.store_id = parent_store_id
-    AND entry.id = parent_entry_id;
+    AND entry.id = parent_entry_id
+  FOR UPDATE;
 
   IF parent_status = 'POSTED' THEN
     RAISE EXCEPTION 'Lines of posted journals are immutable'
