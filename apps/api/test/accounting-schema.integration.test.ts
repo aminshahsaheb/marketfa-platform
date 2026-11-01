@@ -1124,22 +1124,24 @@ test(
           "SELECT pg_backend_pid() AS pid",
         );
         const linePid = linePidResult.rows[0]!.pid;
-        const lateLinePromise = postedFirstLineClient.query(
-          `INSERT INTO journal_lines
-            (tenant_id, store_id, journal_entry_id, line_number, account_id,
-             account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
-             normal_balance_snapshot, debit_irr, credit_irr)
-           VALUES ($1, $2, $3, 3, $4, '1000', 'account.cash', 'ASSET', 'DEBIT', 1, 0)`,
-          [
-            tenantA.tenantId,
-            tenantA.storeId,
-            postedFirstJournalId,
-            accounts.cashId,
-          ],
-        ).then(
-          () => null,
-          (error: unknown) => (error as DbError).code ?? "UNKNOWN",
-        );
+        const lateLinePromise = postedFirstLineClient
+          .query(
+            `INSERT INTO journal_lines
+              (tenant_id, store_id, journal_entry_id, line_number, account_id,
+               account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
+               normal_balance_snapshot, debit_irr, credit_irr)
+             VALUES ($1, $2, $3, 3, $4, '1000', 'account.cash', 'ASSET', 'DEBIT', 1, 0)`,
+            [
+              tenantA.tenantId,
+              tenantA.storeId,
+              postedFirstJournalId,
+              accounts.cashId,
+            ],
+          )
+          .then(
+            () => null,
+            (error: unknown) => (error as DbError).code ?? "UNKNOWN",
+          );
 
         let observedLineLock = false;
         for (let attempt = 0; attempt < 100; attempt += 1) {
