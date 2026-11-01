@@ -108,6 +108,17 @@ test(
         ),
         TenantAccessDeniedError,
       );
+      await assert.rejects(
+        invitations.create(
+          { userId: ownerAId },
+          tenant.tenantId,
+          {
+            intendedIdentifier: "cashier@example.test",
+            role: "VIEWER",
+          },
+        ),
+        ConflictException,
+      );
 
       const removed = await memberships.remove(
         { userId: ownerAId },
