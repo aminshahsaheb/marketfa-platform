@@ -94,11 +94,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Restaurant",
     group: "food-service",
     descriptionFa: "سفارش، میز، منو، آشپزخانه و تحویل",
-    capabilities: [
-      ...retailCapabilities,
-      "reservations",
-      "delivery",
-    ],
+    capabilities: [...retailCapabilities, "reservations", "delivery"],
   },
   {
     id: "cafe-bakery",
