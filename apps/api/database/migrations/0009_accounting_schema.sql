@@ -324,6 +324,11 @@ BEGIN
        OR NEW.effective_to IS DISTINCT FROM OLD.effective_to
        OR NEW.configuration IS DISTINCT FROM OLD.configuration
        OR NEW.source_reference IS DISTINCT FROM OLD.source_reference
+       OR NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+       OR NEW.store_id IS DISTINCT FROM OLD.store_id
+       OR NEW.approved_by_user_id IS DISTINCT FROM OLD.approved_by_user_id
+       OR NEW.approved_at IS DISTINCT FROM OLD.approved_at
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at
      ) THEN
     RAISE EXCEPTION 'Approved posting rule configuration is immutable'
       USING ERRCODE = '55000';
