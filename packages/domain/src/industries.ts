@@ -55,6 +55,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "General retail",
     group: "retail",
     descriptionFa: "فروش کالا، موجودی، خرید و صندوق",
+    regulated: false,
     capabilities: retailCapabilities,
   },
   {
@@ -63,6 +64,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Grocery",
     group: "retail",
     descriptionFa: "کالای متنوع، بارکد، وزن، تاریخ انقضا و صندوق",
+    regulated: false,
     capabilities: retailCapabilities,
   },
   {
@@ -71,6 +73,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Apparel and footwear",
     group: "retail",
     descriptionFa: "تنوع رنگ و سایز، کالا، موجودی و فروش",
+    regulated: false,
     capabilities: retailCapabilities,
   },
   {
@@ -79,6 +82,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Electronics",
     group: "retail",
     descriptionFa: "مدل، سریال، ضمانت، موجودی و فروش",
+    regulated: false,
     capabilities: retailCapabilities,
   },
   {
@@ -96,6 +100,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Restaurant",
     group: "food-service",
     descriptionFa: "سفارش، میز، منو، آشپزخانه و تحویل",
+    regulated: false,
     capabilities: [...retailCapabilities, "reservations", "delivery"],
   },
   {
@@ -104,6 +109,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Cafe and bakery",
     group: "food-service",
     descriptionFa: "منو، دستور ساخت، سفارش و فروش حضوری",
+    regulated: false,
     capabilities: [...retailCapabilities, "production"],
   },
   {
@@ -112,6 +118,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Professional services",
     group: "services",
     descriptionFa: "مشتری، قرارداد، خدمت، صورتحساب و هزینه",
+    regulated: false,
     capabilities: [...shared, "projects"],
   },
   {
@@ -120,6 +127,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Repair and maintenance",
     group: "services",
     descriptionFa: "پذیرش کار، سفارش کار، قطعه و تحویل",
+    regulated: false,
     capabilities: [
       ...shared,
       "suppliers",
@@ -145,6 +153,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Education and classes",
     group: "services",
     descriptionFa: "هنرجو، دوره، جلسه، ثبت‌نام و دریافت شهریه",
+    regulated: false,
     capabilities: [...shared, "appointments", "projects"],
   },
   {
@@ -153,6 +162,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Construction and contracting",
     group: "projects",
     descriptionFa: "پروژه، برآورد، خرید، هزینه و صورت‌وضعیت",
+    regulated: false,
     capabilities: [
       ...shared,
       "suppliers",
@@ -167,6 +177,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Wholesale and distribution",
     group: "trade",
     descriptionFa: "مشتری سازمانی، قیمت‌گذاری، سفارش و توزیع",
+    regulated: false,
     capabilities: [
       ...shared,
       "suppliers",
@@ -182,6 +193,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Manufacturing",
     group: "production",
     descriptionFa: "مواد اولیه، دستور تولید، عملیات و محصول نهایی",
+    regulated: false,
     capabilities: [
       ...shared,
       "suppliers",
@@ -198,6 +210,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Transport and logistics",
     group: "operations",
     descriptionFa: "سفارش حمل، مسیر، تحویل و هزینه",
+    regulated: false,
     capabilities: [...shared, "delivery", "work_orders"],
   },
   {
@@ -215,6 +228,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Other business",
     group: "custom",
     descriptionFa: "شروع با ابزارهای پایه و افزودن قابلیت‌های موردنیاز",
+    regulated: false,
     capabilities: shared,
   },
 ];
