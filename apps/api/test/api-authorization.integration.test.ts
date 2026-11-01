@@ -267,7 +267,7 @@ test(
       for (const role of roles.filter((value) => value !== "invitee")) {
         assert.equal(
           (
-            await request("owner", "POST", "/api/v1/invitations/accept", {
+            await request(role, "POST", "/api/v1/invitations/accept", {
               token: acceptanceInvite.token,
             })
           ).status,
