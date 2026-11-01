@@ -51,6 +51,10 @@ jobs:
         run: pnpm exec prettier --check apps/api/src/tenancy/terminal.controller.ts apps/api/src/tenancy/terminal.service.ts apps/api/test/terminal.controller.test.ts apps/api/test/terminal-lifecycle.integration.test.ts
       - name: Check formatting for HTTP authorization matrix
         run: pnpm exec prettier --check apps/api/test/api-authorization.integration.test.ts
+      - name: Format accounting schema test and docs and show patch
+        run: |
+          pnpm exec prettier --write apps/api/test/accounting-schema.integration.test.ts docs/finance/ACCOUNTING_DATA_MODEL.md docs/finance/ACCOUNTING_KERNEL.md docs/roadmap/ROADMAP.md docs/architecture/TENANCY_AND_IDENTITY.md docs/testing/TENANCY_SECURITY_TEST_PLAN.md
+          git --no-pager diff -- apps/api/test/accounting-schema.integration.test.ts docs/finance/ACCOUNTING_DATA_MODEL.md docs/finance/ACCOUNTING_KERNEL.md docs/roadmap/ROADMAP.md docs/architecture/TENANCY_AND_IDENTITY.md docs/testing/TENANCY_SECURITY_TEST_PLAN.md
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
