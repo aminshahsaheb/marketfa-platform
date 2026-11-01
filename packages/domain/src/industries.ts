@@ -26,6 +26,7 @@ export type IndustryProfile = {
   labelEn: string;
   group: string;
   descriptionFa: string;
+  regulated: boolean;
   capabilities: readonly IndustryCapability[];
 };
 
@@ -86,6 +87,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Pharmacy",
     group: "regulated-retail",
     descriptionFa: "فروش و موجودی با نیاز به قواعد تخصصی و مجوزهای مرتبط",
+    regulated: true,
     capabilities: retailCapabilities,
   },
   {
@@ -134,6 +136,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     group: "appointments",
     descriptionFa:
       "نوبت‌دهی، خدمات، کارکنان و پرداخت؛ دادهٔ حساس نیازمند کنترل جداگانه است",
+    regulated: true,
     capabilities: [...shared, "appointments"],
   },
   {
@@ -203,6 +206,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Hospitality",
     group: "hospitality",
     descriptionFa: "رزرو، پذیرش، خدمات و تسویه",
+    regulated: false,
     capabilities: [...shared, "reservations", "appointments"],
   },
   {
