@@ -8,7 +8,11 @@ import type { AddressInfo } from "node:net";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
 import { AppModule } from "../src/app.module";
-import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, SESSION_COOKIE_NAME } from "../src/auth/auth.constants";
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  SESSION_COOKIE_NAME,
+} from "../src/auth/auth.constants";
 import { DatabaseService } from "../src/database/database.service";
 import { SessionService } from "../src/sessions/session.service";
 import { TenantBootstrapService } from "../src/tenancy/tenant-bootstrap.service";
@@ -65,11 +69,16 @@ test(
 
       const sessions = new SessionService(runtimeDb, authDb);
       for (const role of roles) {
-        const issued = await sessions.create(identityIds[role], `matrix-${role}`);
+        const issued = await sessions.create(
+          identityIds[role],
+          `matrix-${role}`,
+        );
         sessionTokens.set(role, issued.token);
       }
 
-      const bootstrap = new TenantBootstrapService(new DatabaseService(runtimeDb));
+      const bootstrap = new TenantBootstrapService(
+        new DatabaseService(runtimeDb),
+      );
       const tenant = await bootstrap.create(
         { userId: userIds.owner },
         {
@@ -157,10 +166,7 @@ test(
       const tenantPath = `/api/v1/tenants/${tenant.tenantId}`;
       const terminalListPath = `${tenantPath}/stores/${tenant.storeId}/terminals`;
 
-      assert.equal(
-        (await fetch(`${baseUrl}/api/v1/health/live`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${baseUrl}/api/v1/health/live`)).status, 200);
       assert.equal((await request(null, "GET", terminalListPath)).status, 401);
       assert.equal(
         (
@@ -183,11 +189,16 @@ test(
         403,
       );
 
-      const bootstrapResponse = await request("outsider", "POST", "/api/v1/tenants", {
-        displayName: "Outsider Tenant",
-        legalName: null,
-        storeName: "Outsider Store",
-      });
+      const bootstrapResponse = await request(
+        "outsider",
+        "POST",
+        "/api/v1/tenants",
+        {
+          displayName: "Outsider Tenant",
+          legalName: null,
+          storeName: "Outsider Store",
+        },
+      );
       assert.equal(bootstrapResponse.status, 201);
       const outsiderTenant = (await bootstrapResponse.json()) as {
         tenantId: string;
@@ -258,7 +269,10 @@ test(
         "owner",
         "POST",
         `${tenantPath}/invitations`,
-        { intendedIdentifier: "invitee@auth-matrix.example.test", role: "CASHIER" },
+        {
+          intendedIdentifier: "invitee@auth-matrix.example.test",
+          role: "CASHIER",
+        },
       );
       assert.equal(acceptanceInviteResponse.status, 201);
       const acceptanceInvite = (await acceptanceInviteResponse.json()) as {
@@ -275,9 +289,14 @@ test(
           `${role} identity mismatch must not accept the invitation`,
         );
       }
-      const accepted = await request("invitee", "POST", "/api/v1/invitations/accept", {
-        token: acceptanceInvite.token,
-      });
+      const accepted = await request(
+        "invitee",
+        "POST",
+        "/api/v1/invitations/accept",
+        {
+          token: acceptanceInvite.token,
+        },
+      );
       assert.equal(accepted.status, 201);
 
       const roleChangePath = `${tenantPath}/memberships/${viewerMembershipId}/role`;
@@ -285,7 +304,8 @@ test(
       const removeMembershipPath = `${tenantPath}/memberships/${cashierMembershipId}`;
       for (const role of roles.filter((value) => value !== "owner")) {
         assert.equal(
-          (await request(role, "PATCH", roleChangePath, { role: "ACCOUNTANT" })).status,
+          (await request(role, "PATCH", roleChangePath, { role: "ACCOUNTANT" }))
+            .status,
           403,
           `${role} must not change membership roles`,
         );
@@ -301,11 +321,21 @@ test(
         );
       }
       assert.equal(
-        (await request("owner", "PATCH", roleChangePath, { role: "ACCOUNTANT" })).status,
+        (
+          await request("owner", "PATCH", roleChangePath, {
+            role: "ACCOUNTANT",
+          })
+        ).status,
         200,
       );
-      assert.equal((await request("owner", "POST", suspendMembershipPath)).status, 201);
-      assert.equal((await request("owner", "DELETE", removeMembershipPath)).status, 200);
+      assert.equal(
+        (await request("owner", "POST", suspendMembershipPath)).status,
+        201,
+      );
+      assert.equal(
+        (await request("owner", "DELETE", removeMembershipPath)).status,
+        200,
+      );
 
       const registerPath = `${tenantPath}/stores/${tenant.storeId}/terminals`;
       const registered = await request("owner", "POST", registerPath, {
@@ -323,22 +353,50 @@ test(
       const revokeTerminalPath = `${tenantPath}/terminals/${terminal.terminalId}`;
 
       for (const role of roles.filter((value) => value !== "owner")) {
-        assert.equal((await request(role, "GET", terminalListPath)).status, 403);
         assert.equal(
-          (await request(role, "POST", registerPath, { name: `${role} POS` })).status,
+          (await request(role, "GET", terminalListPath)).status,
+          403,
+        );
+        assert.equal(
+          (await request(role, "POST", registerPath, { name: `${role} POS` }))
+            .status,
           403,
         );
         assert.equal((await request(role, "POST", credentialPath)).status, 403);
-        assert.equal((await request(role, "POST", suspendTerminalPath)).status, 403);
-        assert.equal((await request(role, "POST", activateTerminalPath)).status, 403);
-        assert.equal((await request(role, "DELETE", revokeTerminalPath)).status, 403);
+        assert.equal(
+          (await request(role, "POST", suspendTerminalPath)).status,
+          403,
+        );
+        assert.equal(
+          (await request(role, "POST", activateTerminalPath)).status,
+          403,
+        );
+        assert.equal(
+          (await request(role, "DELETE", revokeTerminalPath)).status,
+          403,
+        );
       }
 
-      assert.equal((await request("owner", "GET", terminalListPath)).status, 200);
-      assert.equal((await request("owner", "POST", credentialPath)).status, 201);
-      assert.equal((await request("owner", "POST", suspendTerminalPath)).status, 201);
-      assert.equal((await request("owner", "POST", activateTerminalPath)).status, 201);
-      assert.equal((await request("owner", "DELETE", revokeTerminalPath)).status, 200);
+      assert.equal(
+        (await request("owner", "GET", terminalListPath)).status,
+        200,
+      );
+      assert.equal(
+        (await request("owner", "POST", credentialPath)).status,
+        201,
+      );
+      assert.equal(
+        (await request("owner", "POST", suspendTerminalPath)).status,
+        201,
+      );
+      assert.equal(
+        (await request("owner", "POST", activateTerminalPath)).status,
+        201,
+      );
+      assert.equal(
+        (await request("owner", "DELETE", revokeTerminalPath)).status,
+        200,
+      );
 
       assert.equal(
         (
@@ -399,9 +457,10 @@ test(
         await ownerDb.query("DELETE FROM terminals WHERE tenant_id = $1", [
           tenantId,
         ]);
-        await ownerDb.query("DELETE FROM tenant_invitations WHERE tenant_id = $1", [
-          tenantId,
-        ]);
+        await ownerDb.query(
+          "DELETE FROM tenant_invitations WHERE tenant_id = $1",
+          [tenantId],
+        );
         await ownerDb.query(
           "DELETE FROM tenant_memberships WHERE tenant_id = $1",
           [tenantId],
