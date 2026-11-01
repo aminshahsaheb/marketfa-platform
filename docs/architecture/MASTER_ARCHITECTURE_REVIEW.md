@@ -13,9 +13,9 @@ MarketFa has a sound early foundation: a TypeScript modular monolith, PostgreSQL
 
 The product direction is now broader than the original retail scope. MarketFa must let a business owner select the kind of work they do and receive a suitable workspace. This is a platform architecture problem, not a screen-design problem. The data model must distinguish tenant, business profile, location, store/POS, accounting book, capability, entitlement, role permission, jurisdiction and locale.
 
-**The repository is not a usable multi-industry product yet.** The main branch is a foundation. It does not contain completed authentication-provider integration, business-profile implementation, accounting posting services, inventory, POS, service workflows, offline sync, tax adapters or production operations.
+**The repository is not a usable multi-industry product yet.** The main branch is a foundation and does not contain the unmerged PR #28 onboarding implementation. Authentication-provider integration, accounting posting services, inventory, POS, service workflows, offline sync, tax adapters and production operations are still incomplete.
 
-The safest next step is to agree the business-profile/location/accounting-book boundaries, correct the two open PRs and then implement vertical workflows in evidence-based order. Do not merge the current PRs merely to make the roadmap look complete.
+The safest next step is to complete review and exact-head verification of PR #28, close the remaining product/accounting/security decisions, and then implement selected vertical workflows in evidence-based order. Do not merge PR #28 merely to make the roadmap look complete.
 
 ## 2. Evidence snapshot
 
@@ -75,7 +75,7 @@ PRs #22, #24, #25 and #26 are closed as superseded/duplicates. PR #26's obsolete
 
 ### 3) Finance and accounting
 
-**Finding:** integer IRR and immutable double-entry journals are appropriate foundations. However, the proposed accounting schema is store-scoped. That risks one ledger per retail location and does not fit non-retail businesses or multiple locations under one legal entity.
+**Finding:** integer IRR and immutable double-entry journals are appropriate foundations. The merged accounting schema is scoped by `accounting_book_id`, not store. Posting commands, legal-entity policy, chart of accounts, fiscal periods, costing and rounding decisions remain incomplete.
 
 **Decision:** define an AccountingBook for the legal/accounting entity or approved business-profile scope. Locations are dimensions unless the accountant requires separate books. Keep currency, fiscal calendar, chart of accounts, inventory costing and rounding as explicit policy.
 
@@ -83,7 +83,7 @@ PRs #22, #24, #25 and #26 are closed as superseded/duplicates. PR #26's obsolete
 
 ### 4) Security and privacy
 
-**Finding:** tenant RLS, role maps and server-side sessions are good controls. They do not replace API authorization. Multi-industry adds sensitive domains and additional scope boundaries. The current profile migration does not gate regulated defaults.
+**Finding:** tenant RLS, role maps and server-side sessions are good controls. They do not replace API authorization. PR #28 starts regulated profile capabilities in `PENDING_APPROVAL`, but the specialist approval workflow and server-side activation gates are not implemented.
 
 **Decision:** apply least privilege at tenant, profile, location, module and record level as needed. Use data minimization, purpose limitation, retention and audited privileged actions. Regulated capabilities remain blocked until review.
 
@@ -99,7 +99,7 @@ PRs #22, #24, #25 and #26 are closed as superseded/duplicates. PR #26's obsolete
 
 ### 6) Frontend, product UX and accessibility
 
-**Finding:** a profile picker is not a complete workspace. Navigation and dashboard content must reflect server-authorized capabilities. Unknown server capabilities must not silently disappear. Persian/English support must cover whole workflows, not just headings.
+**Finding:** a profile picker is not a complete workspace. PR #28 rejects unknown capability keys and unsupported profile versions, but it only provides selection and preview. Navigation and dashboard content must later reflect server-authorized capabilities. Persian/English support must cover whole workflows, not just headings.
 
 **Decision:** module-owned navigation, dashboard cards, actions, empty states and permission metadata. Use accessible keyboard/focus behavior and WCAG 2.2 AA as the target baseline. Show planned/unavailable/approval-required states explicitly.
 
