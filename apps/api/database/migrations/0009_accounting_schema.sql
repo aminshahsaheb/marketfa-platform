@@ -500,6 +500,11 @@ DECLARE
   debit_total NUMERIC;
   credit_total NUMERIC;
   period_state accounting_period_status;
+  period_start DATE;
+  period_end DATE;
+  rule_state accounting_rule_status;
+  rule_start DATE;
+  rule_end DATE;
   original_status accounting_journal_status;
   original_currency CHAR(3);
   mismatch_count BIGINT;
@@ -539,8 +544,8 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
 
-  SELECT period.status
-  INTO period_state
+  SELECT period.status, period.start_date, period.end_date
+  INTO period_state, period_start, period_end
   FROM public.fiscal_periods AS period
   WHERE period.tenant_id = NEW.tenant_id
     AND period.store_id = NEW.store_id
@@ -549,6 +554,27 @@ BEGIN
   IF period_state IS DISTINCT FROM 'OPEN' THEN
     RAISE EXCEPTION 'Journal cannot post to a non-open fiscal period'
       USING ERRCODE = '55000';
+  END IF;
+
+  IF NEW.entry_date < period_start OR NEW.entry_date > period_end THEN
+    RAISE EXCEPTION 'Journal entry date must be inside its fiscal period'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NEW.posting_rule_version_id IS NOT NULL THEN
+    SELECT rule.status, rule.effective_from, rule.effective_to
+    INTO rule_state, rule_start, rule_end
+    FROM public.posting_rule_versions AS rule
+    WHERE rule.tenant_id = NEW.tenant_id
+      AND rule.store_id = NEW.store_id
+      AND rule.id = NEW.posting_rule_version_id;
+
+    IF rule_state IS DISTINCT FROM 'APPROVED'
+       OR NEW.entry_date < rule_start
+       OR (rule_end IS NOT NULL AND NEW.entry_date > rule_end) THEN
+      RAISE EXCEPTION 'Journal requires an approved effective posting rule'
+        USING ERRCODE = '23514';
+    END IF;
   END IF;
 
   IF NEW.reverses_entry_id IS NOT NULL THEN
