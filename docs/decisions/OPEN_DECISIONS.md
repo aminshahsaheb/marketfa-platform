@@ -1,38 +1,60 @@
 # Open Product and Architecture Decisions
 
-This document prevents unverified assumptions from silently becoming implementation rules.
+This register prevents assumptions from silently becoming product, accounting, legal or security rules. A decision is closed only when its owner, evidence, date and consequences are recorded.
 
-## Decision register
+## Confirmed decisions
 
-- **OD-001 — First launch jurisdiction:** Decided: Iran first. Tax and legal details still require local review.
-- **OD-002 — Currency and display units:** Partially decided. Integer IRR ledger; explicit Toman input/display. Fractional and rounding policy pending.
-- **OD-003 — Tax model:** Architecture decided: versioned Iran rules. Exact rule pack requires current official sources and Iran tax review.
-- **OD-004 — Fiscal calendar and period locks:** Open. Iran accountant must confirm fiscal-year and period-close rules.
-- **OD-005 — Initial customer profile:** Open. Requires retail segment, SKU count, and transaction-volume interviews.
-- **OD-006 — Single-store vs multi-store MVP:** MVP currently scoped as one store per tenant. Validate with pilot requirements.
-- **OD-007 — Offline capability:** Open. Define permitted operations, duration, and number of terminals.
-- **OD-008 — Hardware:** Open. Inventory barcode scanner, scale, receipt printer, and cash drawer requirements.
-- **OD-009 — Supplier workflow:** Open. Map purchase receipt, supplier invoice, payable, and payment.
-- **OD-010 — Customer accounts:** Open. Validate credit sale, balance, limits, and settlements.
-- **OD-011 — Data migration:** Open. Requires source export, data-quality review, and reconciliation mapping.
-- **OD-012 — Hosting and data residency:** Open. Decide after deployment constraints and legal review.
+- **OD-001 — Launch jurisdiction:** Iran first. This does not make every industry legally eligible for every workflow.
+- **OD-002 — First locales:** Persian (`fa-IR`) and English (`en`).
+- **OD-003 — Locale separation:** UI language/calendar/digits do not select jurisdiction, tax, currency or accounting policy.
+- **OD-004 — Canonical Iran ledger unit:** integer IRR; Toman is explicit input/display only; 1 Toman = 10 Rial.
+- **OD-005 — Architecture:** modular monolith, PostgreSQL source of truth, SQL-first persistence, versioned migrations.
+- **OD-006 — Product direction:** multi-industry business operations platform. Retail POS/inventory is one vertical, not the universal model.
+- **OD-007 — Offline safety:** no unrestricted multi-terminal offline stock allocation; offline behavior must be bounded and server-revalidated.
+- **OD-008 — Financial immutability:** posted journals are immutable; corrections use linked reversals/compensating records.
+- **OD-009 — Security:** tenant scope is server-derived; RLS is defense in depth, not a substitute for API authorization.
+- **OD-010 — Delivery:** a catalogue/profile preview does not mean the corresponding workflows are implemented or approved.
 
-## Confirmed cross-cutting decisions
+## Product and domain decisions still open
 
-- **OD-013:** First launch market is Iran.
-- **OD-014:** Persian (fa-IR) and English (en) are first-release languages.
-- **OD-015:** Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian presentation. User/store overrides are supported.
-- **OD-016:** UI locale is independent from store jurisdiction, currency, and tax profile.
-- **OD-017:** Iran tax/Moadian requirements use versioned, effective-dated rules and a dedicated adapter. Detailed compliance rules await specialist review.
-- **OD-018:** Iran accounting ledger uses integer IRR; Toman is explicit input/display only. Rounding policy remains open.
-- **OD-019:** M1 uses pnpm workspace, NestJS API, React/Vite web, and PostgreSQL. Frozen-lockfile CI and runtime smoke tests passed on the feature branch.
+- **OD-011 — Pilot verticals:** select one or two verticals based on operator interviews and measurable workflows.
+- **OD-012 — Business hierarchy:** confirm tenant, legal entity, business profile and location relationships; define whether one tenant may contain multiple legal entities.
+- **OD-013 — Location model:** define physical, virtual, project-site and service-area locations. Keep retail store/POS concepts optional.
+- **OD-014 — Accounting book scope:** decide whether each business profile maps to one book, whether multiple profiles can share a legal-entity book, and which dimensions identify locations.
+- **OD-015 — Tenant profile cardinality:** confirm one or multiple business profiles in the first release.
+- **OD-016 — Industry taxonomy:** define broad categories, subtypes and the Other-business configuration path. Do not attempt to enumerate every job title.
+- **OD-017 — Capability lifecycle:** approve suggested/available/enabled/suspended/retired states, dependency graph and entitlement policy.
+- **OD-018 — Regulated profiles:** define evidence, reviewer, approval state and data controls before activating regulated workflows.
+- **OD-019 — MVP acceptance:** approve at least ten end-to-end scenarios and measurable pilot outcomes.
+- **OD-020 — Scale profile:** record expected users, locations, terminals, daily events, peak concurrency and retention.
 
-## Financial implementation blockers
+## Identity, security and operations decisions
 
-- Fractional quantity × unit-price policy, statutory tax rounding, and deterministic remainder allocation.
-- Current official tax rates, categories, exemptions, thresholds, invoice types, and taxpayer applicability.
-- Current official Moadian API/schema version, signing/key management, and test/certification path.
-- Fiscal year/period policy, chart-of-accounts template, inventory costing, and legally required reports.
-- Target retail segment, pilot store, hardware, and offline workflow.
+- **OD-021 — Authentication method:** choose password, OTP, email link or provider based on pilot evidence and threat analysis.
+- **OD-022 — Account proofing/recovery:** define identity proofing, recovery, support override, recent-authentication and account-takeover controls.
+- **OD-023 — Invitation delivery:** select email/SMS provider, delivery retries, expiry and abuse controls.
+- **OD-024 — Hosting and data residency:** decide after legal review, threat model, latency and backup constraints.
+- **OD-025 — Privacy and retention:** define personal-data inventory, purpose, access, retention, deletion/hold and breach response.
+- **OD-026 — Hardware:** scanner, scale, printer, cash drawer, supported browsers and device lifecycle.
+- **OD-027 — Offline policy:** define allowed commands, offline duration, terminal count and manual-review states.
 
-Do not close these items using assumptions from legacy code or a secondary summary. Record source, publication/effective date, reviewer, scope, and test vectors for each accepted rule.
+## Accounting and Iran compliance blockers
+
+- **OD-028 — Quantity precision:** unit-specific precision, conversion snapshots and rounding boundaries.
+- **OD-029 — Monetary rounding:** line, discount, tax and deterministic remainder allocation approved by an Iran accountant.
+- **OD-030 — Fiscal calendar:** fiscal-year start, period boundaries, close/reopen authority and reporting.
+- **OD-031 — Chart of accounts:** approved starter template and account hierarchy rules.
+- **OD-032 — Inventory costing/COGS:** approved costing method, cost timing, returns and damaged-stock treatment.
+- **OD-033 — Tax/Moadian:** current official source, effective dates, taxpayer scope, invoice types, field units, schema version, signing and outage procedures.
+- **OD-034 — Payment/tender policy:** cash, card, bank, clearing accounts, settlement and refund workflows.
+
+## Data, analytics and migration decisions
+
+- **OD-035 — Legacy import:** obtain sanitized source export, hashes, field mapping, data-quality report and reconciliation approval.
+- **OD-036 — Analytics boundary:** define operational vs analytical stores, event contracts, tenant isolation, retention and PII minimization.
+- **OD-037 — Reporting:** define authoritative read models, export formats, permitted aggregates and audit requirements.
+- **OD-038 — Recovery objectives:** set RPO/RTO, backup frequency, retention, encryption and restore-test schedule.
+
+## Approval rule
+
+Do not close a legal, tax, accounting or privacy decision from a secondary summary or legacy implementation. Record the primary source, publication/effective date, jurisdiction/scope, reviewer, test vectors and migration behavior. If evidence is missing, keep the decision open and block the dependent feature.

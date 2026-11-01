@@ -1,69 +1,80 @@
 # MarketFa Platform
 
-**An offline-capable retail operations platform with point of sale, inventory, and double-entry accounting.**
+**A multi-industry business operations platform with a shared core and industry-specific workspaces.**
 
-MarketFa is being rebuilt as a secure, testable, multi-store platform. The legacy application is a domain reference, not a production dependency. The new platform uses a modular monolith, PostgreSQL as the authoritative data store, and an explicit offline command queue.
+MarketFa is an Iran-first platform. A business owner selects the type of work they do and receives a workspace built from supported capabilities. Retail POS and inventory are one vertical, not the universal data model. Service, repair, project, food-service, wholesale, manufacturing and other businesses must not be forced into fake retail workflows.
 
-> Status: M1 and the M2 tenant-core foundation are merged. Provider-neutral session core and request actor/CSRF guard are under review in stacked M2 PRs. Authentication provider, HTTP login/cookie flows, tenant onboarding, and business modules are not complete. This repository is not production-ready and must not be used for live financial records.
+> **Repository status (2026-11-01):** M1 and the M2 tenant/identity administration slices are merged to `main`. Provider-neutral sessions, actor/CSRF guards, tenant bootstrap, invitations, membership lifecycle, terminal lifecycle and the HTTP authorization matrix are present. Authentication-provider integration and browser login/recovery are not complete. The accounting schema is proposed in open PR #21 and is not in `main`. Multi-industry profile/onboarding work is in draft PR #26 and is not in `main`. No accounting posting service, inventory/POS vertical, or offline sync product is complete. **This repository is not production-ready and must not be used for live financial records.**
 
 ## Product principles
 
-- Accounting correctness before convenience.
-- Server-authoritative financial and inventory state.
-- Offline operation with explicit limits and conflict handling.
-- Tenant isolation at every data boundary.
-- Immutable posted financial records; corrections use reversals.
-- Auditable operations and reproducible tests.
-- Small, reviewable changes with documented acceptance criteria.
+- One identity and platform core; separate business profiles and domain capabilities.
+- Support many kinds of work without claiming every profession-specific workflow is already implemented.
+- Server-authoritative permissions, entitlements, capability activation, prices, tax, stock and accounting.
+- PostgreSQL is the source of truth; browser storage is a bounded cache/outbox, never financial authority.
+- Tenant and business-profile boundaries are explicit and tested.
+- Immutable posted financial facts; corrections use linked reversals or compensating records.
+- Exact money and quantity arithmetic, explicit rounding and auditable policy versions.
+- Iran compliance is versioned and evidence-based; no unsupported legal or tax claims.
+- Small, reviewable changes with CI evidence from the exact commit.
 
 ## Architecture
 
-- **Web:** React, TypeScript, Vite; Persian and English from the first release.
-- **Local persistence:** IndexedDB and transactional outbox (later milestone).
-- **API:** NestJS, TypeScript, validated DTOs.
-- **Database:** PostgreSQL; versioned SQL migrations and explicit repositories for RLS-sensitive operations.
-- **Quality:** Node test runner, Vitest/Playwright as later test layers, ESLint, TypeScript, Prettier, GitHub Actions.
-- **Deployment:** Docker Compose for local development.
+- **Web:** React, TypeScript, Vite; Persian RTL and English LTR.
+- **API:** NestJS and TypeScript in a modular monolith.
+- **Database:** PostgreSQL, SQL-first versioned migrations, RLS and composite constraints.
+- **Domain:** framework-independent types and exact money rules.
+- **Offline:** future bounded IndexedDB outbox with durable command IDs and server replay validation.
+- **Quality:** frozen pnpm lockfile, formatting, lint, type checks, unit and PostgreSQL integration tests, builds and smoke tests.
+- **Deployment:** Docker Compose for local development; production topology remains a release decision.
 
-**Launch profile:** Iran-first; Persian (fa-IR) and English (en). Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian. UI locale is independent from store jurisdiction, currency, timezone and tax profile. See [localization](docs/architecture/LOCALIZATION.md) and [Iran compliance architecture](docs/compliance/IRAN_COMPLIANCE.md).
+## Core model
 
-See [architecture overview](docs/architecture/overview.md), [PRD](docs/product/PRD.md), [ADRs](docs/architecture/adr/), and [roadmap](docs/roadmap/ROADMAP.md).
+The target model separates:
 
-## Repository layout
+- **User:** a human identity.
+- **Tenant:** workspace/security and customer boundary.
+- **Membership:** actor's role and permissions within a tenant.
+- **Business profile:** a versioned business operation and its industry template.
+- **Business location:** a physical, virtual or service location.
+- **Store / terminal:** retail-specific operational concepts; they are not required for every profession.
+- **Accounting book:** the financial ledger boundary, associated with the relevant legal/accounting entity; it is not automatically one book per POS store.
+- **Capability:** an independently owned module with server-enforced dependencies, entitlement and permission checks.
+- **Jurisdiction profile:** legal/tax settings, separate from industry and UI language.
 
-```text
-apps/api       NestJS API and SQL migrations
-apps/web       React web shell
-packages/domain      framework-independent domain rules
-packages/contracts   shared API contracts
-docs           product, architecture, security, operations
-.github        CI and contribution templates
-infra          PostgreSQL local role bootstrap
-docker-compose.yml   local PostgreSQL
-```
+See [master architecture review](docs/architecture/MASTER_ARCHITECTURE_REVIEW.md), [architecture overview](docs/architecture/overview.md), [PRD](docs/product/PRD.md), [ADRs](docs/architecture/adr/), [open decisions](docs/decisions/OPEN_DECISIONS.md), and [roadmap](docs/roadmap/ROADMAP.md).
+
+## Iran launch baseline
+
+- First jurisdiction: Iran.
+- First locales: Persian `fa-IR` and English `en`.
+- Persian defaults to RTL/Jalali presentation; English defaults to LTR/Gregorian.
+- UI locale does not select tax jurisdiction, currency, accounting rules or timezone.
+- Canonical launch ledger unit: integer IRR. Toman is an explicit input/display unit; 1 Toman = 10 Rial.
+- Fractional quantity, tax rounding, fiscal calendar, chart of accounts and inventory costing remain approval gates.
 
 ## Local setup
 
 1. Install Node.js 22.21.1 and pnpm 10.20.0.
 2. Run `pnpm install --frozen-lockfile`.
-3. Copy `.env.example` to `.env`. The example credentials are local-only.
+3. Copy `.env.example` to `.env`. Example credentials are local-only.
 4. Run `docker compose up -d postgres`.
-5. Apply database migrations with `pnpm --filter @marketfa/api db:migrate`.
+5. Apply migrations with `pnpm --filter @marketfa/api db:migrate`.
 6. Start API and web with `pnpm dev:api` and `pnpm dev:web`.
 
-Normal tenant-scoped API operations use `marketfa_runtime`, a non-inheriting non-superuser role without RLS bypass. Session resolution/rotation/revocation use that role; session creation uses a separate `marketfa_auth_runtime` login with execute-only access to the session-creation function. Both roles have no direct session-table access. Migrations use the separate `marketfa_owner` connection. Never use migration-owner credentials for application traffic.
+Normal application traffic must use the restricted runtime roles. Migration-owner credentials must never be used for application traffic. Never expose database credentials to browsers, terminals or customer devices.
 
-## Non-goals for the first release
+## Non-goals
 
-- Microservices.
+- Microservices before measured need.
 - Unrestricted multi-device offline stock selling.
-- Client-side authority over price, tax, stock, or accounting.
-- Automatic edits to posted journal entries.
-- Tax/legal compliance claims without jurisdiction-specific review.
+- Client-side authority over price, tax, stock, permissions or journals.
+- Direct mutation of posted journals.
+- A claim that a selectable industry profile means its specialist workflow or regulatory approval is production-ready.
 
 ## Security
 
-Report suspected vulnerabilities privately to the repository owner. Do not publish secrets, access tokens, real customer data, or production backups in issues or commits.
+Report suspected vulnerabilities privately to the repository owner. Do not commit secrets, access tokens, real customer data or production backups.
 
 ## License
 
