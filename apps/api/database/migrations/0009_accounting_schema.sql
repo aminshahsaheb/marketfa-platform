@@ -289,43 +289,58 @@ LANGUAGE plpgsql
 SET search_path = pg_catalog, public
 AS $function$
 BEGIN
-  IF TG_OP = 'DELETE' AND OLD.status IN ('APPROVED', 'RETIRED') THEN
-    RAISE EXCEPTION 'Approved posting rule versions are immutable'
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.status <> 'DRAFT' THEN
+      RAISE EXCEPTION 'Posting rule versions must be created as drafts'
+        USING ERRCODE = '42501';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.status IN ('APPROVED', 'RETIRED') THEN
+      RAISE EXCEPTION 'Approved posting rule versions are immutable'
+        USING ERRCODE = '55000';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF OLD.status = 'RETIRED' THEN
+    RAISE EXCEPTION 'Retired posting rule versions are immutable'
       USING ERRCODE = '55000';
   END IF;
 
-  IF TG_OP = 'UPDATE' THEN
-    IF OLD.status = 'RETIRED' THEN
-      RAISE EXCEPTION 'Retired posting rule versions are immutable'
-        USING ERRCODE = '55000';
-    END IF;
-
-    IF OLD.status = 'APPROVED'
-       AND (
-         NEW.rule_key IS DISTINCT FROM OLD.rule_key
-         OR NEW.version IS DISTINCT FROM OLD.version
-         OR NEW.effective_from IS DISTINCT FROM OLD.effective_from
-         OR NEW.effective_to IS DISTINCT FROM OLD.effective_to
-         OR NEW.configuration IS DISTINCT FROM OLD.configuration
-         OR NEW.source_reference IS DISTINCT FROM OLD.source_reference
-       ) THEN
-      RAISE EXCEPTION 'Approved posting rule configuration is immutable'
-        USING ERRCODE = '55000';
-    END IF;
-
-    IF NEW.status = 'APPROVED'
-       AND current_user <> 'marketfa_accounting_owner' THEN
-      RAISE EXCEPTION 'Only the accounting command owner can approve posting rules'
-        USING ERRCODE = '42501';
-    END IF;
+  IF OLD.status = 'APPROVED'
+     AND NEW.status NOT IN ('APPROVED', 'RETIRED') THEN
+    RAISE EXCEPTION 'Approved posting rules can only be retired'
+      USING ERRCODE = '55000';
   END IF;
 
-  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  IF OLD.status = 'APPROVED'
+     AND (
+       NEW.rule_key IS DISTINCT FROM OLD.rule_key
+       OR NEW.version IS DISTINCT FROM OLD.version
+       OR NEW.effective_from IS DISTINCT FROM OLD.effective_from
+       OR NEW.effective_to IS DISTINCT FROM OLD.effective_to
+       OR NEW.configuration IS DISTINCT FROM OLD.configuration
+       OR NEW.source_reference IS DISTINCT FROM OLD.source_reference
+     ) THEN
+    RAISE EXCEPTION 'Approved posting rule configuration is immutable'
+      USING ERRCODE = '55000';
+  END IF;
+
+  IF NEW.status = 'APPROVED'
+     AND current_user <> 'marketfa_accounting_owner' THEN
+    RAISE EXCEPTION 'Only the accounting command owner can approve posting rules'
+      USING ERRCODE = '42501';
+  END IF;
+
+  RETURN NEW;
 END;
 $function$;
 
 CREATE TRIGGER posting_rule_versions_immutable_trg
-  BEFORE UPDATE OR DELETE ON posting_rule_versions
+  BEFORE INSERT OR UPDATE OR DELETE ON posting_rule_versions
   FOR EACH ROW EXECUTE FUNCTION accounting_protect_approved_posting_rule();
 
 CREATE OR REPLACE FUNCTION accounting_prevent_posted_journal_mutation()
