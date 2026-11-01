@@ -41,7 +41,12 @@ test("custom business profile starts with shared capabilities only", () => {
   const profile = getIndustryProfile("custom");
   assert.ok(profile);
   assert.deepEqual(profile.capabilities, [
-    "customers", "sales", "payments", "expenses", "finance", "reports",
+    "customers",
+    "sales",
+    "payments",
+    "expenses",
+    "finance",
+    "reports",
   ]);
 });
 
