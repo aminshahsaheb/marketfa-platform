@@ -69,6 +69,7 @@ test(
       idempotencyKey: string;
       sourceType?: string;
       postingPurpose?: string;
+      entryDate?: string;
     }): Promise<string> {
       const id = args.id ?? randomUUID();
       await withRole("marketfa_accounting_owner", args.tenantId, (client) =>
@@ -77,13 +78,14 @@ test(
             (id, tenant_id, store_id, period_id, entry_date, status, source_type,
              source_id, posting_purpose, posting_rule_version_id, idempotency_key,
              reverses_entry_id, created_by_user_id)
-           VALUES ($1, $2, $3, $4, DATE '2026-01-10', 'DRAFT', $5,
-                   NULL, $6, NULL, $7, $8, $9)`,
+           VALUES ($1, $2, $3, $4, $5::date, 'DRAFT', $6,
+                   NULL, $7, NULL, $8, $9, $10)`,
           [
             id,
             args.tenantId,
             args.storeId,
             args.periodId,
+            args.entryDate ?? "2026-01-10",
             args.sourceType ?? "MANUAL",
             args.postingPurpose ?? "manual",
             args.idempotencyKey,
@@ -445,6 +447,16 @@ test(
           }),
         "23514",
       );
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, async (client) => {
+        await client.query(
+          "DELETE FROM journal_lines WHERE tenant_id = $1 AND journal_entry_id = $2",
+          [tenantA.tenantId, badReversalId],
+        );
+        await client.query(
+          "DELETE FROM journal_entries WHERE tenant_id = $1 AND id = $2",
+          [tenantA.tenantId, badReversalId],
+        );
+      });
 
       const reversalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
@@ -550,6 +562,51 @@ test(
               debit: 10,
               credit: 10,
             });
+          }),
+        "23514",
+      );
+
+      const outOfPeriodId = await createDraftJournal({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        periodId: accounts.periodId,
+        createdBy: ownerId,
+        idempotencyKey: "out-of-period-001",
+        entryDate: "2026-02-01",
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: outOfPeriodId,
+        lineNumber: 1,
+        accountId: accounts.cashId,
+        accountCode: "1000",
+        accountNameKey: "account.cash",
+        accountType: "ASSET",
+        normalBalance: "DEBIT",
+        debit: 100,
+        credit: 0,
+      });
+      await insertLine({
+        tenantId: tenantA.tenantId,
+        storeId: tenantA.storeId,
+        journalId: outOfPeriodId,
+        lineNumber: 2,
+        accountId: accounts.revenueId,
+        accountCode: "4000",
+        accountNameKey: "account.revenue",
+        accountType: "REVENUE",
+        normalBalance: "CREDIT",
+        debit: 0,
+        credit: 100,
+      });
+      await expectSqlState(
+        () =>
+          postJournal({
+            tenantId: tenantA.tenantId,
+            journalId: outOfPeriodId,
+            entryNumber: 3,
+            postedBy: ownerId,
           }),
         "23514",
       );
@@ -693,45 +750,67 @@ test(
         "42501",
       );
     } finally {
-      for (const tenantId of tenantIds) {
-        await ownerDb.query("DELETE FROM accounting_audit_events WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM journal_lines WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM journal_entries WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM accounting_sequences WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM posting_rule_versions WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM fiscal_periods WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM accounts WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM stores WHERE tenant_id = $1 AND name = 'Store A2'", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM audit_events WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM tenant_memberships WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM stores WHERE tenant_id = $1", [
-          tenantId,
-        ]);
-        await ownerDb.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
+      const cleanupClient = await ownerDb.connect();
+      try {
+        await cleanupClient.query("SET session_replication_role = replica");
+        for (const tenantId of tenantIds) {
+          await cleanupClient.query(
+            "DELETE FROM accounting_audit_events WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM journal_lines WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM journal_entries WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM accounting_sequences WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM posting_rule_versions WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM fiscal_periods WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM accounts WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM stores WHERE tenant_id = $1 AND name = 'Store A2'",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM audit_events WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query(
+            "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+            [tenantId],
+          );
+          await cleanupClient.query("DELETE FROM stores WHERE tenant_id = $1", [
+            tenantId,
+          ]);
+          await cleanupClient.query("DELETE FROM tenants WHERE id = $1", [
+            tenantId,
+          ]);
+        }
+        await cleanupClient.query(
+          "DELETE FROM users WHERE id = ANY($1::uuid[])",
+          [[ownerId, secondOwnerId]],
+        );
+      } finally {
+        await cleanupClient.query("SET session_replication_role = origin").catch(
+          () => undefined,
+        );
+        cleanupClient.release();
       }
-      await ownerDb.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
-        [ownerId, secondOwnerId],
-      ]);
       await Promise.all([ownerDb.end(), runtimeDb.end()]);
     }
   },
