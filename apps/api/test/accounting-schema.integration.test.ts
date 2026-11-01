@@ -75,6 +75,8 @@ test(
       sourceType?: string;
       postingPurpose?: string;
       entryDate?: string;
+      sourceId?: string | null;
+      postingRuleVersionId?: string | null;
     }): Promise<string> {
       const id = args.id ?? randomUUID();
       await withRole("marketfa_accounting_owner", args.tenantId, (client) =>
@@ -84,7 +86,7 @@ test(
              source_id, posting_purpose, posting_rule_version_id, idempotency_key,
              reverses_entry_id, created_by_user_id)
            VALUES ($1, $2, $3, $4, $5::date, 'DRAFT', $6,
-                   NULL, $7, NULL, $8, $9, $10)`,
+                   $7, $8, $9, $10, $11, $12)`,
           [
             id,
             args.tenantId,
@@ -92,7 +94,9 @@ test(
             args.periodId,
             args.entryDate ?? "2026-01-10",
             args.sourceType ?? "MANUAL",
+            args.sourceId ?? null,
             args.postingPurpose ?? "manual",
+            args.postingRuleVersionId ?? null,
             args.idempotencyKey,
             args.reversesEntryId ?? null,
             args.createdBy,
@@ -252,6 +256,58 @@ test(
         "23P01",
       );
 
+      const groupAccount = await withRole(
+        "marketfa_accounting_owner",
+        tenantA.tenantId,
+        async (client) => {
+          const result = await client.query<{ id: string }>(
+            `INSERT INTO accounts
+              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+               is_postable, status, created_by_user_id)
+             VALUES ($1, $2, '1100', 'account.cash.group', 'ASSET', 'DEBIT',
+                     FALSE, 'ACTIVE', $3)
+             RETURNING id`,
+            [tenantA.tenantId, tenantA.storeId, ownerId],
+          );
+          return result.rows[0]!.id;
+        },
+      );
+      const childAccount = await withRole(
+        "marketfa_accounting_owner",
+        tenantA.tenantId,
+        async (client) => {
+          const result = await client.query<{ id: string }>(
+            `INSERT INTO accounts
+              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+               parent_account_id, is_postable, status, created_by_user_id)
+             VALUES ($1, $2, '1101', 'account.cash.drawer', 'ASSET', 'DEBIT',
+                     $3, TRUE, 'ACTIVE', $4)
+             RETURNING id`,
+            [tenantA.tenantId, tenantA.storeId, groupAccount, ownerId],
+          );
+          return result.rows[0]!.id;
+        },
+      );
+      await expectSqlState(
+        () =>
+          withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+            client.query(
+              "UPDATE accounts SET is_postable = TRUE WHERE tenant_id = $1 AND id = $2",
+              [tenantA.tenantId, groupAccount],
+            ),
+          ),
+        "23514",
+      );
+      await expectSqlState(
+        () =>
+          withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+            client.query(
+              "UPDATE accounts SET parent_account_id = $3 WHERE tenant_id = $1 AND id = $2",
+              [tenantA.tenantId, groupAccount, childAccount],
+            ),
+          ),
+        "23514",
+      );
       await expectSqlState(
         () =>
           withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
@@ -365,6 +421,17 @@ test(
           "INSERT INTO accounting_sequences (tenant_id, store_id, next_entry_number) VALUES ($1, $2, 2)",
           [tenantA.tenantId, tenantA.storeId],
         ),
+      );
+      await expectSqlState(
+        () =>
+          createDraftJournal({
+            tenantId: tenantA.tenantId,
+            storeId: tenantA.storeId,
+            periodId: accounts.periodId,
+            createdBy: ownerId,
+            idempotencyKey: "sale-test-001",
+          }),
+        "23505",
       );
 
       await expectSqlState(
