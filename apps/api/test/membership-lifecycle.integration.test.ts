@@ -154,7 +154,7 @@ test(
           tenant.tenantId,
           ownerBMembership.id,
         ),
-        memberships.suspend(
+        memberships.remove(
           { userId: ownerBId },
           tenant.tenantId,
           tenant.ownerMembershipId,
