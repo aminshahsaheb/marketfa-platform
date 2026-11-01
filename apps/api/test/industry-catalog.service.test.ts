@@ -63,8 +63,9 @@ test("industry catalogue groups server capabilities by versioned profile", async
 
   assert.equal(readOnly, true);
   assert.match(queryText, /capability\.status = 'ACTIVE'/);
-  assert.match(queryText, /capability\.capability_key/);
-  assert.doesNotMatch(queryText, /SELECT[\s\S]*defaults\.capability_key/);
+  const selectClause = queryText.split("FROM industry_catalog AS industry")[0] ?? "";
+  assert.match(selectClause, /capability\.capability_key/);
+  assert.doesNotMatch(selectClause, /defaults\.capability_key/);
   assert.deepEqual(profiles, [
     {
       id: "professional-services",
