@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
-import {
-  ForbiddenException,
-  NotFoundException,
-} from "@nestjs/common";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
