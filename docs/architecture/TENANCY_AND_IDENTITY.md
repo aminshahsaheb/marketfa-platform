@@ -1,6 +1,6 @@
 # Identity, Tenancy, and Store Boundary
 
-**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, and invitation create/revoke/accept commands are merged. Membership role change, suspension, removal, last-active-OWNER protection, and atomic membership audit are implemented in open PR #18; integration tests cover immediate access loss, re-invitation denial, audit, and concurrent OWNER suspension/removal. PR #18 remains pending review and merge. Terminal lifecycle, invitation delivery/rate limits, and authentication provider/login integration remain open.  
+**Status:** Tenant/RLS foundation, provider-neutral session core, request actor/CSRF guards, atomic tenant bootstrap, invitation lifecycle, and membership lifecycle are merged. Membership commands enforce last-active-OWNER protection and atomic audit. Terminal listing, registration, credential rotation, suspension/reactivation, revocation, and audit are implemented in the open terminal-lifecycle PR; integration tests cover hash-only credential storage, OWNER authorization, state transitions, assignment revocation, and audit. Terminal-device authentication/sync enforcement, invitation delivery/rate limits, and authentication provider/login integration remain open.  
 **MVP policy:** one store per tenant in the first release; schema supports future multiple stores without assuming them in product scope.
 
 ## 1. Core concepts
@@ -103,7 +103,7 @@ Initial command set:
 - **Bootstrap tenant:** create tenant, its first store, and the creator's OWNER membership atomically.
 - **Invitation:** create, revoke, and accept a high-entropy one-time token; persist only its hash; bind to the intended verified identity when supplied; enforce expiry and replay safety.
 - **Membership:** change role, suspend, or remove; prevent removal/suspension of the last active OWNER. Ownership transfer is a separate confirmation workflow.
-- **Terminal:** register, rotate, suspend, and revoke credentials; store only hashes; audit each change.
+- **Terminal:** register, rotate, suspend/reactivate, and revoke credentials; store only hashes; audit each state change. Revocation also revokes active terminal assignments. Last-seen updates and device-auth/sync enforcement require the later terminal authentication/sync endpoint.
 
 The initial permission map gives membership administration to OWNER. A command must not allow a caller to grant OWNER through an ordinary invitation or grant a role above the caller's authority. Role changes and membership removal must affect the next request.
 

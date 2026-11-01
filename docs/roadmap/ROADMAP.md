@@ -49,15 +49,15 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [ ] Extend isolation verification to each business endpoint and background job as those modules are implemented.
 - [x] Atomic tenant bootstrap: tenant + first store + OWNER membership + audit event.
 - [x] Invitation create/revoke/accept commands and API: hashed token, expiry, verified identity binding, replay/concurrency protection, and atomic audit.
-- [x] Membership role change, suspension and removal; protect the last active OWNER (implemented in PR #18; pending review and merge).
-- [ ] Terminal registration, credential rotation, suspension and immediate revocation.
-- [ ] Audit all tenant, membership, invitation and terminal security changes atomically (bootstrap, invitation, and membership command audit are implemented; terminal audit remains pending).
+- [x] Membership role change, suspension and removal; protect the last active OWNER (merged in PR #18).
+- [ ] Terminal registration, credential rotation, suspension/reactivation and revocation (implemented in the open terminal-lifecycle PR; device-auth/sync enforcement remains future work).
+- [ ] Audit all tenant, membership, invitation and terminal security changes atomically (bootstrap, invitation, membership, and terminal lifecycle commands write audit events atomically; terminal PR is pending review and merge).
 
 - [ ] End-to-end API authorization matrix for every role.
 
 **Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → audit coverage → authentication provider and browser login integration. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
 
-**Exit:** cross-tenant access tests fail closed; membership and terminal revocation take effect immediately; invitation acceptance is atomic; the API authorization matrix passes.
+**Exit:** cross-tenant access tests fail closed; membership changes take effect on the next request; terminal state and assignment revocation are atomic; device-auth/sync endpoints reject suspended or revoked terminals when implemented; invitation acceptance is atomic; the API authorization matrix passes.
 
 ## M3 — Accounting kernel
 
