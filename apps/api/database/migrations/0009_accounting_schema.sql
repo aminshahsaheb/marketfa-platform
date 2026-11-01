@@ -310,6 +310,11 @@ BEGIN
       USING ERRCODE = '55000';
   END IF;
 
+  IF NEW.status = 'RETIRED' AND OLD.status <> 'APPROVED' THEN
+    RAISE EXCEPTION 'Only an approved posting rule can be retired'
+      USING ERRCODE = '55000';
+  END IF;
+
   IF OLD.status = 'APPROVED'
      AND NEW.status NOT IN ('APPROVED', 'RETIRED') THEN
     RAISE EXCEPTION 'Approved posting rules can only be retired'
