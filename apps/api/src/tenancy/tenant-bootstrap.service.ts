@@ -43,7 +43,8 @@ export class TenantBootstrapService {
     actor: AuthenticatedActor,
     input: TenantBootstrapInput,
   ): Promise<TenantBootstrapResult> {
-    const locationName = input.locationName ?? input.storeName ?? "Main location";
+    const locationName =
+      input.locationName ?? input.storeName ?? "Main location";
     const storeName = input.storeName ?? null;
     const industryId = input.industryId ?? "general-retail";
     let result;

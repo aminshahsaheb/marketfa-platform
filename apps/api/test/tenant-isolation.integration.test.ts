@@ -73,7 +73,16 @@ test(
       );
       await owner.query(
         "INSERT INTO business_profiles (id, tenant_id, display_name, industry_key, industry_profile_version, accounting_book_id, created_by_user_id) VALUES ($1, $2, 'Tenant A', 'general-retail', 1, $3, $4), ($5, $6, 'Tenant B', 'general-retail', 1, $7, $8)",
-        [profileA, tenantA, accountingBookA, userA, profileB, tenantB, accountingBookB, userB],
+        [
+          profileA,
+          tenantA,
+          accountingBookA,
+          userA,
+          profileB,
+          tenantB,
+          accountingBookB,
+          userB,
+        ],
       );
       await owner.query(
         "INSERT INTO stores (id, tenant_id, name, business_profile_id) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)",
@@ -95,9 +104,21 @@ test(
       await owner.query(
         "INSERT INTO business_locations (id, tenant_id, business_profile_id, name, location_type, store_id, created_by_user_id) VALUES ($1, $2, $3, 'Location A', 'BRANCH', $4, $5), ($6, $7, $8, 'Location B', 'BRANCH', $9, $10), ($11, $12, $13, 'Location A2', 'BRANCH', $14, $15)",
         [
-          locationA, tenantA, profileA, storeA, userA,
-          locationB, tenantB, profileB, storeB, userB,
-          locationA2, tenantA, profileA, storeA2, userA,
+          locationA,
+          tenantA,
+          profileA,
+          storeA,
+          userA,
+          locationB,
+          tenantB,
+          profileB,
+          storeB,
+          userB,
+          locationA2,
+          tenantA,
+          profileA,
+          storeA2,
+          userA,
         ],
       );
       await owner.query(

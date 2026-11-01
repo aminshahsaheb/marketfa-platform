@@ -183,9 +183,10 @@ test(
           "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
           [tenantId],
         );
-        await owner.query("DELETE FROM business_profiles WHERE tenant_id = $1", [
-          tenantId,
-        ]);
+        await owner.query(
+          "DELETE FROM business_profiles WHERE tenant_id = $1",
+          [tenantId],
+        );
         await owner.query("DELETE FROM accounting_books WHERE tenant_id = $1", [
           tenantId,
         ]);

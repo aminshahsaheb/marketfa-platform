@@ -231,15 +231,17 @@ test(
           "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
           [tenantId],
         );
-        await owner.query("DELETE FROM business_profiles WHERE tenant_id = $1", [
-          tenantId,
-        ]);
+        await owner.query(
+          "DELETE FROM business_profiles WHERE tenant_id = $1",
+          [tenantId],
+        );
         await owner.query("DELETE FROM accounting_books WHERE tenant_id = $1", [
           tenantId,
         ]);
-        await owner.query("DELETE FROM tenant_memberships WHERE tenant_id = $1", [
-          tenantId,
-        ]);
+        await owner.query(
+          "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+          [tenantId],
+        );
         await owner.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
       }
       await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [

@@ -43,7 +43,9 @@ function isIndustryCapability(value: string): value is IndustryCapability {
 
 type VersionedIndustryProfile = IndustryProfile & { profileVersion: number };
 
-function profileKey(profile: Pick<VersionedIndustryProfile, "id" | "profileVersion">): string {
+function profileKey(
+  profile: Pick<VersionedIndustryProfile, "id" | "profileVersion">,
+): string {
   return `${profile.id}:${profile.profileVersion}`;
 }
 
@@ -86,7 +88,10 @@ function App(): React.JSX.Element {
           if (!presentation) {
             throw new Error(`Unsupported industry profile: ${item.id}`);
           }
-          if (!Number.isInteger(item.profileVersion) || item.profileVersion < 1) {
+          if (
+            !Number.isInteger(item.profileVersion) ||
+            item.profileVersion < 1
+          ) {
             throw new Error(`Invalid industry profile version: ${item.id}`);
           }
 
@@ -108,7 +113,9 @@ function App(): React.JSX.Element {
 
         const profileKeys = mapped.map(profileKey);
         if (new Set(profileKeys).size !== profileKeys.length) {
-          throw new Error("The industry catalogue contains duplicate versions.");
+          throw new Error(
+            "The industry catalogue contains duplicate versions.",
+          );
         }
 
         const firstProfile = mapped[0];
@@ -145,7 +152,9 @@ function App(): React.JSX.Element {
     };
   }, [catalogReload, isPersian]);
 
-  const selected = profiles.find((profile) => profileKey(profile) === selectedKey);
+  const selected = profiles.find(
+    (profile) => profileKey(profile) === selectedKey,
+  );
 
   const visibleProfiles = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -335,7 +344,9 @@ function App(): React.JSX.Element {
               <ul className="module-list">
                 {selected.capabilities.map((capability) => (
                   <li key={capability}>
-                    <span className="module-check" aria-hidden="true">•</span>
+                    <span className="module-check" aria-hidden="true">
+                      •
+                    </span>
                     {isPersian
                       ? capabilityLabels[capability]
                       : capability.replaceAll("_", " ")}
