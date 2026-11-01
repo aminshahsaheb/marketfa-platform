@@ -1,111 +1,160 @@
 # Product Requirements Document
 
-**Status:** Draft for discovery (M0)
-**Product:** MarketFa Platform
-**Audience:** product, engineering, pilot operators
+**Status:** Multi-industry product direction confirmed; pilot scope and policy decisions remain open  
+**Product:** MarketFa Platform  
+**Audience:** product, engineering, business operators and pilot partners
 
 ## 1. Product intent
 
-Build a dependable retail operations system for small and medium retailers. Connect point of sale, inventory movements, cash control, and double-entry accounting with transparent financial state. MVP target: one store per tenant with multiple named users and terminals. Multi-store groups remain deferred unless discovery proves they are essential.
+Build one business operations platform for different kinds of work. A person creates an account, selects the type of business they run, and receives a workspace with relevant modules and workflows.
 
-## 2. Users and permissions
+MarketFa is not a retail-only application. Retail POS and inventory are one vertical pack. A consulting business must not need a stock ledger. A repair business must not need a cashier shift. A project contractor must not be forced into a retail sale. The shared platform provides identity, tenancy, customer/supplier directory, documents, payments, expenses, finance, audit, reporting and integrations. Each vertical owns its operational data and workflows.
 
-- **Owner:** tenant settings, users, financial reports, period close.
-- **Manager:** products, purchasing, stock operations, refunds, shift oversight.
-- **Cashier:** assigned terminal, sales, permitted refunds, shift operations.
-- **Accountant:** chart of accounts, journals, reconciliation, reports.
-- **Viewer:** read-only access to explicitly granted views.
-  Every API request derives tenant membership and role from authenticated server-side identity. A client-supplied tenant ID is a selector, never authorization proof.
+The initial jurisdiction is Iran. Jurisdiction is a legal setting, not an industry label or UI locale.
 
-## 3. Core workflows
+## 2. Product model and boundaries
 
-1. Create tenant, owner, store, and first terminal.
-2. Configure currency, timezone, fiscal calendar, tax profile, and chart of accounts.
-3. Create products, barcodes, units, conversion rules, and tracked batches.
-4. Receive supplier goods and record purchase cost and payable/cash settlement.
-5. Open cashier shift with opening float.
-6. Sell items with server validation of price, tax, discounts, and stock allocation.
-7. Post payment and inventory/accounting effects atomically.
-8. Return all or part of a sale with traceable refund and stock disposition.
-9. Close shift and reconcile expected versus counted tender.
-10. Review ledger, trial balance, income statement, balance sheet, and stock valuation.
-11. Back up, restore, and audit data.
+The platform keeps these concepts separate:
 
-## 4. MVP scope
+- **User:** one human identity, possibly a member of several tenants.
+- **Tenant:** workspace, security and commercial-customer boundary.
+- **Membership:** a user's role and permissions in a tenant.
+- **Business profile:** a versioned operating business with an industry template and configured capabilities.
+- **Business location:** a physical branch, office, workshop, project site, virtual operation or service area.
+- **Store:** a retail/POS concept. Do not require every business to create a store merely to use the platform.
+- **Terminal:** a registered device assigned to a supported location and workflow.
+- **Accounting book:** a ledger boundary for a legal/accounting entity. A book is not automatically tied to a POS store.
+- **Industry profile:** a versioned template that suggests modules and setup steps. It is not a license or authorization.
+- **Capability:** a separately owned domain module.
+- **Entitlement:** commercial permission to use a module.
+- **Role permission:** permission for an actor to perform a specific action.
+- **Jurisdiction profile:** tax/legal rules and reporting obligations.
+- **UI locale:** language, calendar and display formatting only.
 
-### Required
+A tenant may later contain more than one business profile. Whether the MVP enables this is an open product decision. The data model must not block it.
 
-- Tenant membership and role-based authorization.
-- Product catalogue, barcode, unit conversions.
-- Purchase receipt and stock ledger.
-- Batch/expiry tracking and deterministic FEFO where enabled.
-- POS cart, price validation, permission-controlled discounts.
-- Cash/card tender recording; payment-provider integration is not assumed.
-- Shift open/close and cash reconciliation.
-- Returns/refunds linked to original sale lines.
-- Double-entry journal posting for supported events.
-- General ledger and trial balance.
-- Audit trail, backup/restore plan, operational health checks.
-- Online-first synchronization with bounded offline capture and idempotent replay.
+## 3. User journey
 
-### Explicitly deferred
+1. A person signs in or creates an account.
+2. The person creates a workspace.
+3. The person searches and selects an industry or selects **Other business**.
+4. MarketFa shows suggested modules and clearly labels available, planned, unavailable and regulated capabilities.
+5. The owner confirms the business profile, legal entity details, location, timezone, currency and fiscal settings.
+6. The owner configures only the capabilities supported by the release and permitted by policy.
+7. The owner invites staff and assigns roles.
+8. The dashboard shows module-owned cards and actions that the actor can use.
+9. The business can add a location or a second business profile when the approved plan permits it.
 
-- Payroll, manufacturing, advanced CRM/loyalty, ecommerce marketplace.
-- Multiple legal entities and consolidated accounting.
-- Unrestricted offline stock allocation across multiple terminals.
-- Automated bank feeds and payment-gateway settlement.
-- Tax filing and electronic invoice certification until legal and technical requirements are verified.
+The user must not confuse a preview with an implemented workflow.
 
-## 5. Non-functional requirements
+## 4. Industry coverage
 
-- **Correctness:** no posted journal without exactly balanced debits and credits.
-- **Atomicity:** sale, tender, stock movements, and journal posting succeed or fail as one local transaction.
-- **Idempotency:** retries do not duplicate sale, refund, payment, or journal effects.
-- **Isolation:** cross-tenant access fails closed.
-- **Auditability:** sensitive changes record actor, time, reason, entity, and correlation ID.
-- **Resilience:** offline state is visible; queued commands have explicit states and retry rules.
-- **Performance:** targets are set after pilot workload measurement.
-- **Accessibility:** keyboard operation and accessible labels for core POS tasks.
-- **Localization:** complete Persian RTL and English LTR support, with tested Jalali/Gregorian presentation.
+The first taxonomy should cover broad operating models, not attempt to enumerate every job title:
 
-## 6. Confirmed launch profile — Iran, bilingual from day one
+- Retail and grocery.
+- Food service, cafe and bakery.
+- Professional and consulting services.
+- Repair, maintenance and field service.
+- Health, wellness and beauty.
+- Education and training.
+- Construction and project-based work.
+- Wholesale and distribution.
+- Manufacturing and workshops.
+- Transport and logistics.
+- Hospitality and accommodation.
+- Other business, with a configurable starter workspace.
 
-The first commercial launch targets Iran. Persian (fa-IR) and English (en) are first-release locales. Locale is independent from store jurisdiction, functional currency, tax profile, timezone, and fiscal calendar.
+The catalogue is extensible. A new industry is a versioned configuration over domain capabilities, not a separate application. A specific profession may need a subtype, workflow extension or dedicated module. Do not claim full coverage until its workflows are implemented and tested.
 
-- Persian defaults to RTL, Jalali date presentation, and configurable Persian digits.
-- English defaults to LTR and Gregorian date presentation.
-- Users may change locale independently from store legal settings.
-- Store timestamps are UTC instants with an IANA timezone; accounting dates are canonical date-only values. Jalali strings are never canonical timestamps.
-- All UI strings use translation keys. Use logical CSS properties and locale-aware formatters.
+## 5. Shared core and vertical capabilities
 
-## 7. Confirmed Iran money profile
+### Shared platform capabilities
 
-- Canonical Iran accounting ledger: integer Rial (IRR), currency explicitly identified.
-- Toman is an explicit input/display unit only; 1 Toman = 10 Rial.
-- No authoritative monetary calculation uses binary floating point. JSON APIs serialize integer amounts as decimal strings.
-- Fractional quantity × unit-price, tax rounding, and deterministic remainder allocation remain gated on specialist-approved rules.
-- UI locale must never alter canonical amounts or accounting postings.
+Identity, tenant administration, business profiles, locations, memberships, permissions, customer and supplier directory, documents, payments, expenses, accounting, audit, notifications, reports, exports, integration contracts and platform settings.
 
-## 8. Iran tax and electronic invoices
+### Vertical capabilities
 
-- Tax rules, taxpayer applicability, exemptions, invoice types, and rates are versioned and effective-dated.
-- Do not hard-code a universal VAT rate or universal e-invoice obligation.
-- Internal POS receipts, accounting vouchers, and legally compliant electronic tax invoices are distinct documents.
-- Moadian integration is an isolated adapter. Its current official schema, field units, precision, signing/key lifecycle, test path, and status handling must be verified before live integration or compliance claims.
-- Offline capture is not proof of Moadian acceptance.
+- **Retail:** catalogue, barcode, stock ledger, procurement, batches/expiry, POS, shifts, tenders and returns.
+- **Food service:** menu, table/order flow, kitchen tickets, recipes, ingredient consumption and delivery.
+- **Services:** service catalogue, appointments, quotes, work orders, time records and invoices.
+- **Repair:** intake, diagnosis, work orders, parts, repair status and handover.
+- **Projects/construction:** project budgets, milestones, purchase commitments, cost tracking and progress claims.
+- **Wholesale/distribution:** customer pricing, sales orders, picking, dispatch, delivery and receivables.
+- **Manufacturing:** bill of materials, production orders, material issues, output, scrap and work-centre capacity.
+- **Hospitality:** reservations, rooms, check-in/out, guest folios and housekeeping.
+- **Transport/logistics:** jobs, fleet, route, dispatch, proof of delivery and settlement.
 
-## 9. Product decisions still requiring discovery
+A business can enable more than one pack if dependencies and policy allow it. Do not force all packs into one universal sales-and-stock workflow.
 
-- First retail vertical and representative SKU/transaction volume.
-- Pilot store/operator and measurable success criteria.
-- Fiscal-year start, period-close procedure, and statutory reporting requirements.
-- Fractional quantity, line rounding, tax rounding, and remainder policy.
-- Chart-of-accounts template and inventory costing/COGS timing.
-- Receipt/printer, barcode scanner, scale, and cash-drawer hardware.
-- Offline duration, number of terminals, and permitted offline commands.
-- Supplier/customer account workflows and legacy data migration mapping.
-- Hosting, privacy, and data-residency requirements.
+## 6. Capability activation contract
 
-## 10. Acceptance principles
+An industry template recommends capabilities. It does not grant them automatically.
 
-A feature is not complete because its screen works. It requires domain rules, authorization, persistence, audit events, failure behavior, automated tests, and operator documentation. Financial workflows require ledger-level assertions and retry/concurrency tests. A test is PASS only after execution with retained evidence.
+A capability is usable only if the server verifies all applicable conditions:
+
+1. The deployed application release supports it.
+2. The selected business-profile version allows it.
+3. Required dependencies and setup are complete.
+4. The tenant has the required entitlement, where plans apply.
+5. The actor has the required permission.
+6. The location/accounting scope is valid.
+7. Jurisdiction rules permit the workflow.
+8. Any specialist or regulatory approval gate is satisfied.
+
+Keep suggested, available, enabled, suspended and retired states distinct. Frontend navigation is a view of server-authorized capabilities, never the security boundary.
+
+## 7. Regulated and sensitive workflows
+
+A profile may be visible in the catalogue before its specialist workflow is ready. Regulated profiles must not activate regulated capabilities merely because a user selected the profile. Separate profile selection from legal eligibility, licence verification, sensitive-data controls and workflow approval.
+
+Health, pharmacy, financial, legal and similar domains require separate privacy, retention, access-control, audit and legal review. Do not collect sensitive data before the relevant controls and lawful basis are established. Do not make compliance claims from a catalogue label.
+
+## 8. Finance, money and jurisdiction
+
+- Generic accounting is separate from industry-specific source workflows.
+- The accounting book belongs to the relevant legal/accounting entity or business profile; locations are dimensions unless an approved policy requires separate books.
+- The initial Iran ledger uses integer IRR. Toman is an explicit input/display unit; 1 Toman = 10 Rial.
+- No authoritative money calculation uses binary floating point.
+- Quantity precision and unit conversions are explicit and snapshotted where needed.
+- Tax, invoice applicability, rounding and statutory reporting are versioned and effective-dated.
+- Do not infer tax profile from industry, locale or currency.
+- Do not encode a universal VAT rate or universal electronic invoice obligation.
+- Moadian is a separate adapter. Verify the current official schema and legal scope before live use.
+
+Fractional quantity, line/tax rounding, deterministic remainder allocation, fiscal calendar, chart of accounts, inventory costing and COGS timing require specialist approval.
+
+## 9. Workspace and dashboard
+
+- Navigation comes from enabled capabilities and actor permissions.
+- Each module owns its route, permission requirements, data contract, dashboard cards, actions and empty states.
+- Hide irrelevant retail terms from service businesses unless the related capability is enabled.
+- Provide search and Other business.
+- Mark unavailable modules as planned or unavailable. Do not show a live action that has no backend workflow.
+- Support Persian RTL and English LTR throughout each complete workflow.
+- Support keyboard operation and accessible labels for core tasks.
+
+## 10. Non-functional requirements
+
+Correctness, tenant and profile isolation, least privilege, atomicity, idempotency, auditability, data minimization, recoverability, bounded offline behavior, accessibility, localization, observability and maintainability are required.
+
+Use one modular monolith until measured scale or independent operational needs justify service separation. Keep domain boundaries explicit inside the monolith.
+
+## 11. Delivery strategy
+
+Do not implement every industry in one release. Choose one or two pilot verticals from operator evidence. Build the shared core, then complete each vertical end to end. A profile catalogue can be broader than the implemented workflow catalogue, provided the UI labels the difference clearly.
+
+## 12. Acceptance principles
+
+A feature is complete only when it has:
+
+- domain rules and approved acceptance scenarios;
+- authenticated actor, tenant/profile/location scope and server-side authorization;
+- database constraints and explicit transaction boundaries;
+- retry, idempotency and concurrency behavior;
+- audit and outbox behavior for consequential changes;
+- unit, PostgreSQL integration and API authorization tests;
+- browser workflow, accessibility and localization tests where relevant;
+- migration, rollback and operator documentation;
+- CI evidence from the exact commit.
+
+A test file existing is not evidence that the test passed. A selectable profile is not evidence that its workflows are implemented.
