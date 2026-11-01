@@ -43,11 +43,13 @@ function parseInput(value: unknown): TenantBootstrapInput {
   const displayName = readText(body, "displayName", 160, true);
   const legalName = readText(body, "legalName", 200, false);
   const storeName = readText(body, "storeName", 160, true);
+  const industryId = readText(body, "industryId", 80, true);
 
   return {
     displayName: displayName!,
     legalName,
     storeName: storeName!,
+    industryId: industryId!,
   };
 }
 
