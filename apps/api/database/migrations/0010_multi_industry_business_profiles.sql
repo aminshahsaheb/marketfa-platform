@@ -364,6 +364,37 @@ CREATE TRIGGER stores_business_profile_reassignment_trg
   FOR EACH ROW
   EXECUTE FUNCTION prevent_store_business_profile_reassignment();
 
+CREATE OR REPLACE FUNCTION enforce_store_profile_pos_capability()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $function$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.business_profiles AS profile
+    JOIN public.industry_capability_defaults AS defaults
+      ON defaults.industry_key = profile.industry_key
+     AND defaults.profile_version = profile.industry_profile_version
+     AND defaults.capability_key = 'point_of_sale'
+    JOIN public.capability_catalog AS capability
+      ON capability.capability_key = defaults.capability_key
+     AND capability.status = 'ACTIVE'
+    WHERE profile.tenant_id = NEW.tenant_id
+      AND profile.id = NEW.business_profile_id
+  ) THEN
+    RAISE EXCEPTION 'Business profile does not support a retail store/POS'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
+CREATE TRIGGER stores_profile_pos_capability_trg
+  BEFORE INSERT OR UPDATE OF tenant_id, business_profile_id ON stores
+  FOR EACH ROW
+  EXECUTE FUNCTION enforce_store_profile_pos_capability();
+
 ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_profiles FORCE ROW LEVEL SECURITY;
 CREATE POLICY business_profiles_current_tenant_read ON business_profiles
