@@ -40,7 +40,10 @@ function parseRole(value: unknown): ChangeableMembershipRole {
     throw new BadRequestException("A membership role is required.");
   }
   const role = (value as Record<string, unknown>).role;
-  if (typeof role !== "string" || !changeableRoles.has(role as ChangeableMembershipRole)) {
+  if (
+    typeof role !== "string" ||
+    !changeableRoles.has(role as ChangeableMembershipRole)
+  ) {
     throw new BadRequestException("This membership role cannot be assigned.");
   }
   return role as ChangeableMembershipRole;
