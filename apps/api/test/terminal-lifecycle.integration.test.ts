@@ -41,8 +41,8 @@ test(
         },
       );
       tenantIds.push(tenant.tenantId);
-      assert.ok(storeId);
-      const storeId = storeId;
+      assert.ok(tenant.storeId);
+      const storeId = tenant.storeId;
 
       await owner.query(
         "INSERT INTO tenant_memberships (tenant_id, user_id, role, status) VALUES ($1, $2, 'MANAGER', 'ACTIVE')",
