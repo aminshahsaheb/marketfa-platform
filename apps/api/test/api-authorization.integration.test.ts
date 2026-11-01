@@ -85,6 +85,7 @@ test(
           displayName: "Authorization Matrix",
           legalName: null,
           storeName: "Matrix Store",
+          industryId: "general-retail",
         },
       );
       tenantIds.push(tenant.tenantId);
@@ -167,6 +168,24 @@ test(
       const terminalListPath = `${tenantPath}/stores/${tenant.storeId}/terminals`;
 
       assert.equal((await fetch(`${baseUrl}/api/v1/health/live`)).status, 200);
+      const industryCatalogResponse = await fetch(`${baseUrl}/api/v1/industries`);
+      assert.equal(industryCatalogResponse.status, 200);
+      const industryCatalog = (await industryCatalogResponse.json()) as Array<{
+        id: string;
+        profileVersion: number;
+        regulated: boolean;
+        capabilities: string[];
+      }>;
+      assert.ok(
+        industryCatalog.some(
+          (profile) => profile.id === "general-retail" && profile.profileVersion === 1,
+        ),
+      );
+      assert.ok(
+        industryCatalog.some(
+          (profile) => profile.id === "pharmacy" && profile.regulated,
+        ),
+      );
       assert.equal((await request(null, "GET", terminalListPath)).status, 401);
       assert.equal(
         (
@@ -197,6 +216,7 @@ test(
           displayName: "Outsider Tenant",
           legalName: null,
           storeName: "Outsider Store",
+          industryId: "general-retail",
         },
       );
       assert.equal(bootstrapResponse.status, 201);
@@ -462,12 +482,26 @@ test(
           [tenantId],
         );
         await ownerDb.query(
-          "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+          "DELETE FROM business_locations WHERE tenant_id = $1",
           [tenantId],
         );
         await ownerDb.query("DELETE FROM stores WHERE tenant_id = $1", [
           tenantId,
         ]);
+        await ownerDb.query(
+          "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await ownerDb.query("DELETE FROM business_profiles WHERE tenant_id = $1", [
+          tenantId,
+        ]);
+        await ownerDb.query("DELETE FROM accounting_books WHERE tenant_id = $1", [
+          tenantId,
+        ]);
+        await ownerDb.query(
+          "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+          [tenantId],
+        );
         await ownerDb.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
       }
       await ownerDb.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
