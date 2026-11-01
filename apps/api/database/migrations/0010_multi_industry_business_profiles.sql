@@ -132,44 +132,6 @@ CREATE TABLE business_profiles (
   CHECK (length(btrim(display_name)) BETWEEN 1 AND 160)
 );
 
--- Give each existing business profile a separate default accounting book.
--- A later reviewed command may map multiple profiles to one book when they
--- belong to the same legal/accounting entity.
-WITH profile_book_map AS MATERIALIZED (
-  SELECT
-    profile.id AS profile_id,
-    profile.tenant_id,
-    profile.display_name,
-    profile.created_by_user_id,
-    gen_random_uuid() AS accounting_book_id
-  FROM business_profiles AS profile
-),
-inserted_books AS (
-  INSERT INTO accounting_books (
-    id, tenant_id, name, created_by_user_id
-  )
-  SELECT
-    profile_book_map.accounting_book_id,
-    profile_book_map.tenant_id,
-    profile_book_map.display_name,
-    profile_book_map.created_by_user_id
-  FROM profile_book_map
-  RETURNING id
-)
-UPDATE business_profiles AS profile
-SET accounting_book_id = profile_book_map.accounting_book_id
-FROM profile_book_map
-JOIN inserted_books
-  ON inserted_books.id = profile_book_map.accounting_book_id
-WHERE profile.id = profile_book_map.profile_id;
-
-ALTER TABLE business_profiles
-  ALTER COLUMN accounting_book_id SET NOT NULL,
-  ADD CONSTRAINT business_profiles_accounting_book_fk
-    FOREIGN KEY (tenant_id, accounting_book_id)
-    REFERENCES accounting_books (tenant_id, id)
-    ON DELETE RESTRICT;
-
 CREATE INDEX business_profiles_tenant_status_idx
   ON business_profiles (tenant_id, status);
 
@@ -225,6 +187,45 @@ SELECT
     LIMIT 1
   )
 FROM tenants AS tenant;
+
+-- Give each existing business profile a separate default accounting book.
+-- A later reviewed command may map multiple profiles to one book when they
+-- belong to the same legal/accounting entity.
+WITH profile_book_map AS MATERIALIZED (
+  SELECT
+    profile.id AS profile_id,
+    profile.tenant_id,
+    profile.display_name,
+    profile.created_by_user_id,
+    gen_random_uuid() AS accounting_book_id
+  FROM business_profiles AS profile
+),
+inserted_books AS (
+  INSERT INTO accounting_books (
+    id, tenant_id, name, created_by_user_id
+  )
+  SELECT
+    profile_book_map.accounting_book_id,
+    profile_book_map.tenant_id,
+    profile_book_map.display_name,
+    profile_book_map.created_by_user_id
+  FROM profile_book_map
+  RETURNING id
+)
+UPDATE business_profiles AS profile
+SET accounting_book_id = profile_book_map.accounting_book_id
+FROM profile_book_map
+JOIN inserted_books
+  ON inserted_books.id = profile_book_map.accounting_book_id
+WHERE profile.id = profile_book_map.profile_id;
+
+ALTER TABLE business_profiles
+  ALTER COLUMN accounting_book_id SET NOT NULL,
+  ADD CONSTRAINT business_profiles_accounting_book_fk
+    FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id)
+    ON DELETE RESTRICT;
+
 
 INSERT INTO business_profile_capabilities (
   tenant_id,
