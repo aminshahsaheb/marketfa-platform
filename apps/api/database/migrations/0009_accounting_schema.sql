@@ -258,6 +258,7 @@ CREATE TABLE accounting_audit_events (
     REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, actor_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, store_id, command_id, event_type),
   CHECK (length(btrim(event_type)) BETWEEN 1 AND 80),
   CHECK (length(btrim(entity_type)) BETWEEN 1 AND 50)
 );
@@ -266,6 +267,66 @@ CREATE INDEX accounting_audit_store_time_idx
   ON accounting_audit_events (tenant_id, store_id, occurred_at DESC);
 CREATE INDEX accounting_audit_entity_idx
   ON accounting_audit_events (tenant_id, store_id, entity_type, entity_id, occurred_at DESC);
+
+CREATE OR REPLACE FUNCTION accounting_prevent_audit_mutation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'Accounting audit events are append-only'
+    USING ERRCODE = '55000';
+END;
+$function$;
+
+CREATE TRIGGER accounting_audit_immutable_trg
+  BEFORE UPDATE OR DELETE ON accounting_audit_events
+  FOR EACH ROW EXECUTE FUNCTION accounting_prevent_audit_mutation();
+
+CREATE OR REPLACE FUNCTION accounting_protect_approved_posting_rule()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $function$
+BEGIN
+  IF TG_OP = 'DELETE' AND OLD.status IN ('APPROVED', 'RETIRED') THEN
+    RAISE EXCEPTION 'Approved posting rule versions are immutable'
+      USING ERRCODE = '55000';
+  END IF;
+
+  IF TG_OP = 'UPDATE' THEN
+    IF OLD.status = 'RETIRED' THEN
+      RAISE EXCEPTION 'Retired posting rule versions are immutable'
+        USING ERRCODE = '55000';
+    END IF;
+
+    IF OLD.status = 'APPROVED'
+       AND (
+         NEW.rule_key IS DISTINCT FROM OLD.rule_key
+         OR NEW.version IS DISTINCT FROM OLD.version
+         OR NEW.effective_from IS DISTINCT FROM OLD.effective_from
+         OR NEW.effective_to IS DISTINCT FROM OLD.effective_to
+         OR NEW.configuration IS DISTINCT FROM OLD.configuration
+         OR NEW.source_reference IS DISTINCT FROM OLD.source_reference
+       ) THEN
+      RAISE EXCEPTION 'Approved posting rule configuration is immutable'
+        USING ERRCODE = '55000';
+    END IF;
+
+    IF NEW.status = 'APPROVED'
+       AND current_user <> 'marketfa_accounting_owner' THEN
+      RAISE EXCEPTION 'Only the accounting command owner can approve posting rules'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$function$;
+
+CREATE TRIGGER posting_rule_versions_immutable_trg
+  BEFORE UPDATE OR DELETE ON posting_rule_versions
+  FOR EACH ROW EXECUTE FUNCTION accounting_protect_approved_posting_rule();
 
 CREATE OR REPLACE FUNCTION accounting_prevent_posted_journal_mutation()
 RETURNS TRIGGER
