@@ -6,6 +6,8 @@
 
 ## Executive assessment
 
+**Confirmed product constraints:** MarketFa is an Iran-first retail POS + inventory + accounting PWA. The platform is a NestJS/TypeScript modular monolith with PostgreSQL and a React/TypeScript PWA. Persian is RTL with Jalali dates and Persian digits; English is LTR with Gregorian dates and Latin digits. Ledger amounts use integer IRR; Toman is an explicit display conversion, with no hidden rounding. UI language must not change tax jurisdiction, currency, or accounting calculations. Offline behavior is bounded and controlled; it is not unrestricted offline stock allocation.
+
 The repository has a useful foundation: modular-monolith direction, PostgreSQL as source of truth, tenant-scoped RLS, server-side sessions, request actor/CSRF guards, tenant bootstrap, invitation/membership/terminal lifecycle commands, and integration tests against PostgreSQL.
 
 It is **not yet a usable retail product**. The web app is a shell. There is no selected authentication provider or login/recovery flow, no catalog/inventory/sales/shift modules, no accounting posting service or reports, no durable offline outbox/sync, and no production operations or pilot evidence.
@@ -49,7 +51,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 7. **Offline is a consistency and security feature, not just IndexedDB.** Persist command IDs before send; use server idempotency outcomes; revalidate current price/tax/stock/shift/permission/terminal state; define reject/review states and bounded allowed commands. Never promise unrestricted multi-terminal offline stock allocation.
 8. **Tax compliance must be evidence-versioned.** Keep generic accounting separate from Iran tax and Moadian adapters. Do not encode rates, taxpayer applicability, schema fields, outage rules or rounding without primary official source, effective date, scope, reviewer and golden test vectors.
 9. **Operational safety is not yet proven.** Add backup encryption/retention, restore drills, migrations/rollback policy, structured logs/metrics/alerts, incident procedures, deployment secrets and data-residency decisions before pilot.
-10. **Legacy migration needs a real sanitized export.** Build mapping/validation/reconciliation artifacts and a staging import. Do not migrate credentials or modify the only source backup.
+10. **Legacy migration needs a real sanitized export.** The separate legacy Firebase PWA is not this platform's backend and uses integer Toman, while the new ledger uses integer IRR. Build an explicit amount/unit mapping, validation/reconciliation artifacts and a staging import. Audit its historical batch allocation, return-state, cash-close, stale-price and concurrent-return behavior before importing records. Do not copy its security rules or offline cache as proof of transactional safety; do not migrate credentials or modify the only source backup.
 11. **Quality evidence must be feature-complete.** Every tenant-owned API family needs role and cross-tenant tests. Every financial feature needs golden, boundary, property, retry/concurrency, reconciliation and restore coverage. Existing web test is only a shell test; browser E2E and accessibility/localization coverage remain future gates.
 12. **API edge hardening must be standardized before external exposure.** The current bootstrap config is minimal. Define and test request validation/unknown-field behavior, allowed origins, security headers, request-size limits, stable error envelopes, correlation IDs, rate limits, and graceful shutdown. Keep route-specific parsers strict and avoid logging secrets or financial payloads.
 
@@ -57,7 +59,8 @@ The correct sequence is to close product/legal decisions and identity entry poin
 
 ### Phase 0 — Product and policy decisions (gate before financial behavior)
 
-- [ ] Select first retail vertical and pilot operator; record SKU/transaction/terminal scale.
+- [x] Confirm first vertical: Iran-first retail POS + inventory + accounting PWA.
+- [ ] Select pilot operator; record expected SKU, daily transaction and terminal scale.
 - [ ] Confirm one-store-per-tenant MVP or document why multi-store is required.
 - [ ] Define core workflows and at least 10 end-to-end acceptance scenarios.
 - [ ] Approve device/hardware list: barcode scanner, scale, receipt printer, cash drawer, supported browsers.
@@ -137,7 +140,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 ### Phase 7 — Localization, compliance, reports and migration
 
 - [ ] Complete translation-key coverage and RTL/LTR flows across all modules.
-- [ ] Jalali/Gregorian, timezone/DST, Persian/Latin digits, money-unit and rounding golden tests.
+- [ ] Jalali/Gregorian, timezone/DST, Persian/Latin digits, IRR storage/Toman display conversion, and rounding golden tests. UI locale must not alter tax jurisdiction, currency, or accounting calculations.
 - [ ] CSV/PDF/receipt exports with locale, calendar, timezone and currency metadata; test Persian shaping/fonts.
 - [ ] Versioned Iran tax profile and Moadian adapter only after specialist-approved source/rules.
 - [ ] Tax invoice states, durable submission/reconciliation and outage/rejection workflows.
