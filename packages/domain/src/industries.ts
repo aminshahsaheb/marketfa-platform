@@ -38,6 +38,15 @@ const shared: readonly IndustryCapability[] = [
   "reports",
 ];
 
+const retailCapabilities: readonly IndustryCapability[] = [
+  ...shared,
+  "suppliers",
+  "catalog",
+  "inventory",
+  "procurement",
+  "point_of_sale",
+];
+
 export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
   {
     id: "general-retail",
@@ -45,7 +54,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "General retail",
     group: "retail",
     descriptionFa: "فروش کالا، موجودی، خرید و صندوق",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale"],
+    capabilities: retailCapabilities,
   },
   {
     id: "grocery",
@@ -53,7 +62,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Grocery",
     group: "retail",
     descriptionFa: "کالای متنوع، بارکد، وزن، تاریخ انقضا و صندوق",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale"],
+    capabilities: retailCapabilities,
   },
   {
     id: "apparel",
@@ -61,7 +70,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Apparel and footwear",
     group: "retail",
     descriptionFa: "تنوع رنگ و سایز، کالا، موجودی و فروش",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale"],
+    capabilities: retailCapabilities,
   },
   {
     id: "electronics",
@@ -69,7 +78,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Electronics",
     group: "retail",
     descriptionFa: "مدل، سریال، ضمانت، موجودی و فروش",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale"],
+    capabilities: retailCapabilities,
   },
   {
     id: "pharmacy",
@@ -77,7 +86,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Pharmacy",
     group: "regulated-retail",
     descriptionFa: "فروش و موجودی با نیاز به قواعد تخصصی و مجوزهای مرتبط",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale"],
+    capabilities: retailCapabilities,
   },
   {
     id: "restaurant",
@@ -85,7 +94,11 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Restaurant",
     group: "food-service",
     descriptionFa: "سفارش، میز، منو، آشپزخانه و تحویل",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale", "reservations", "delivery"],
+    capabilities: [
+      ...retailCapabilities,
+      "reservations",
+      "delivery",
+    ],
   },
   {
     id: "cafe-bakery",
@@ -93,7 +106,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Cafe and bakery",
     group: "food-service",
     descriptionFa: "منو، دستور ساخت، سفارش و فروش حضوری",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "point_of_sale", "production"],
+    capabilities: [...retailCapabilities, "production"],
   },
   {
     id: "professional-services",
@@ -109,14 +122,22 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Repair and maintenance",
     group: "services",
     descriptionFa: "پذیرش کار، سفارش کار، قطعه و تحویل",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "work_orders"],
+    capabilities: [
+      ...shared,
+      "suppliers",
+      "catalog",
+      "inventory",
+      "procurement",
+      "work_orders",
+    ],
   },
   {
     id: "health-wellness",
     labelFa: "سلامت و زیبایی",
     labelEn: "Health and beauty",
     group: "appointments",
-    descriptionFa: "نوبت‌دهی، خدمات، کارکنان و پرداخت؛ دادهٔ حساس نیازمند کنترل جداگانه است",
+    descriptionFa:
+      "نوبت‌دهی، خدمات، کارکنان و پرداخت؛ دادهٔ حساس نیازمند کنترل جداگانه است",
     capabilities: [...shared, "appointments"],
   },
   {
@@ -133,7 +154,13 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Construction and contracting",
     group: "projects",
     descriptionFa: "پروژه، برآورد، خرید، هزینه و صورت‌وضعیت",
-    capabilities: [...shared, "suppliers", "procurement", "projects", "work_orders"],
+    capabilities: [
+      ...shared,
+      "suppliers",
+      "procurement",
+      "projects",
+      "work_orders",
+    ],
   },
   {
     id: "wholesale",
@@ -141,7 +168,14 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Wholesale and distribution",
     group: "trade",
     descriptionFa: "مشتری سازمانی، قیمت‌گذاری، سفارش و توزیع",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "delivery"],
+    capabilities: [
+      ...shared,
+      "suppliers",
+      "catalog",
+      "inventory",
+      "procurement",
+      "delivery",
+    ],
   },
   {
     id: "manufacturing",
@@ -149,7 +183,15 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     labelEn: "Manufacturing",
     group: "production",
     descriptionFa: "مواد اولیه، دستور تولید، عملیات و محصول نهایی",
-    capabilities: [...shared, "suppliers", "catalog", "inventory", "procurement", "production", "work_orders"],
+    capabilities: [
+      ...shared,
+      "suppliers",
+      "catalog",
+      "inventory",
+      "procurement",
+      "production",
+      "work_orders",
+    ],
   },
   {
     id: "transport",
@@ -175,7 +217,7 @@ export const INDUSTRY_PROFILES: readonly IndustryProfile[] = [
     descriptionFa: "شروع با ابزارهای پایه و افزودن قابلیت‌های موردنیاز",
     capabilities: shared,
   },
-] as const;
+];
 
 export function getIndustryProfile(id: string): IndustryProfile | undefined {
   return INDUSTRY_PROFILES.find((profile) => profile.id === id);
