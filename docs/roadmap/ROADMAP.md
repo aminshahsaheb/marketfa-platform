@@ -53,7 +53,6 @@ Work is gated by evidence. A phase is not complete because its files exist.
 - [x] Terminal listing, registration, credential rotation, suspension/reactivation and revocation (merged in PR #19; device-auth/sync enforcement remains future work).
 - [x] Audit tenant bootstrap, invitation, membership, and terminal lifecycle security changes atomically (merged in PRs #18 and #19).
 
-
 **Implementation order:** tenant bootstrap → invitation lifecycle → membership lifecycle → terminal lifecycle → audit coverage → authentication provider and browser login integration. The login method must be selected from pilot evidence; do not implement SMS OTP or password by assumption.
 
 **Exit:** cross-tenant access tests fail closed; membership changes take effect on the next request; terminal state and assignment revocation are atomic; device-auth/sync endpoints reject suspended or revoked terminals when implemented; invitation acceptance is atomic; the API authorization matrix passes.
