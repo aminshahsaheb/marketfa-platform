@@ -376,7 +376,13 @@ test(
         "suspended membership must lose access immediately",
       );
     } finally {
-      if (app) await app.close();
+      if (app) {
+        try {
+          await app.close();
+        } catch {
+          // Continue fixture cleanup even if the HTTP app failed to close.
+        }
+      }
       if (previousTrustedOrigins === undefined) {
         delete process.env.CSRF_TRUSTED_ORIGINS;
       } else {
