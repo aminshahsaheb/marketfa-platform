@@ -149,11 +149,3 @@ test(
     }
   },
 );
-##[group]Run pnpm format:check
-[36;1mpnpm format:check[0m
-shell: /usr/bin/bash -e {0}
-env:
-  DATABASE_URL: ***localhost:5432/marketfa
-  DATABASE_URL_MIGRATION: ***localhost:5432/marketfa
-  MIGRATION_TEST_DATABASE_CREATION: true
-  PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
