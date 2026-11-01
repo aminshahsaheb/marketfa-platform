@@ -280,6 +280,88 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION tenant_terminal_activate(
+  p_tenant_id UUID,
+  p_terminal_id UUID
+)
+RETURNS TABLE(
+  terminal_id UUID,
+  store_id UUID,
+  name TEXT,
+  status terminal_status,
+  registered_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $function$
+DECLARE
+  actor_id UUID;
+  actor_role tenant_role;
+  target public.terminals%ROWTYPE;
+BEGIN
+  actor_id := public.app_current_user_id();
+
+  IF actor_id IS NULL
+     OR p_tenant_id IS NULL
+     OR p_terminal_id IS NULL
+     OR public.app_current_tenant_id() IS DISTINCT FROM p_tenant_id THEN
+    RAISE EXCEPTION 'Invalid terminal activation context'
+      USING ERRCODE = '22023';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_tenant_id::TEXT, 0));
+
+  SELECT membership.role
+  INTO actor_role
+  FROM public.tenant_memberships AS membership
+  JOIN public.users AS account ON account.id = membership.user_id
+  JOIN public.tenants AS tenant ON tenant.id = membership.tenant_id
+  WHERE membership.tenant_id = p_tenant_id
+    AND membership.user_id = actor_id
+    AND membership.status = 'ACTIVE'
+    AND account.status = 'ACTIVE'
+    AND tenant.status = 'ACTIVE';
+
+  IF NOT FOUND OR actor_role <> 'OWNER' THEN
+    RAISE EXCEPTION 'Terminal administration permission denied'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT terminal.*
+  INTO target
+  FROM public.terminals AS terminal
+  WHERE terminal.tenant_id = p_tenant_id
+    AND terminal.id = p_terminal_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR target.status = 'REVOKED' THEN
+    RETURN;
+  END IF;
+
+  IF target.status = 'SUSPENDED' THEN
+    UPDATE public.terminals AS terminal
+    SET status = 'ACTIVE'
+    WHERE terminal.tenant_id = p_tenant_id
+      AND terminal.id = p_terminal_id;
+
+    INSERT INTO public.audit_events (
+      tenant_id, store_id, actor_user_id, action, entity_type, entity_id, metadata
+    )
+    VALUES (
+      p_tenant_id, target.store_id, actor_id, 'tenant.terminal.activate',
+      'terminal', target.id, jsonb_build_object('old_status', target.status)
+    );
+  END IF;
+
+  RETURN QUERY
+  SELECT target.id, target.store_id, target.name,
+         CASE WHEN target.status = 'SUSPENDED' THEN 'ACTIVE'::terminal_status
+              ELSE target.status END,
+         target.registered_at;
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION tenant_terminal_revoke(
   p_tenant_id UUID,
   p_terminal_id UUID
@@ -386,6 +468,8 @@ ALTER FUNCTION tenant_terminal_rotate_credential(UUID, UUID, BYTEA)
   OWNER TO marketfa_tenant_admin_owner;
 ALTER FUNCTION tenant_terminal_suspend(UUID, UUID)
   OWNER TO marketfa_tenant_admin_owner;
+ALTER FUNCTION tenant_terminal_activate(UUID, UUID)
+  OWNER TO marketfa_tenant_admin_owner;
 ALTER FUNCTION tenant_terminal_revoke(UUID, UUID)
   OWNER TO marketfa_tenant_admin_owner;
 REVOKE CREATE ON SCHEMA public FROM marketfa_tenant_admin_owner;
@@ -393,8 +477,10 @@ REVOKE CREATE ON SCHEMA public FROM marketfa_tenant_admin_owner;
 REVOKE ALL ON FUNCTION tenant_terminal_register(UUID, UUID, TEXT, BYTEA) FROM PUBLIC;
 REVOKE ALL ON FUNCTION tenant_terminal_rotate_credential(UUID, UUID, BYTEA) FROM PUBLIC;
 REVOKE ALL ON FUNCTION tenant_terminal_suspend(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION tenant_terminal_activate(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION tenant_terminal_revoke(UUID, UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION tenant_terminal_register(UUID, UUID, TEXT, BYTEA) TO marketfa_app;
 GRANT EXECUTE ON FUNCTION tenant_terminal_rotate_credential(UUID, UUID, BYTEA) TO marketfa_app;
 GRANT EXECUTE ON FUNCTION tenant_terminal_suspend(UUID, UUID) TO marketfa_app;
+GRANT EXECUTE ON FUNCTION tenant_terminal_activate(UUID, UUID) TO marketfa_app;
 GRANT EXECUTE ON FUNCTION tenant_terminal_revoke(UUID, UUID) TO marketfa_app;
