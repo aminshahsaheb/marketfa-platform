@@ -54,8 +54,6 @@ jobs:
         run: pnpm exec prettier --check apps/api/test/api-authorization.integration.test.ts
       - name: Check formatting for accounting schema test and docs
         run: pnpm exec prettier --check apps/api/test/accounting-schema.integration.test.ts docs/finance/ACCOUNTING_DATA_MODEL.md docs/finance/ACCOUNTING_KERNEL.md docs/roadmap/ROADMAP.md docs/architecture/TENANCY_AND_IDENTITY.md docs/testing/TENANCY_SECURITY_TEST_PLAN.md
-      - name: Print formatted migration upgrade test
-        run: pnpm exec prettier apps/api/test/migration-upgrade.integration.test.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
