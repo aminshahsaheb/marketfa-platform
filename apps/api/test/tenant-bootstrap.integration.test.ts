@@ -126,6 +126,20 @@ test(
         store_id: null,
       });
 
+      await assert.rejects(
+        service.create(
+          { userId: activeUserId },
+          {
+            displayName: "Invalid Service Store",
+            legalName: null,
+            locationName: "Office",
+            storeName: "Unexpected Store",
+            industryId: "professional-services",
+          },
+        ),
+        BadRequestException,
+      );
+
       const retailBusiness = await service.create(
         { userId: activeUserId },
         {
