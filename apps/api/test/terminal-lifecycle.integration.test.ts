@@ -83,6 +83,22 @@ test(
         ),
         ForbiddenException,
       );
+      await assert.rejects(
+        terminals.suspend(
+          { userId: managerId },
+          tenant.tenantId,
+          created.terminalId,
+        ),
+        ForbiddenException,
+      );
+      await assert.rejects(
+        terminals.revoke(
+          { userId: managerId },
+          tenant.tenantId,
+          created.terminalId,
+        ),
+        ForbiddenException,
+      );
 
       await assert.rejects(
         terminals.register(
