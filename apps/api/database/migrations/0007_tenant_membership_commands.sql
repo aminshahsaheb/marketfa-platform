@@ -1,7 +1,8 @@
 -- Atomic membership role, suspension, and removal commands.
 -- All tenant administration commands use the same transaction-scoped advisory
 -- lock so last-owner checks serialize with other membership changes/invitations.
-GRANT SELECT, UPDATE ON tenant_memberships TO marketfa_tenant_admin_owner;
+GRANT SELECT ON tenant_memberships TO marketfa_tenant_admin_owner;
+GRANT UPDATE (role, status, updated_at) ON tenant_memberships TO marketfa_tenant_admin_owner;
 
 CREATE POLICY tenant_admin_owner_membership_update ON tenant_memberships
   FOR UPDATE TO marketfa_tenant_admin_owner
