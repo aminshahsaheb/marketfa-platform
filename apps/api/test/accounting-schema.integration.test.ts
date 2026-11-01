@@ -369,6 +369,30 @@ test(
           ),
         "55000",
       );
+
+      const unapprovedRuleId = randomUUID();
+      await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+        client.query(
+          `INSERT INTO posting_rule_versions
+            (id, tenant_id, store_id, rule_key, version, effective_from,
+             configuration, status)
+           VALUES ($1, $2, $3, 'manual.unapproved', '1', DATE '2026-01-01',
+                   '{}'::jsonb, 'DRAFT')`,
+          [unapprovedRuleId, tenantA.tenantId, tenantA.storeId],
+        ),
+      );
+      await expectSqlState(
+        () =>
+          withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
+            client.query(
+              `UPDATE posting_rule_versions
+               SET status = 'RETIRED', approved_by_user_id = $2, approved_at = now()
+               WHERE tenant_id = $1 AND id = $3`,
+              [tenantA.tenantId, ownerId, unapprovedRuleId],
+            ),
+          ),
+        "55000",
+      );
       await expectSqlState(
         () =>
           withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
