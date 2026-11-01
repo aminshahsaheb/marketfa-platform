@@ -34,7 +34,7 @@ export class IndustryCatalogService {
            industry.display_name_key,
            industry.group_key,
            industry.is_regulated,
-           defaults.capability_key
+           capability.capability_key
          FROM industry_catalog AS industry
          LEFT JOIN industry_capability_defaults AS defaults
            ON defaults.industry_key = industry.industry_key
@@ -46,7 +46,7 @@ export class IndustryCatalogService {
          ORDER BY
            industry.group_key,
            industry.display_name_key,
-           defaults.capability_key`,
+           capability.capability_key`,
       ),
     );
 

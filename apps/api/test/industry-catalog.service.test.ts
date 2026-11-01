@@ -63,7 +63,8 @@ test("industry catalogue groups server capabilities by versioned profile", async
 
   assert.equal(readOnly, true);
   assert.match(queryText, /capability\.status = 'ACTIVE'/);
-  assert.doesNotMatch(queryText, /defaults\.capability_key IS NULL OR/);
+  assert.match(queryText, /capability\.capability_key/);
+  assert.doesNotMatch(queryText, /SELECT[\s\S]*defaults\.capability_key/);
   assert.deepEqual(profiles, [
     {
       id: "professional-services",
