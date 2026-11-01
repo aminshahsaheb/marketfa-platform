@@ -55,6 +55,13 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
     BadRequestException,
   );
 
+  // Existing clients send storeName and do not send industryId.
+  await controller.create(actor, {
+    displayName: "Legacy Business",
+    legalName: null,
+    storeName: "Legacy Store",
+  });
+
   await controller.create(actor, {
     displayName: "  Business  ",
     legalName: "  Legal Name ",
@@ -63,6 +70,13 @@ test("tenant bootstrap supports generic locations and optional retail stores", a
   });
 
   assert.deepEqual(calls, [
+    {
+      displayName: "Legacy Business",
+      legalName: null,
+      locationName: "Legacy Store",
+      storeName: "Legacy Store",
+      industryId: "general-retail",
+    },
     {
       displayName: "Business",
       legalName: "Legal Name",
