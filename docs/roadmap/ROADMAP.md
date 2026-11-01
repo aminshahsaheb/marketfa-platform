@@ -67,7 +67,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 
 ## M0.5 — Multi-industry business model
 
-**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes additional store-eligibility and frontend-version safeguards. CI for that exact head is pending.
+**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes additional store-eligibility and frontend-version safeguards. CI passed on exact head `f2554145ce16fd170f1b6a09f52bd69f3aa94d58` in run [41361420259](https://github.com/aminshahsaheb/marketfa-platform/actions/runs/41361420259).
 
 - [x] Define tenant → business profile → business location boundaries in the merged architecture baseline.
 - [x] Keep retail store/POS terminal concepts optional in the PR #28 implementation.
@@ -80,7 +80,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 - [ ] Select first pilot verticals and complete their workflows end to end.
 - [ ] Test profile migration without changing historical records.
 
-**Open PR #28:** ready for review; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`). Check the live PR for the current head and exact-head CI result. Earlier heads passed CI, but those results do not verify later changes. CodeRabbit's review quota is currently exhausted; no completed human architecture review is recorded. PR #26 is closed as superseded.
+**Open PR #28:** ready for review; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`). Check the live PR for the current head and exact-head CI result. CodeRabbit's full review attempt was rate-limited; no completed human architecture review is recorded. PR #26 is closed as superseded.
 
 **Exit:** the profile, location and capability contracts are merged; capability activation is enforced server-side with release, profile, dependency, entitlement, permission, setup, jurisdiction and specialist-approval gates; the UI renders only active, authorized module routes and actions; historical profile changes are explicit; and at least two selected pilot workflows pass end-to-end tests.
 
