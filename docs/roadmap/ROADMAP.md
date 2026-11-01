@@ -67,7 +67,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 
 ## M0.5 — Multi-industry business model
 
-**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes additional store-eligibility and frontend-version safeguards. CI passed on exact head `f2554145ce16fd170f1b6a09f52bd69f3aa94d58` in run [41361420259](https://github.com/aminshahsaheb/marketfa-platform/actions/runs/41361420259).
+**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes store-eligibility, frontend-version and legacy HTTP bootstrap compatibility safeguards. The live PR records CI results for the exact current head.
 
 - [x] Define tenant → business profile → business location boundaries in the merged architecture baseline.
 - [x] Keep retail store/POS terminal concepts optional in the PR #28 implementation.
