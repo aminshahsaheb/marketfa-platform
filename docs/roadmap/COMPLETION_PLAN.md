@@ -6,13 +6,13 @@
 
 ## Executive assessment
 
-**Confirmed product constraints:** MarketFa is an Iran-first retail POS + inventory + accounting PWA. The platform is a NestJS/TypeScript modular monolith with PostgreSQL and a React/TypeScript PWA. Persian is RTL with Jalali dates and Persian digits; English is LTR with Gregorian dates and Latin digits. Ledger amounts use integer IRR; Toman is an explicit display conversion, with no hidden rounding. UI language must not change tax jurisdiction, currency, or accounting calculations. Offline behavior is bounded and controlled; it is not unrestricted offline stock allocation.
+**Confirmed product constraints:** MarketFa is an Iran-first multi-industry business operations platform. Retail POS + inventory + accounting is one vertical pack. The owner selects an industry profile and receives a workspace assembled from shared core services and enabled capabilities. The platform is a NestJS/TypeScript modular monolith with PostgreSQL and a React/TypeScript PWA. Persian is RTL with Jalali dates and Persian digits; English is LTR with Gregorian dates and Latin digits. Ledger amounts use integer IRR; Toman is an explicit display conversion, with no hidden rounding. UI language must not change tax jurisdiction, currency, or accounting calculations. Offline behavior is bounded and controlled; it is not unrestricted offline stock allocation.
 
 The repository has a useful foundation: modular-monolith direction, PostgreSQL as source of truth, tenant-scoped RLS, server-side sessions, request actor/CSRF guards, tenant bootstrap, invitation/membership/terminal lifecycle commands, and integration tests against PostgreSQL.
 
-It is **not yet a usable retail product**. The web app is a shell. There is no selected authentication provider or login/recovery flow, no catalog/inventory/sales/shift modules, no accounting posting service or reports, no durable offline outbox/sync, and no production operations or pilot evidence.
+It is **not yet a usable multi-industry product**. The web app is a shell. There is no selected authentication provider or login/recovery flow, no catalog/inventory/sales/shift modules, no accounting posting service or reports, no durable offline outbox/sync, and no production operations or pilot evidence.
 
-The correct sequence is to close product/legal decisions and identity entry points, finish the accounting foundation and posting boundary, then build inventory and POS around atomic source-document-to-ledger transactions. Offline scope must remain bounded until online workflows and device revocation are proven.
+The correct sequence is to close product/legal decisions and identity entry points, define business profiles and server-authoritative capability activation, finish the shared finance foundation, then deliver vertical packs. Retail inventory and POS must not become mandatory workflows for service or project businesses. Offline scope must remain bounded until online workflows and device revocation are proven.
 
 ## Verified current state
 
@@ -40,7 +40,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 - Durable local outbox, device authentication and sync protocol.
 - Deployment, backups/restore rehearsal, monitoring, incident/rollback runbooks, security review and pilot operations.
 
-## Architecture review — risks and required controls
+## Architecture review — risks and required controls\n\n0. **Multi-industry boundary is a product-level requirement.** Tenant, business profile, location, industry template, capability, entitlement, role permission and jurisdiction must be separate concepts. Never infer a legal or tax profile from the selected industry. Never force service or project businesses into retail stock/POS tables. Industry changes must be versioned and must not reinterpret historical records.
 
 1. **Identity is not end-to-end yet.** Session primitives exist, but there is no provider-backed login/recovery path. Do not expose tenant administration as a usable product until authentication, cookie policy, recovery, rate limits, abuse handling and account lifecycle are implemented and tested.
 2. **Accounting schema is not an accounting service.** Keep direct table writes unavailable to `marketfa_app`. Implement a narrow command boundary with transaction-scoped tenant/store authorization, durable idempotency, atomic audit/outbox, deterministic locks, and stable error contracts.
@@ -59,7 +59,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 
 ### Phase 0 — Product and policy decisions (gate before financial behavior)
 
-- [x] Confirm first vertical: Iran-first retail POS + inventory + accounting PWA.
+- [x] Confirm product direction: Iran-first multi-industry business operations platform; retail POS + inventory + accounting is the first vertical pack.
 - [ ] Select pilot operator; record expected SKU, daily transaction and terminal scale.
 - [ ] Confirm one-store-per-tenant MVP or document why multi-store is required.
 - [ ] Define core workflows and at least 10 end-to-end acceptance scenarios.
@@ -71,7 +71,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 - [ ] Define hosting/data residency, privacy, retention and pilot success metrics.
 - **Exit:** signed decisions, source evidence and golden acceptance scenarios; unresolved items are explicit launch blockers.
 
-### Phase 1 — Close M2 identity and administration
+### Phase 0.5 — Multi-industry platform foundation\n\n- [x] Record ADR-0008 and the shared-core / capability-pack architecture.\n- [x] Add the initial industry profile catalogue and web selection preview.\n- [ ] Implement tenant-scoped business profiles and locations.\n- [ ] Implement server-side capability activation, dependency checks, role authorization and entitlements.\n- [ ] Implement module-owned dashboard cards, actions, routes and empty states.\n- [ ] Select the first two vertical packs and define their acceptance scenarios.\n- **Exit:** business setup creates a versioned profile; dashboard and API expose only supported, enabled and authorized capabilities.\n\n### Phase 1 — Close M2 identity and administration
 
 - [ ] Decide authentication method from pilot evidence (password, OTP, email link or provider); do not assume.
 - [ ] Implement provider adapter, login/logout, session-cookie issuance/clearing, expiry/rotation/revocation and recovery.
@@ -105,7 +105,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 - [ ] Add golden, property, concurrency, period-close race, reversal and tenant-isolation tests.
 - **Exit:** independent fixtures reconcile; posting is atomic/idempotent; closed periods cannot accept late posts; trial balance balances; accountant approves scenarios.
 
-### Phase 4 — Catalog, procurement and inventory
+### Phase 4 — Retail vertical pack: catalog, procurement and inventory
 
 - [ ] Product/SKU/barcode, localized labels, units and exact conversion rules.
 - [ ] Supplier and purchase order/receipt workflow; decide supplier invoice/payable scope.
@@ -116,7 +116,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 - [ ] Import/export, pagination, search and audit.
 - **Exit:** stock quantities and valuation reconcile for purchase, sale, return, adjustment and expiry scenarios.
 
-### Phase 5 — POS, tender and shifts
+### Phase 5 — Retail vertical pack: POS, tender and shifts
 
 - [ ] Shift open/close, opening float, cash count and variance workflow.
 - [ ] Server-authoritative cart pricing, discount permissions, tax calculation and stock allocation.
