@@ -147,7 +147,9 @@ test(
     } finally {
       await legacy?.end();
       if (databaseCreated) {
-        await admin.query(`DROP DATABASE IF EXISTS ${databaseName} WITH (FORCE)`);
+        await admin.query(
+          `DROP DATABASE IF EXISTS ${databaseName} WITH (FORCE)`,
+        );
       }
       await admin.end();
     }
