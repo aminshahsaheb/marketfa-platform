@@ -25,8 +25,8 @@ The correct sequence is to close product/legal decisions and identity entry poin
 
 ### In progress
 
-- **PR #21 — M3 accounting schema foundation.** The branch contains accounts, fiscal periods, posting-rule versions, journals/lines, sequences, audit events, RLS, database constraints and PostgreSQL integration tests. It does not implement posting application services, durable command idempotency, sequence allocation, period close/reopen commands, ledger/trial-balance queries, or source-module integration.
-- CI passes on exact PR #21 head `fbac60de7788f2257b2f79335670cee135106f66` (format, lint, typecheck, migrations, PostgreSQL integration tests, build, API+Web smoke). An earlier run exposed a duplicate journal-number fixture in the closed-period test; the fixture was corrected and the exact-head rerun passed.
+- **PR #21 — M3 accounting schema foundation.** The branch contains accounts, fiscal periods, posting-rule versions, journals/lines, sequences, audit events, forced RLS, database constraints and PostgreSQL integration tests. It now serializes journal-line mutation against posting, serializes posting validation against period close/reopen, prevents deactivation of parent accounts with children, and enforces the posting-rule approval-to-retirement lifecycle. It does not implement posting application services, durable command idempotency, sequence allocation, period close/reopen commands, ledger/trial-balance queries, or source-module integration.
+- CI passes on exact PR #21 head `c0b7939042345858f3329d820b41a76c03dbde41` (format, lint, typecheck, role bootstrap, PostgreSQL migrations/integration tests, build, API+Web smoke). The integration suite now tests both lock orderings for concurrent journal-line mutation and posting.
 
 ### Not implemented or not approved
 
@@ -81,10 +81,11 @@ The correct sequence is to close product/legal decisions and identity entry poin
 
 ### Phase 2 — Finish M3 accounting schema foundation
 
-- [x] Confirm PR #21 CI passes on exact head; migration privilege/RLS review is recorded as a follow-up gate.
-- [ ] Add/verify rule effective-date overlap semantics and account hierarchy policy.
-- [ ] Confirm deferred constraints, rollback behavior, audit immutability and test cleanup.
-- [ ] Merge PR #21 only after review and green CI.
+- [x] Confirm PR #21 CI passes on exact head; review forced RLS, role grants, constraints, trigger invariants and migration/test cleanup.
+- [x] Add parent-account deactivation guard, approved-rule retirement guard, journal-line/posting serialization and period-row locking in the deferred posting guard.
+- [ ] Define approved posting-rule effective-date overlap/priority semantics; do not infer this policy from schema structure.
+- [ ] Confirm the future command runtime's safe access path to the non-login accounting-owner role.
+- [ ] Merge PR #21 after final maintainer approval.
 - [ ] Update main roadmap/status docs to match merged implementation.
 - **Exit:** schema migration is merged, reproducible on clean PostgreSQL, and constraints are backed by integration tests.
 
@@ -170,8 +171,8 @@ A feature is complete only when it has:
 
 ## Recommended immediate next actions
 
-1. Complete human review of PR #21 migration/RLS and schema invariants; CI is green on its exact head.
-2. Merge PR #21 only after review; then implement Phase 3 accounting commands.
-3. Review/merge PR #22, which updates the roadmap and records this plan.
-4. Make Phase 0 decisions with the pilot operator/accountant before implementing posting behavior.
-5. Build accounting commands before starting POS, so sales cannot invent their own financial writes.
+1. PR #21 schema review and CI are complete on exact head `c0b7939042345858f3329d820b41a76c03dbde41`; merge remains pending explicit maintainer approval.
+2. PR #22 updates this evidence-based plan and repository status; its latest documentation CI must pass after this update.
+3. Resolve Phase 0 decisions with the pilot operator/accountant before implementing financial behavior.
+4. Implement Phase 3 accounting commands with idempotency, row-locked sequences, period locks, posting-rule selection and audit/outbox before POS.
+5. Keep approved posting-rule overlap/priority and accounting-owner runtime access as explicit design gates.
