@@ -85,6 +85,7 @@ test(
           displayName: "Authorization Matrix",
           legalName: null,
           storeName: "Matrix Store",
+          industryId: "general-retail",
         },
       );
       tenantIds.push(tenant.tenantId);
@@ -197,6 +198,7 @@ test(
           displayName: "Outsider Tenant",
           legalName: null,
           storeName: "Outsider Store",
+          industryId: "general-retail",
         },
       );
       assert.equal(bootstrapResponse.status, 201);
