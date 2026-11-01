@@ -40,12 +40,7 @@ function App(): React.JSX.Element {
     if (!query) return INDUSTRY_PROFILES;
 
     return INDUSTRY_PROFILES.filter((profile) =>
-      [
-        profile.labelFa,
-        profile.labelEn,
-        profile.descriptionFa,
-        profile.group,
-      ]
+      [profile.labelFa, profile.labelEn, profile.descriptionFa, profile.group]
         .join(" ")
         .toLocaleLowerCase()
         .includes(query),
