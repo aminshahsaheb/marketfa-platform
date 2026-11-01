@@ -22,6 +22,7 @@ Do not create a separate application, database schema or code fork for each prof
 ## Capability activation rule
 
 A capability is available only when all required checks pass:
+
 1. The capability is supported by the deployed application version.
 2. The business profile enables it.
 3. The tenant plan or entitlement permits it, if plans apply.
