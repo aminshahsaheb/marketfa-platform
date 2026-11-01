@@ -49,15 +49,12 @@ export class TenantBootstrapService {
           created_store_id: string;
           owner_membership_id: string;
           created_business_profile_id: string;
-        }>(
-          "SELECT * FROM public.tenant_bootstrap($1, $2, $3, $4)",
-          [
-            input.displayName,
-            input.legalName,
-            input.storeName,
-            input.industryId,
-          ],
-        ),
+        }>("SELECT * FROM public.tenant_bootstrap($1, $2, $3, $4)", [
+          input.displayName,
+          input.legalName,
+          input.storeName,
+          input.industryId,
+        ]),
       );
     } catch (error) {
       if (isInvalidInputError(error)) {
