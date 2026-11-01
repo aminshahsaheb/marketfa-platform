@@ -43,7 +43,6 @@ export class IndustryCatalogService {
            ON capability.capability_key = defaults.capability_key
           AND capability.status = 'ACTIVE'
          WHERE industry.status = 'ACTIVE'
-           AND (defaults.capability_key IS NULL OR capability.capability_key IS NOT NULL)
          ORDER BY
            industry.group_key,
            industry.display_name_key,

@@ -246,7 +246,10 @@ JOIN industry_catalog AS industry
  AND industry.profile_version = profile.industry_profile_version
 JOIN industry_capability_defaults AS defaults
   ON defaults.industry_key = profile.industry_key
- AND defaults.profile_version = profile.industry_profile_version;
+ AND defaults.profile_version = profile.industry_profile_version
+JOIN capability_catalog AS capability
+  ON capability.capability_key = defaults.capability_key
+ AND capability.status = 'ACTIVE';
 
 ALTER TABLE stores
   ADD COLUMN business_profile_id UUID;
@@ -594,6 +597,9 @@ BEGIN
     END,
     actor_id
   FROM public.industry_capability_defaults AS defaults
+  JOIN public.capability_catalog AS capability
+    ON capability.capability_key = defaults.capability_key
+   AND capability.status = 'ACTIVE'
   WHERE defaults.industry_key = btrim(p_industry_key)
     AND defaults.profile_version = selected_profile_version;
 
