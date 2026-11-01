@@ -51,6 +51,7 @@ The correct sequence is to close product/legal decisions and identity entry poin
 9. **Operational safety is not yet proven.** Add backup encryption/retention, restore drills, migrations/rollback policy, structured logs/metrics/alerts, incident procedures, deployment secrets and data-residency decisions before pilot.
 10. **Legacy migration needs a real sanitized export.** Build mapping/validation/reconciliation artifacts and a staging import. Do not migrate credentials or modify the only source backup.
 11. **Quality evidence must be feature-complete.** Every tenant-owned API family needs role and cross-tenant tests. Every financial feature needs golden, boundary, property, retry/concurrency, reconciliation and restore coverage. Existing web test is only a shell test; browser E2E and accessibility/localization coverage remain future gates.
+12. **API edge hardening must be standardized before external exposure.** The current bootstrap config is minimal. Define and test request validation/unknown-field behavior, allowed origins, security headers, request-size limits, stable error envelopes, correlation IDs, rate limits, and graceful shutdown. Keep route-specific parsers strict and avoid logging secrets or financial payloads.
 
 ## Ordered completion plan
 
