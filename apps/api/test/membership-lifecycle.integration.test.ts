@@ -197,15 +197,25 @@ test(
         "SELECT action FROM audit_events WHERE tenant_id = $1",
         [tenant.tenantId],
       );
-      assert.deepEqual(
-        audit.rows.map((row) => row.action).sort(),
-        [
-          "tenant.bootstrap",
-          "tenant.membership.role_change",
-          "tenant.membership.suspend",
-          "tenant.membership.remove",
-          "tenant.membership.suspend",
-        ].sort(),
+      const auditActions = audit.rows.map((row) => row.action);
+      assert.equal(auditActions.length, 5);
+      assert.equal(auditActions.filter((action) => action === "tenant.bootstrap").length, 1);
+      assert.equal(
+        auditActions.filter((action) => action === "tenant.membership.role_change").length,
+        1,
+      );
+      assert.equal(
+        auditActions.filter((action) => action === "tenant.membership.suspend").length +
+          auditActions.filter((action) => action === "tenant.membership.remove").length,
+        3,
+      );
+      assert.equal(
+        auditActions.filter((action) => action === "tenant.membership.suspend").length,
+        1 + concurrent.filter((result) => result.status === "fulfilled" && result.value.status === "SUSPENDED").length,
+      );
+      assert.equal(
+        auditActions.filter((action) => action === "tenant.membership.remove").length,
+        1 + concurrent.filter((result) => result.status === "fulfilled" && result.value.status === "REMOVED").length,
       );
     } finally {
       for (const tenantId of tenantIds) {
