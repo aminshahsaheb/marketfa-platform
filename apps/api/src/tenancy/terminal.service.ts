@@ -29,6 +29,10 @@ export interface TerminalCredentialResult extends TerminalCommandResult {
   readonly credential: string;
 }
 
+export interface TerminalListItem extends TerminalCommandResult {
+  readonly lastSeenAt: string | null;
+}
+
 interface TerminalRow {
   terminal_id: string;
   store_id: string;
@@ -95,6 +99,43 @@ export class TerminalService {
   constructor(
     @Inject(DatabaseService) private readonly database: DatabaseService,
   ) {}
+
+  async list(
+    actor: AuthenticatedActor,
+    tenantId: string,
+    storeId: string,
+  ): Promise<TerminalListItem[]> {
+    try {
+      const result = await this.database.withTenantPermission(
+        actor,
+        tenantId,
+        "tenant:manage",
+        async (client) =>
+          client.query<{
+            terminal_id: string;
+            store_id: string;
+            name: string;
+            status: TerminalStatus;
+            registered_at: string;
+            last_seen_at: string | null;
+            revoked_at: string | null;
+          }>(
+            `SELECT id AS terminal_id, store_id, name, status, registered_at,
+                    last_seen_at, revoked_at
+             FROM terminals
+             WHERE tenant_id = $1 AND store_id = $2
+             ORDER BY registered_at, id`,
+            [tenantId, storeId],
+          ),
+      );
+      return result.rows.map((row) => ({
+        ...readRow(row),
+        lastSeenAt: row.last_seen_at,
+      }));
+    } catch (error) {
+      mapCommandError(error);
+    }
+  }
 
   async register(
     actor: AuthenticatedActor,
