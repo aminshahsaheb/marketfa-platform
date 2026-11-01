@@ -66,6 +66,20 @@ test(
       );
       assert.ok(stored.rows[0]?.credential_hash.equals(createdHash));
 
+      const listed = await terminals.list(
+        { userId: ownerId },
+        tenant.tenantId,
+        tenant.storeId,
+      );
+      assert.equal(listed.length, 1);
+      assert.equal(listed[0]?.terminalId, created.terminalId);
+      assert.equal(listed[0]?.status, "ACTIVE");
+      assert.equal("credential" in (listed[0] ?? {}), false);
+      await assert.rejects(
+        terminals.list({ userId: managerId }, tenant.tenantId, tenant.storeId),
+        ForbiddenException,
+      );
+
       await assert.rejects(
         terminals.register(
           { userId: managerId },
