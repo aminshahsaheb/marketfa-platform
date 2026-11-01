@@ -165,9 +165,11 @@ CREATE TABLE journal_entries (
   CHECK (length(btrim(posting_purpose)) BETWEEN 1 AND 50),
   CHECK (length(btrim(idempotency_key)) BETWEEN 1 AND 128),
   CHECK (
-    (source_type = 'MANUAL' AND source_id IS NULL)
+    (source_type = 'MANUAL' AND source_id IS NULL
+      AND posting_rule_version_id IS NULL)
     OR
-    (source_type <> 'MANUAL' AND source_id IS NOT NULL)
+    (source_type <> 'MANUAL' AND source_id IS NOT NULL
+      AND posting_rule_version_id IS NOT NULL)
   ),
   CHECK (reverses_entry_id IS NULL OR reverses_entry_id <> id),
   CHECK (
@@ -448,7 +450,14 @@ BEGIN
     WHERE line.tenant_id = NEW.tenant_id
       AND line.store_id = NEW.store_id
       AND line.journal_entry_id = NEW.id
-      AND (account.status <> 'ACTIVE' OR account.is_postable = FALSE)
+      AND (
+        account.status <> 'ACTIVE'
+        OR account.is_postable = FALSE
+        OR account.code IS DISTINCT FROM line.account_code_snapshot
+        OR account.name_key IS DISTINCT FROM line.account_name_key_snapshot
+        OR account.account_type IS DISTINCT FROM line.account_type_snapshot
+        OR account.normal_balance IS DISTINCT FROM line.normal_balance_snapshot
+      )
   ) THEN
     RAISE EXCEPTION 'Posted journal lines require active postable accounts'
       USING ERRCODE = '23514';
@@ -500,6 +509,7 @@ BEGIN
         OR reversal_line.account_name_key_snapshot IS DISTINCT FROM original_line.account_name_key_snapshot
         OR reversal_line.account_type_snapshot IS DISTINCT FROM original_line.account_type_snapshot
         OR reversal_line.normal_balance_snapshot IS DISTINCT FROM original_line.normal_balance_snapshot
+        OR reversal_line.dimensions IS DISTINCT FROM original_line.dimensions
       );
 
     IF mismatch_count <> 0 OR EXISTS (
