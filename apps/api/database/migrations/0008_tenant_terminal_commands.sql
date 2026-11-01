@@ -5,6 +5,7 @@
 GRANT SELECT, INSERT ON terminals TO marketfa_tenant_admin_owner;
 GRANT UPDATE (credential_hash, status, revoked_at, last_seen_at)
   ON terminals TO marketfa_tenant_admin_owner;
+GRANT SELECT ON terminal_assignments TO marketfa_tenant_admin_owner;
 GRANT UPDATE (revoked_at) ON terminal_assignments
   TO marketfa_tenant_admin_owner;
 
