@@ -105,6 +105,7 @@ Correctness, atomicity, idempotency, tenant and business-profile isolation, audi
 Do not attempt to implement every industry workflow in one release. Build the shared core and profile-selection contract first. Then deliver vertical packs in evidence-based phases.
 
 Suggested first vertical packs:
+
 1. General retail and grocery.
 2. Professional services.
 3. Repair and maintenance.
