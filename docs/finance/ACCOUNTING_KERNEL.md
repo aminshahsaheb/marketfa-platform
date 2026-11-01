@@ -36,24 +36,24 @@ Other modules request accounting through an application port such as `Accounting
 4. All amounts are non-negative integer Rials at the journal-line level. Direction is represented by debit/credit, not signed amounts.
 5. A posted journal is immutable. No update/delete of its header or lines.
 6. A correction is a separately posted reversal linked to the original, followed by a corrected new journal if needed.
-7. Every posted journal belongs to exactly one store, one fiscal period, one currency, one source event (or an explicitly classified manual journal), and one idempotent command.
+7. Every posted journal belongs to exactly one accounting book, one fiscal period, one currency, one source event (or an explicitly classified manual journal), and one idempotent command.
 8. The source event and its journal are committed atomically for internal operations.
 9. A source event cannot produce duplicate posted journals for the same posting purpose.
-10. Every journal line references an active, postable account in the same store's chart.
+10. Every journal line references an active, postable account in the same accounting book's chart.
 11. No ordinary posting is permitted into a closed period.
-12. All reads and writes are tenant/store scoped and authorization checked server-side.
+12. All reads and writes are tenant/accounting-book scoped and authorization checked server-side.
 13. Audit metadata records actor, command ID, request/correlation ID, timestamps, and rule/version context.
 14. The ledger never derives its posted truth from UI state or a client-calculated report.
 
 ## 3. Account model
 
-Each store has a chart of accounts (CoA), normally initialized from a reviewed template and then versioned.
+Each accounting book has a chart of accounts (CoA), normally initialized from a reviewed template and then versioned.
 
 Account fields:
 
 - Stable UUID.
-- Store ID.
-- Code (unique within store and chart version policy).
+- Accounting book ID.
+- Code (unique within accounting book and chart version policy).
 - Name key / localized display names (fa and en).
 - Account type: ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE.
 - Optional parent account.
@@ -79,14 +79,14 @@ Do not publish a universal Iran account-code template until reviewed by an Iran 
 
 - Editable only by authorized roles.
 - Not included in posted ledger balances or financial statements.
-- Must reference a valid open period and store.
+- Must reference a valid open period and accounting book.
 - Drafts may be abandoned with an audit event; they are not deleted silently.
 
 ### Posted
 
 - Created only through the posting use case.
 - All invariants validated in one database transaction.
-- Gets a store-scoped sequence number and immutable posted timestamp.
+- Gets a accounting-book-scoped sequence number and immutable posted timestamp.
 - Included in ledger and reports.
 - Header and lines cannot be changed or deleted.
 
@@ -98,22 +98,22 @@ A unique constraint prevents more than one full reversal of the same journal unl
 
 ## 5. Fiscal periods and dates
 
-- Store event instants in UTC and retain the store's IANA timezone.
+- Accounting book event instants in UTC and retain the accounting book's IANA timezone.
 - Accounting posting date is a canonical date-only value (Gregorian/ISO date in storage), not a localized Jalali string.
 - Persian UI may display the same date in Jalali; English UI may display Gregorian.
 - A period has start_date, end_date, status (OPEN, CLOSING, CLOSED), and close metadata.
-- Period boundaries are defined as date-only values in the store's accounting calendar. The fiscal-year start and period length are configuration approved by the accountant.
+- Period boundaries are defined as date-only values in the accounting book's accounting calendar. The fiscal-year start and period length are configuration approved by the accountant.
 - Closing is a controlled workflow: pre-close checks, lock new postings, reconcile control accounts, approve close, then mark CLOSED.
 - Reopening a closed period requires a privileged, reasoned, audited operation. Prefer a current-period adjustment when legally/accountingly appropriate.
 - No assumption is made here that the Iranian fiscal year always matches the Jalali calendar year. This must be confirmed for the target business and statutory reporting.
 
 ## 6. Posting workflow
 
-1. Authenticate actor and resolve tenant/store membership.
+1. Authenticate actor and resolve tenant membership and accounting-book scope.
 2. Authorize the exact command (e.g. post sale, post manual journal, reverse journal).
 3. Validate command schema and durable idempotency key.
 4. Begin PostgreSQL transaction.
-5. Lock/check store period and source document in deterministic order.
+5. Lock/check accounting-book period and source document in deterministic order.
 6. Validate period open, account postability, currency, and source state.
 7. Generate journal lines from a versioned posting rule; do not accept arbitrary client-supplied accounting lines for automated events.
 8. Validate each amount and exact balance using integer arithmetic.
@@ -152,7 +152,7 @@ Required initial read models:
 - Inventory control account vs inventory valuation subledger.
 - Customer and supplier control accounts vs their subledgers when those modules are enabled.
 
-All reports must state store, currency, period/date range, timezone/calendar presentation, and whether they include posted entries only. Draft journals are excluded from statutory/posted reports.
+All reports must state accounting book, currency, period/date range, timezone/calendar presentation, and whether they include posted entries only. Draft journals are excluded from statutory/posted reports.
 
 Reconciliation differences must be visible; never auto-plug unexplained differences to a suspense account.
 
@@ -169,9 +169,9 @@ Manual journal capability is privileged and controlled:
 
 ## 10. Security and tenant isolation
 
-- Store scope is derived from authenticated membership, never trusted from request body alone.
-- Every account, period, journal, line, and source reference is checked against the same store.
-- Database foreign keys should include store scope where practical (composite uniqueness/FKs).
+- Accounting book scope is derived from authenticated membership, never trusted from request body alone.
+- Every account, period, journal, line, and source reference is checked against the same accounting book.
+- Database foreign keys should include accounting-book scope where practical (composite uniqueness/FKs).
 - PostgreSQL row-level security may be used as defense in depth; it does not replace application authorization.
 - The API database role should not have unrestricted ability to rewrite posted rows. Use restricted repositories/permissions and/or triggers to reject mutation of posted records.
 - Audit log access is separately permissioned.
@@ -193,11 +193,11 @@ Do not encode these without evidence:
 
 - Schema and migrations reviewed.
 - Posting API is idempotent under concurrent retries.
-- Database prevents cross-store references and posted-row mutation.
+- Database prevents cross-accounting book references and posted-row mutation.
 - Balanced-journal invariant is enforced at the posting boundary and independently verified in the database.
 - Full reversal is exact and linked.
 - Closed-period posting is rejected under concurrency.
 - General ledger and trial balance reconcile exactly.
 - Golden and property-based tests pass on PostgreSQL.
 - Tenant and role matrix tests pass.
-- Backup/restore preserves immutable journal history and sequence references.
+- Backup/reaccounting book preserves immutable journal history and sequence references.

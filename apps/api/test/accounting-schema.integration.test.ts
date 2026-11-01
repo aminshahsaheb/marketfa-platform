@@ -16,7 +16,7 @@ type DbError = Error & { code?: string };
 type RoleName = "marketfa_accounting_owner" | "marketfa_app";
 
 test(
-  "accounting schema enforces tenant/store scope, period, posting, reversal, and immutability invariants",
+  "accounting schema enforces tenant/accounting-book scope, period, posting, reversal, and immutability invariants",
   { skip: !enabled },
   async () => {
     await runMigrations();
@@ -51,6 +51,24 @@ test(
       }
     }
 
+    async function createAccountingBook(
+      tenantId: string,
+      createdBy: string,
+      code: string,
+      name: string,
+    ): Promise<string> {
+      return withRole("marketfa_accounting_owner", tenantId, async (client) => {
+        const result = await client.query<{ id: string }>(
+          `INSERT INTO accounting_books
+            (tenant_id, code, name, created_by_user_id)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id`,
+          [tenantId, code, name, createdBy],
+        );
+        return result.rows[0]!.id;
+      });
+    }
+
     async function expectSqlState(
       action: () => Promise<unknown>,
       code: string,
@@ -67,7 +85,7 @@ test(
 
     async function createDraftJournal(args: {
       tenantId: string;
-      storeId: string;
+      accountingBookId: string;
       periodId: string;
       createdBy: string;
       id?: string;
@@ -83,7 +101,7 @@ test(
       await withRole("marketfa_accounting_owner", args.tenantId, (client) =>
         client.query(
           `INSERT INTO journal_entries
-            (id, tenant_id, store_id, period_id, entry_date, status, source_type,
+            (id, tenant_id, accounting_book_id, period_id, entry_date, status, source_type,
              source_id, posting_purpose, posting_rule_version_id, idempotency_key,
              reverses_entry_id, created_by_user_id)
            VALUES ($1, $2, $3, $4, $5::date, 'DRAFT', $6,
@@ -91,7 +109,7 @@ test(
           [
             id,
             args.tenantId,
-            args.storeId,
+            args.accountingBookId,
             args.periodId,
             args.entryDate ?? "2026-01-10",
             args.sourceType ?? "MANUAL",
@@ -109,7 +127,7 @@ test(
 
     async function insertLine(args: {
       tenantId: string;
-      storeId: string;
+      accountingBookId: string;
       journalId: string;
       lineNumber: number;
       accountId: string;
@@ -124,13 +142,13 @@ test(
       await withRole("marketfa_accounting_owner", args.tenantId, (client) =>
         client.query(
           `INSERT INTO journal_lines
-            (tenant_id, store_id, journal_entry_id, line_number, account_id,
+            (tenant_id, accounting_book_id, journal_entry_id, line_number, account_id,
              account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
              normal_balance_snapshot, debit_irr, credit_irr, dimensions)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
           [
             args.tenantId,
-            args.storeId,
+            args.accountingBookId,
             args.journalId,
             args.lineNumber,
             args.accountId,
@@ -181,12 +199,23 @@ test(
       );
       tenantIds.push(tenantA.tenantId, tenantB.tenantId);
 
-      const storeA2 = randomUUID();
-      await ownerDb.query(
-        `INSERT INTO stores
-          (id, tenant_id, name, timezone, default_locale, currency_code, money_display_unit)
-         VALUES ($1, $2, 'Store A2', 'Asia/Tehran', 'fa-IR', 'IRR', 'TOMAN')`,
-        [storeA2, tenantA.tenantId],
+      const accountingBookA = await createAccountingBook(
+        tenantA.tenantId,
+        ownerId,
+        "MAIN",
+        "Main accounting book",
+      );
+      const accountingBookA2 = await createAccountingBook(
+        tenantA.tenantId,
+        ownerId,
+        "SECOND",
+        "Second accounting book",
+      );
+      const accountingBookB = await createAccountingBook(
+        tenantB.tenantId,
+        secondOwnerId,
+        "MAIN",
+        "Main accounting book",
       );
 
       const accounts = await withRole(
@@ -195,49 +224,49 @@ test(
         async (client) => {
           const cash = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1000', 'account.cash', 'ASSET', 'DEBIT',
                      TRUE, 'ACTIVE', $3)
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId, ownerId],
+            [tenantA.tenantId, accountingBookA, ownerId],
           );
           const revenue = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                is_postable, status, created_by_user_id)
              VALUES ($1, $2, '4000', 'account.revenue', 'REVENUE', 'CREDIT',
                      TRUE, 'ACTIVE', $3)
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId, ownerId],
+            [tenantA.tenantId, accountingBookA, ownerId],
           );
-          const otherStoreAccount = await client.query<{ id: string }>(
+          const otherBookAccount = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1000', 'account.cash.other', 'ASSET', 'DEBIT',
                      TRUE, 'ACTIVE', $3)
              RETURNING id`,
-            [tenantA.tenantId, storeA2, ownerId],
+            [tenantA.tenantId, accountingBookA2, ownerId],
           );
           const period = await client.query<{ id: string }>(
             `INSERT INTO fiscal_periods
-              (tenant_id, store_id, name, start_date, end_date, status)
+              (tenant_id, accounting_book_id, name, start_date, end_date, status)
              VALUES ($1, $2, '2026-01', DATE '2026-01-01', DATE '2026-01-31', 'OPEN')
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId],
+            [tenantA.tenantId, accountingBookA],
           );
           const adjacent = await client.query<{ id: string }>(
             `INSERT INTO fiscal_periods
-              (tenant_id, store_id, name, start_date, end_date, status)
+              (tenant_id, accounting_book_id, name, start_date, end_date, status)
              VALUES ($1, $2, '2026-02', DATE '2026-02-01', DATE '2026-02-28', 'OPEN')
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId],
+            [tenantA.tenantId, accountingBookA],
           );
           return {
             cashId: cash.rows[0]!.id,
             revenueId: revenue.rows[0]!.id,
-            otherStoreAccountId: otherStoreAccount.rows[0]!.id,
+            otherBookAccountId: otherBookAccount.rows[0]!.id,
             periodId: period.rows[0]!.id,
             adjacentPeriodId: adjacent.rows[0]!.id,
           };
@@ -249,9 +278,9 @@ test(
           withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
             client.query(
               `INSERT INTO fiscal_periods
-                (tenant_id, store_id, name, start_date, end_date, status)
+                (tenant_id, accounting_book_id, name, start_date, end_date, status)
                VALUES ($1, $2, 'overlap', DATE '2026-01-15', DATE '2026-02-15', 'OPEN')`,
-              [tenantA.tenantId, tenantA.storeId],
+              [tenantA.tenantId, accountingBookA],
             ),
           ),
         "23P01",
@@ -263,12 +292,12 @@ test(
         async (client) => {
           const result = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1100', 'account.cash.group', 'ASSET', 'DEBIT',
                      FALSE, 'ACTIVE', $3)
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId, ownerId],
+            [tenantA.tenantId, accountingBookA, ownerId],
           );
           return result.rows[0]!.id;
         },
@@ -279,12 +308,12 @@ test(
         async (client) => {
           const result = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                parent_account_id, is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1101', 'account.cash.drawer', 'ASSET', 'DEBIT',
                      $3, FALSE, 'ACTIVE', $4)
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId, groupAccount, ownerId],
+            [tenantA.tenantId, accountingBookA, groupAccount, ownerId],
           );
           return result.rows[0]!.id;
         },
@@ -325,14 +354,14 @@ test(
           withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
             client.query(
               `INSERT INTO accounts
-                (tenant_id, store_id, code, name_key, account_type, normal_balance,
+                (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                  parent_account_id, is_postable, status, created_by_user_id)
                VALUES ($1, $2, '1999', 'account.bad.parent', 'ASSET', 'DEBIT',
                        $3, TRUE, 'ACTIVE', $4)`,
               [
                 tenantA.tenantId,
-                tenantA.storeId,
-                accounts.otherStoreAccountId,
+                accountingBookA,
+                accounts.otherBookAccountId,
                 ownerId,
               ],
             ),
@@ -344,11 +373,11 @@ test(
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           `INSERT INTO posting_rule_versions
-            (id, tenant_id, store_id, rule_key, version, effective_from,
+            (id, tenant_id, accounting_book_id, rule_key, version, effective_from,
              configuration, status)
            VALUES ($1, $2, $3, 'manual.test', '1', DATE '2026-01-01',
                    '{"rule":"test"}'::jsonb, 'DRAFT')`,
-          [ruleId, tenantA.tenantId, tenantA.storeId],
+          [ruleId, tenantA.tenantId, accountingBookA],
         ),
       );
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
@@ -374,11 +403,11 @@ test(
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           `INSERT INTO posting_rule_versions
-            (id, tenant_id, store_id, rule_key, version, effective_from,
+            (id, tenant_id, accounting_book_id, rule_key, version, effective_from,
              configuration, status)
            VALUES ($1, $2, $3, 'manual.unapproved', '1', DATE '2026-01-01',
                    '{}'::jsonb, 'DRAFT')`,
-          [unapprovedRuleId, tenantA.tenantId, tenantA.storeId],
+          [unapprovedRuleId, tenantA.tenantId, accountingBookA],
         ),
       );
       await expectSqlState(
@@ -422,14 +451,14 @@ test(
 
       const originalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "sale-test-001",
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: originalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -443,7 +472,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: originalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -464,15 +493,15 @@ test(
 
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
-          "INSERT INTO accounting_sequences (tenant_id, store_id, next_entry_number) VALUES ($1, $2, 2)",
-          [tenantA.tenantId, tenantA.storeId],
+          "INSERT INTO accounting_sequences (tenant_id, accounting_book_id, next_entry_number) VALUES ($1, $2, 2)",
+          [tenantA.tenantId, accountingBookA],
         ),
       );
       await expectSqlState(
         () =>
           createDraftJournal({
             tenantId: tenantA.tenantId,
-            storeId: tenantA.storeId,
+            accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
             idempotencyKey: "sale-test-001",
@@ -523,7 +552,7 @@ test(
 
       const badReversalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "reversal-bad-001",
@@ -531,7 +560,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: badReversalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -545,7 +574,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: badReversalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -584,7 +613,7 @@ test(
 
       const reversalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "reversal-good-001",
@@ -592,7 +621,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: reversalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -606,7 +635,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: reversalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -629,7 +658,7 @@ test(
         () =>
           createDraftJournal({
             tenantId: tenantA.tenantId,
-            storeId: tenantA.storeId,
+            accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
             idempotencyKey: "reversal-duplicate-001",
@@ -642,11 +671,11 @@ test(
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           `INSERT INTO posting_rule_versions
-            (id, tenant_id, store_id, rule_key, version, effective_from,
+            (id, tenant_id, accounting_book_id, rule_key, version, effective_from,
              effective_to, configuration, status)
            VALUES ($1, $2, $3, 'sale.posting', '1', DATE '2026-01-01',
                    DATE '2026-01-31', '{"rule":"sale"}'::jsonb, 'DRAFT')`,
-          [saleRuleId, tenantA.tenantId, tenantA.storeId],
+          [saleRuleId, tenantA.tenantId, accountingBookA],
         ),
       );
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
@@ -660,7 +689,7 @@ test(
       const saleSourceId = randomUUID();
       const saleJournalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "sale-source-001",
@@ -671,7 +700,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: saleJournalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -684,7 +713,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: saleJournalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -703,15 +732,15 @@ test(
       });
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
-          "UPDATE accounting_sequences SET next_entry_number = 4 WHERE tenant_id = $1 AND store_id = $2",
-          [tenantA.tenantId, tenantA.storeId],
+          "UPDATE accounting_sequences SET next_entry_number = 4 WHERE tenant_id = $1 AND accounting_book_id = $2",
+          [tenantA.tenantId, accountingBookA],
         ),
       );
       await expectSqlState(
         () =>
           createDraftJournal({
             tenantId: tenantA.tenantId,
-            storeId: tenantA.storeId,
+            accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
             idempotencyKey: "sale-source-duplicate",
@@ -727,11 +756,11 @@ test(
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           `INSERT INTO posting_rule_versions
-            (id, tenant_id, store_id, rule_key, version, effective_from,
+            (id, tenant_id, accounting_book_id, rule_key, version, effective_from,
              configuration, status)
            VALUES ($1, $2, $3, 'sale.future', '1', DATE '2026-02-01',
                    '{"rule":"future"}'::jsonb, 'DRAFT')`,
-          [futureRuleId, tenantA.tenantId, tenantA.storeId],
+          [futureRuleId, tenantA.tenantId, accountingBookA],
         ),
       );
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
@@ -745,7 +774,7 @@ test(
       const futureSourceId = randomUUID();
       const futureRuleJournalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "sale-future-rule-001",
@@ -756,7 +785,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: futureRuleJournalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -769,7 +798,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: futureRuleJournalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -795,17 +824,17 @@ test(
         () =>
           createDraftJournal({
             tenantId: tenantA.tenantId,
-            storeId: tenantA.storeId,
+            accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
             idempotencyKey: "cross-store-line-001",
           }).then(async (journalId) => {
             await insertLine({
               tenantId: tenantA.tenantId,
-              storeId: tenantA.storeId,
+              accountingBookId: accountingBookA,
               journalId,
               lineNumber: 1,
-              accountId: accounts.otherStoreAccountId,
+              accountId: accounts.otherBookAccountId,
               accountCode: "1000",
               accountNameKey: "account.cash.other",
               accountType: "ASSET",
@@ -821,14 +850,14 @@ test(
         () =>
           createDraftJournal({
             tenantId: tenantA.tenantId,
-            storeId: tenantA.storeId,
+            accountingBookId: accountingBookA,
             periodId: accounts.periodId,
             createdBy: ownerId,
             idempotencyKey: "invalid-line-side-001",
           }).then(async (journalId) => {
             await insertLine({
               tenantId: tenantA.tenantId,
-              storeId: tenantA.storeId,
+              accountingBookId: accountingBookA,
               journalId,
               lineNumber: 1,
               accountId: accounts.cashId,
@@ -845,7 +874,7 @@ test(
 
       const outOfPeriodId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "out-of-period-001",
@@ -853,7 +882,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: outOfPeriodId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -866,7 +895,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: outOfPeriodId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -894,26 +923,26 @@ test(
         async (client) => {
           const result = await client.query<{ id: string }>(
             `INSERT INTO fiscal_periods
-              (tenant_id, store_id, name, start_date, end_date, status,
+              (tenant_id, accounting_book_id, name, start_date, end_date, status,
                closed_at, closed_by_user_id)
              VALUES ($1, $2, 'closed-2025', DATE '2025-01-01', DATE '2025-12-31',
                      'CLOSED', now(), $3)
              RETURNING id`,
-            [tenantA.tenantId, tenantA.storeId, ownerId],
+            [tenantA.tenantId, accountingBookA, ownerId],
           );
           return result.rows[0]!.id;
         },
       );
       const closedJournalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: closedPeriod,
         createdBy: ownerId,
         idempotencyKey: "closed-period-001",
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: closedJournalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -926,7 +955,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: closedJournalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -951,14 +980,14 @@ test(
       // Serialize journal-line mutation against posting on the same parent row.
       const raceJournalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "posting-line-race-001",
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: raceJournalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -971,7 +1000,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: raceJournalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -994,7 +1023,7 @@ test(
         );
         await lineClient.query(
           `INSERT INTO journal_lines
-            (tenant_id, store_id, journal_entry_id, line_number, account_id,
+            (tenant_id, accounting_book_id, journal_entry_id, line_number, account_id,
              account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
              normal_balance_snapshot, debit_irr, credit_irr)
            VALUES
@@ -1002,7 +1031,7 @@ test(
             ($1, $2, $3, 4, $5, '4000', 'account.revenue', 'REVENUE', 'CREDIT', 0, 10)`,
           [
             tenantA.tenantId,
-            tenantA.storeId,
+            accountingBookA,
             raceJournalId,
             accounts.cashId,
             accounts.revenueId,
@@ -1061,14 +1090,14 @@ test(
       // and then fail after the committed POSTED state becomes visible.
       const postedFirstJournalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         periodId: accounts.periodId,
         createdBy: ownerId,
         idempotencyKey: "posting-line-race-002",
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: postedFirstJournalId,
         lineNumber: 1,
         accountId: accounts.cashId,
@@ -1081,7 +1110,7 @@ test(
       });
       await insertLine({
         tenantId: tenantA.tenantId,
-        storeId: tenantA.storeId,
+        accountingBookId: accountingBookA,
         journalId: postedFirstJournalId,
         lineNumber: 2,
         accountId: accounts.revenueId,
@@ -1127,13 +1156,13 @@ test(
         const lateLinePromise = postedFirstLineClient
           .query(
             `INSERT INTO journal_lines
-              (tenant_id, store_id, journal_entry_id, line_number, account_id,
+              (tenant_id, accounting_book_id, journal_entry_id, line_number, account_id,
                account_code_snapshot, account_name_key_snapshot, account_type_snapshot,
                normal_balance_snapshot, debit_irr, credit_irr)
              VALUES ($1, $2, $3, 3, $4, '1000', 'account.cash', 'ASSET', 'DEBIT', 1, 0)`,
             [
               tenantA.tenantId,
-              tenantA.storeId,
+              accountingBookA,
               postedFirstJournalId,
               accounts.cashId,
             ],
@@ -1177,13 +1206,13 @@ test(
       await withRole("marketfa_accounting_owner", tenantA.tenantId, (client) =>
         client.query(
           `INSERT INTO accounting_audit_events
-            (id, tenant_id, store_id, actor_user_id, command_id, event_type,
+            (id, tenant_id, accounting_book_id, actor_user_id, command_id, event_type,
              entity_type, entity_id, metadata)
            VALUES ($1, $2, $3, $4, $5, 'journal.post', 'journal_entry', $6, '{}'::jsonb)`,
           [
             auditId,
             tenantA.tenantId,
-            tenantA.storeId,
+            accountingBookA,
             ownerId,
             randomUUID(),
             originalId,
@@ -1217,12 +1246,12 @@ test(
         async (client) => {
           const result = await client.query<{ id: string }>(
             `INSERT INTO accounts
-              (tenant_id, store_id, code, name_key, account_type, normal_balance,
+              (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                is_postable, status, created_by_user_id)
              VALUES ($1, $2, '1000', 'tenant.b.cash', 'ASSET', 'DEBIT',
                      TRUE, 'ACTIVE', $3)
              RETURNING id`,
-            [tenantB.tenantId, tenantB.storeId, secondOwnerId],
+            [tenantB.tenantId, accountingBookB, secondOwnerId],
           );
           return result.rows[0]!.id;
         },
@@ -1244,11 +1273,11 @@ test(
           withRole("marketfa_app", tenantA.tenantId, (client) =>
             client.query(
               `INSERT INTO accounts
-                (tenant_id, store_id, code, name_key, account_type, normal_balance,
+                (tenant_id, accounting_book_id, code, name_key, account_type, normal_balance,
                  is_postable, status, created_by_user_id)
                VALUES ($1, $2, '9999', 'runtime.write', 'ASSET', 'DEBIT',
                        TRUE, 'ACTIVE', $3)`,
-              [tenantA.tenantId, tenantA.storeId, ownerId],
+              [tenantA.tenantId, accountingBookA, ownerId],
             ),
           ),
         "42501",

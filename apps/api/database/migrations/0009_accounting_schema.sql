@@ -1,4 +1,4 @@
--- M3 accounting schema foundation aligned to M2 tenant/store boundaries.
+-- M3 accounting schema foundation aligned to M2 tenant/book boundaries.
 -- No chart-of-accounts template or fiscal-year policy is seeded here.
 
 DO $$
@@ -24,10 +24,32 @@ CREATE TYPE accounting_period_status AS ENUM ('OPEN', 'CLOSING', 'CLOSED');
 CREATE TYPE accounting_rule_status AS ENUM ('DRAFT', 'APPROVED', 'RETIRED');
 CREATE TYPE accounting_journal_status AS ENUM ('DRAFT', 'POSTED');
 
+CREATE TABLE accounting_books (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+  code VARCHAR(32) NOT NULL,
+  name VARCHAR(160) NOT NULL,
+  currency_code CHAR(3) NOT NULL DEFAULT 'IRR',
+  status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
+  created_by_user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (tenant_id, id),
+  UNIQUE (tenant_id, code),
+  FOREIGN KEY (tenant_id, created_by_user_id)
+    REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
+  CHECK (currency_code = 'IRR'),
+  CHECK (status IN ('ACTIVE', 'INACTIVE')),
+  CHECK (length(btrim(code)) BETWEEN 1 AND 32),
+  CHECK (length(btrim(name)) BETWEEN 1 AND 160)
+);
+
+CREATE INDEX accounting_books_tenant_status_idx
+  ON accounting_books (tenant_id, status);
+
 CREATE TABLE accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   code VARCHAR(32) NOT NULL,
   name_key VARCHAR(120) NOT NULL,
   account_type accounting_account_type NOT NULL,
@@ -38,26 +60,26 @@ CREATE TABLE accounts (
   created_by_user_id UUID NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (tenant_id, store_id, id),
-  UNIQUE (tenant_id, store_id, code),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, accounting_book_id, id),
+  UNIQUE (tenant_id, accounting_book_id, code),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, created_by_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, parent_account_id)
-    REFERENCES accounts (tenant_id, store_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, parent_account_id)
+    REFERENCES accounts (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
   CHECK (parent_account_id IS NULL OR parent_account_id <> id),
   CHECK (length(btrim(code)) BETWEEN 1 AND 32),
   CHECK (length(btrim(name_key)) BETWEEN 1 AND 120)
 );
 
-CREATE INDEX accounts_store_parent_status_idx
-  ON accounts (tenant_id, store_id, parent_account_id, status);
+CREATE INDEX accounts_book_parent_status_idx
+  ON accounts (tenant_id, accounting_book_id, parent_account_id, status);
 
 CREATE TABLE fiscal_periods (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   name VARCHAR(80) NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
@@ -68,10 +90,10 @@ CREATE TABLE fiscal_periods (
   reopened_at TIMESTAMPTZ,
   reopened_by_user_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (tenant_id, store_id, id),
-  UNIQUE (tenant_id, store_id, name),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, accounting_book_id, id),
+  UNIQUE (tenant_id, accounting_book_id, name),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, closed_by_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, reopened_by_user_id)
@@ -86,13 +108,13 @@ CREATE TABLE fiscal_periods (
   CHECK (length(btrim(name)) BETWEEN 1 AND 80)
 );
 
-CREATE INDEX fiscal_periods_store_dates_idx
-  ON fiscal_periods (tenant_id, store_id, start_date, end_date);
+CREATE INDEX fiscal_periods_book_dates_idx
+  ON fiscal_periods (tenant_id, accounting_book_id, start_date, end_date);
 
 CREATE TABLE posting_rule_versions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   rule_key VARCHAR(100) NOT NULL,
   version VARCHAR(40) NOT NULL,
   effective_from DATE NOT NULL,
@@ -103,10 +125,10 @@ CREATE TABLE posting_rule_versions (
   approved_at TIMESTAMPTZ,
   status accounting_rule_status NOT NULL DEFAULT 'DRAFT',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (tenant_id, store_id, id),
-  UNIQUE (tenant_id, store_id, rule_key, version),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, accounting_book_id, id),
+  UNIQUE (tenant_id, accounting_book_id, rule_key, version),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, approved_by_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
   CHECK (effective_to IS NULL OR effective_to >= effective_from),
@@ -121,12 +143,12 @@ CREATE TABLE posting_rule_versions (
 );
 
 CREATE INDEX posting_rule_versions_effective_idx
-  ON posting_rule_versions (tenant_id, store_id, rule_key, effective_from);
+  ON posting_rule_versions (tenant_id, accounting_book_id, rule_key, effective_from);
 
 CREATE TABLE journal_entries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   period_id UUID NOT NULL,
   entry_number BIGINT,
   entry_date DATE NOT NULL,
@@ -144,17 +166,17 @@ CREATE TABLE journal_entries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   posted_at TIMESTAMPTZ,
   request_id UUID,
-  UNIQUE (tenant_id, store_id, id),
-  UNIQUE (tenant_id, store_id, idempotency_key),
-  UNIQUE (tenant_id, store_id, reverses_entry_id),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, period_id)
-    REFERENCES fiscal_periods (tenant_id, store_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, posting_rule_version_id)
-    REFERENCES posting_rule_versions (tenant_id, store_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, reverses_entry_id)
-    REFERENCES journal_entries (tenant_id, store_id, id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, accounting_book_id, id),
+  UNIQUE (tenant_id, accounting_book_id, idempotency_key),
+  UNIQUE (tenant_id, accounting_book_id, reverses_entry_id),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, period_id)
+    REFERENCES fiscal_periods (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, posting_rule_version_id)
+    REFERENCES posting_rule_versions (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, reverses_entry_id)
+    REFERENCES journal_entries (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, created_by_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, posted_by_user_id)
@@ -181,21 +203,21 @@ CREATE TABLE journal_entries (
   )
 );
 
-CREATE UNIQUE INDEX journal_entries_store_number_uq
-  ON journal_entries (tenant_id, store_id, entry_number)
+CREATE UNIQUE INDEX journal_entries_book_number_uq
+  ON journal_entries (tenant_id, accounting_book_id, entry_number)
   WHERE entry_number IS NOT NULL;
 CREATE UNIQUE INDEX journal_entries_source_purpose_uq
-  ON journal_entries (tenant_id, store_id, source_type, source_id, posting_purpose)
+  ON journal_entries (tenant_id, accounting_book_id, source_type, source_id, posting_purpose)
   WHERE source_id IS NOT NULL;
-CREATE INDEX journal_entries_store_date_idx
-  ON journal_entries (tenant_id, store_id, entry_date, entry_number);
-CREATE INDEX journal_entries_store_period_status_idx
-  ON journal_entries (tenant_id, store_id, period_id, status);
+CREATE INDEX journal_entries_book_date_idx
+  ON journal_entries (tenant_id, accounting_book_id, entry_date, entry_number);
+CREATE INDEX journal_entries_book_period_status_idx
+  ON journal_entries (tenant_id, accounting_book_id, period_id, status);
 
 CREATE TABLE journal_lines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   journal_entry_id UUID NOT NULL,
   line_number SMALLINT NOT NULL,
   account_id UUID NOT NULL,
@@ -208,13 +230,13 @@ CREATE TABLE journal_lines (
   credit_irr BIGINT NOT NULL DEFAULT 0,
   dimensions JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (tenant_id, store_id, journal_entry_id, line_number),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, journal_entry_id)
-    REFERENCES journal_entries (tenant_id, store_id, id) ON DELETE RESTRICT,
-  FOREIGN KEY (tenant_id, store_id, account_id)
-    REFERENCES accounts (tenant_id, store_id, id) ON DELETE RESTRICT,
+  UNIQUE (tenant_id, accounting_book_id, journal_entry_id, line_number),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, journal_entry_id)
+    REFERENCES journal_entries (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id, account_id)
+    REFERENCES accounts (tenant_id, accounting_book_id, id) ON DELETE RESTRICT,
   CHECK (line_number > 0),
   CHECK (debit_irr >= 0 AND credit_irr >= 0),
   CHECK (
@@ -226,26 +248,26 @@ CREATE TABLE journal_lines (
   CHECK (length(btrim(account_name_key_snapshot)) BETWEEN 1 AND 120)
 );
 
-CREATE INDEX journal_lines_store_account_idx
-  ON journal_lines (tenant_id, store_id, account_id, journal_entry_id);
+CREATE INDEX journal_lines_book_account_idx
+  ON journal_lines (tenant_id, accounting_book_id, account_id, journal_entry_id);
 CREATE INDEX journal_lines_entry_line_idx
-  ON journal_lines (tenant_id, store_id, journal_entry_id, line_number);
+  ON journal_lines (tenant_id, accounting_book_id, journal_entry_id, line_number);
 
 CREATE TABLE accounting_sequences (
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   next_entry_number BIGINT NOT NULL DEFAULT 1,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (tenant_id, store_id),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
+  PRIMARY KEY (tenant_id, accounting_book_id),
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
   CHECK (next_entry_number > 0)
 );
 
 CREATE TABLE accounting_audit_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
+  accounting_book_id UUID NOT NULL,
   actor_user_id UUID,
   command_id UUID NOT NULL,
   event_type VARCHAR(80) NOT NULL,
@@ -254,19 +276,19 @@ CREATE TABLE accounting_audit_events (
   reason TEXT,
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  FOREIGN KEY (tenant_id, store_id)
-    REFERENCES stores (tenant_id, id) ON DELETE RESTRICT,
+  FOREIGN KEY (tenant_id, accounting_book_id)
+    REFERENCES accounting_books (tenant_id, id) ON DELETE RESTRICT,
   FOREIGN KEY (tenant_id, actor_user_id)
     REFERENCES tenant_memberships (tenant_id, user_id) ON DELETE RESTRICT,
-  UNIQUE (tenant_id, store_id, command_id, event_type),
+  UNIQUE (tenant_id, accounting_book_id, command_id, event_type),
   CHECK (length(btrim(event_type)) BETWEEN 1 AND 80),
   CHECK (length(btrim(entity_type)) BETWEEN 1 AND 50)
 );
 
-CREATE INDEX accounting_audit_store_time_idx
-  ON accounting_audit_events (tenant_id, store_id, occurred_at DESC);
+CREATE INDEX accounting_audit_book_time_idx
+  ON accounting_audit_events (tenant_id, accounting_book_id, occurred_at DESC);
 CREATE INDEX accounting_audit_entity_idx
-  ON accounting_audit_events (tenant_id, store_id, entity_type, entity_id, occurred_at DESC);
+  ON accounting_audit_events (tenant_id, accounting_book_id, entity_type, entity_id, occurred_at DESC);
 
 CREATE OR REPLACE FUNCTION accounting_prevent_audit_mutation()
 RETURNS TRIGGER
@@ -330,7 +352,7 @@ BEGIN
        OR NEW.configuration IS DISTINCT FROM OLD.configuration
        OR NEW.source_reference IS DISTINCT FROM OLD.source_reference
        OR NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
-       OR NEW.store_id IS DISTINCT FROM OLD.store_id
+       OR NEW.accounting_book_id IS DISTINCT FROM OLD.accounting_book_id
        OR NEW.approved_by_user_id IS DISTINCT FROM OLD.approved_by_user_id
        OR NEW.approved_at IS DISTINCT FROM OLD.approved_at
        OR NEW.created_at IS DISTINCT FROM OLD.created_at
@@ -394,7 +416,7 @@ AS $function$
 DECLARE
   parent_status accounting_journal_status;
   parent_tenant_id UUID;
-  parent_store_id UUID;
+  parent_accounting_book_id UUID;
   parent_entry_id UUID;
 BEGIN
   IF current_user <> 'marketfa_accounting_owner' THEN
@@ -404,18 +426,18 @@ BEGIN
 
   IF TG_OP = 'DELETE' THEN
     parent_tenant_id := OLD.tenant_id;
-    parent_store_id := OLD.store_id;
+    parent_accounting_book_id := OLD.accounting_book_id;
     parent_entry_id := OLD.journal_entry_id;
   ELSE
     parent_tenant_id := NEW.tenant_id;
-    parent_store_id := NEW.store_id;
+    parent_accounting_book_id := NEW.accounting_book_id;
     parent_entry_id := NEW.journal_entry_id;
   END IF;
 
   IF TG_OP = 'UPDATE'
      AND (
        NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
-       OR NEW.store_id IS DISTINCT FROM OLD.store_id
+       OR NEW.accounting_book_id IS DISTINCT FROM OLD.accounting_book_id
        OR NEW.journal_entry_id IS DISTINCT FROM OLD.journal_entry_id
      ) THEN
     RAISE EXCEPTION 'Journal line parent is immutable'
@@ -426,7 +448,7 @@ BEGIN
   INTO parent_status
   FROM public.journal_entries AS entry
   WHERE entry.tenant_id = parent_tenant_id
-    AND entry.store_id = parent_store_id
+    AND entry.accounting_book_id = parent_accounting_book_id
     AND entry.id = parent_entry_id
   FOR UPDATE;
 
@@ -461,12 +483,12 @@ BEGIN
     INTO parent_postable, parent_status
     FROM public.accounts AS parent
     WHERE parent.tenant_id = NEW.tenant_id
-      AND parent.store_id = NEW.store_id
+      AND parent.accounting_book_id = NEW.accounting_book_id
       AND parent.id = NEW.parent_account_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
-      RAISE EXCEPTION 'Parent account must belong to the same store'
+      RAISE EXCEPTION 'Parent account must belong to the same accounting book'
         USING ERRCODE = '23503';
     END IF;
 
@@ -480,7 +502,7 @@ BEGIN
         SELECT account.id, account.parent_account_id
         FROM public.accounts AS account
         WHERE account.tenant_id = NEW.tenant_id
-          AND account.store_id = NEW.store_id
+          AND account.accounting_book_id = NEW.accounting_book_id
           AND account.id = NEW.parent_account_id
         UNION ALL
         SELECT account.id, account.parent_account_id
@@ -488,7 +510,7 @@ BEGIN
         JOIN ancestors AS ancestor
           ON account.id = ancestor.parent_account_id
         WHERE account.tenant_id = NEW.tenant_id
-          AND account.store_id = NEW.store_id
+          AND account.accounting_book_id = NEW.accounting_book_id
       )
       SELECT EXISTS (SELECT 1 FROM ancestors WHERE id = NEW.id)
       INTO has_cycle;
@@ -504,7 +526,7 @@ BEGIN
     SELECT 1
     FROM public.accounts AS child
     WHERE child.tenant_id = NEW.tenant_id
-      AND child.store_id = NEW.store_id
+      AND child.accounting_book_id = NEW.accounting_book_id
       AND child.parent_account_id = NEW.id
   ) THEN
     RAISE EXCEPTION 'An account with children must be non-postable'
@@ -515,7 +537,7 @@ BEGIN
     SELECT 1
     FROM public.accounts AS child
     WHERE child.tenant_id = NEW.tenant_id
-      AND child.store_id = NEW.store_id
+      AND child.accounting_book_id = NEW.accounting_book_id
       AND child.parent_account_id = NEW.id
   ) THEN
     RAISE EXCEPTION 'An account with children cannot be deactivated'
@@ -543,10 +565,10 @@ BEGIN
        FROM public.journal_lines AS line
        JOIN public.journal_entries AS entry
          ON entry.tenant_id = line.tenant_id
-        AND entry.store_id = line.store_id
+        AND entry.accounting_book_id = line.accounting_book_id
         AND entry.id = line.journal_entry_id
        WHERE line.tenant_id = OLD.tenant_id
-         AND line.store_id = OLD.store_id
+         AND line.accounting_book_id = OLD.accounting_book_id
          AND line.account_id = OLD.id
          AND entry.status = 'POSTED'
      ) THEN
@@ -572,18 +594,18 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
 
-  PERFORM pg_advisory_xact_lock(hashtextextended(NEW.store_id::TEXT, 0));
+  PERFORM pg_advisory_xact_lock(hashtextextended(NEW.accounting_book_id::TEXT, 0));
 
   IF EXISTS (
     SELECT 1
     FROM public.fiscal_periods AS period
     WHERE period.tenant_id = NEW.tenant_id
-      AND period.store_id = NEW.store_id
+      AND period.accounting_book_id = NEW.accounting_book_id
       AND period.id <> NEW.id
       AND daterange(period.start_date, period.end_date, '[]')
           && daterange(NEW.start_date, NEW.end_date, '[]')
   ) THEN
-    RAISE EXCEPTION 'Fiscal periods cannot overlap within a store'
+    RAISE EXCEPTION 'Fiscal periods cannot overlap within an accounting book'
       USING ERRCODE = '23P01';
   END IF;
 
@@ -592,7 +614,7 @@ END;
 $function$;
 
 CREATE TRIGGER fiscal_periods_nonoverlap_trg
-  BEFORE INSERT OR UPDATE OF start_date, end_date, store_id ON fiscal_periods
+  BEFORE INSERT OR UPDATE OF start_date, end_date, accounting_book_id ON fiscal_periods
   FOR EACH ROW EXECUTE FUNCTION accounting_validate_period_nonoverlap();
 
 CREATE OR REPLACE FUNCTION accounting_assert_posted_journal()
@@ -618,7 +640,7 @@ BEGIN
   INTO line_count, debit_total, credit_total
   FROM public.journal_lines AS line
   WHERE line.tenant_id = NEW.tenant_id
-    AND line.store_id = NEW.store_id
+    AND line.accounting_book_id = NEW.accounting_book_id
     AND line.journal_entry_id = NEW.id;
 
   IF line_count < 2 OR debit_total <= 0 OR debit_total <> credit_total THEN
@@ -631,10 +653,10 @@ BEGIN
     FROM public.journal_lines AS line
     JOIN public.accounts AS account
       ON account.tenant_id = line.tenant_id
-     AND account.store_id = line.store_id
+     AND account.accounting_book_id = line.accounting_book_id
      AND account.id = line.account_id
     WHERE line.tenant_id = NEW.tenant_id
-      AND line.store_id = NEW.store_id
+      AND line.accounting_book_id = NEW.accounting_book_id
       AND line.journal_entry_id = NEW.id
       AND (
         account.status <> 'ACTIVE'
@@ -653,7 +675,7 @@ BEGIN
   INTO period_state, period_start, period_end
   FROM public.fiscal_periods AS period
   WHERE period.tenant_id = NEW.tenant_id
-    AND period.store_id = NEW.store_id
+    AND period.accounting_book_id = NEW.accounting_book_id
     AND period.id = NEW.period_id
   FOR UPDATE;
 
@@ -672,7 +694,7 @@ BEGIN
     INTO rule_state, rule_start, rule_end
     FROM public.posting_rule_versions AS rule
     WHERE rule.tenant_id = NEW.tenant_id
-      AND rule.store_id = NEW.store_id
+      AND rule.accounting_book_id = NEW.accounting_book_id
       AND rule.id = NEW.posting_rule_version_id;
 
     IF rule_state IS DISTINCT FROM 'APPROVED'
@@ -688,7 +710,7 @@ BEGIN
     INTO original_status, original_currency
     FROM public.journal_entries AS original
     WHERE original.tenant_id = NEW.tenant_id
-      AND original.store_id = NEW.store_id
+      AND original.accounting_book_id = NEW.accounting_book_id
       AND original.id = NEW.reverses_entry_id;
 
     IF original_status IS DISTINCT FROM 'POSTED'
@@ -702,11 +724,11 @@ BEGIN
     FROM public.journal_lines AS original_line
     FULL JOIN public.journal_lines AS reversal_line
       ON reversal_line.tenant_id = NEW.tenant_id
-     AND reversal_line.store_id = NEW.store_id
+     AND reversal_line.accounting_book_id = NEW.accounting_book_id
      AND reversal_line.journal_entry_id = NEW.id
      AND reversal_line.line_number = original_line.line_number
     WHERE original_line.tenant_id = NEW.tenant_id
-      AND original_line.store_id = NEW.store_id
+      AND original_line.accounting_book_id = NEW.accounting_book_id
       AND original_line.journal_entry_id = NEW.reverses_entry_id
       AND (
         reversal_line.id IS NULL
@@ -725,11 +747,11 @@ BEGIN
       FROM public.journal_lines AS reversal_line
       LEFT JOIN public.journal_lines AS original_line
         ON original_line.tenant_id = NEW.tenant_id
-       AND original_line.store_id = NEW.store_id
+       AND original_line.accounting_book_id = NEW.accounting_book_id
        AND original_line.journal_entry_id = NEW.reverses_entry_id
        AND original_line.line_number = reversal_line.line_number
       WHERE reversal_line.tenant_id = NEW.tenant_id
-        AND reversal_line.store_id = NEW.store_id
+        AND reversal_line.accounting_book_id = NEW.accounting_book_id
         AND reversal_line.journal_entry_id = NEW.id
         AND original_line.id IS NULL
     ) THEN
@@ -748,6 +770,16 @@ CREATE CONSTRAINT TRIGGER journal_entries_posted_balance_ct
   FOR EACH ROW
   WHEN (NEW.status = 'POSTED')
   EXECUTE FUNCTION accounting_assert_posted_journal();
+
+ALTER TABLE accounting_books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accounting_books FORCE ROW LEVEL SECURITY;
+CREATE POLICY accounting_books_app_read ON accounting_books
+  FOR SELECT TO marketfa_app
+  USING (tenant_id = app_current_tenant_id());
+CREATE POLICY accounting_books_command_owner_all ON accounting_books
+  FOR ALL TO marketfa_accounting_owner
+  USING (tenant_id = app_current_tenant_id())
+  WITH CHECK (tenant_id = app_current_tenant_id());
 
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE accounts FORCE ROW LEVEL SECURITY;
@@ -821,6 +853,7 @@ CREATE POLICY accounting_audit_command_owner_all ON accounting_audit_events
 
 GRANT USAGE ON SCHEMA public TO marketfa_accounting_owner;
 GRANT SELECT, INSERT, UPDATE, DELETE ON
+  accounting_books,
   accounts,
   fiscal_periods,
   posting_rule_versions,
@@ -831,6 +864,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
 TO marketfa_accounting_owner;
 
 GRANT SELECT ON
+  accounting_books,
   accounts,
   fiscal_periods,
   posting_rule_versions,
