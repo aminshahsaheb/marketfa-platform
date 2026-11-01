@@ -296,6 +296,43 @@ button {
   line-height: 1.9;
 }
 
+.catalog-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #ead7c5;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff9f3;
+  color: #7c4a25;
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+
+.catalog-error p {
+  margin: 0;
+}
+
+.catalog-error button {
+  flex: 0 0 auto;
+  border: 1px solid #c9a17e;
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #714522;
+}
+
+.regulatory-note {
+  border-inline-start: 3px solid #b77b3d;
+  margin: 16px 0;
+  padding: 8px 12px;
+  background: #fff8ee;
+  color: #76502d;
+  font-size: 0.78rem;
+  line-height: 1.9;
+}
+
 .empty-state {
   color: #69766e;
   text-align: center;
