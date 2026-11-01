@@ -59,7 +59,8 @@ Test API endpoints directly; do not rely on UI hiding controls.
 
 ## Terminal tests
 
-- Only an active OWNER can register, rotate credentials, suspend, reactivate, or revoke a terminal.
+- Only an active OWNER can list, register, rotate credentials, suspend, reactivate, or revoke a terminal.
+- Terminal listing is tenant/store scoped and never returns credential hashes or raw credentials.
 - Registration requires an active store in the selected tenant; cross-tenant or inactive stores fail closed.
 - A 256-bit credential is returned only at registration/rotation; PostgreSQL stores only its SHA-256 hash.
 - Credential rotation replaces the stored hash; the previous credential no longer matches.
