@@ -46,6 +46,36 @@ export class DatabaseService implements OnModuleDestroy {
     }
   }
 
+  async withPublicReader<T>(
+    operation: (client: PoolClient) => Promise<T>,
+  ): Promise<T> {
+    const client = await this.pool.connect();
+    let transactionStarted = false;
+    let discardClient = false;
+
+    try {
+      await client.query("BEGIN READ ONLY");
+      transactionStarted = true;
+      await client.query("SET LOCAL ROLE marketfa_app");
+      const result = await operation(client);
+      await client.query("COMMIT");
+      transactionStarted = false;
+      return result;
+    } catch (error) {
+      if (transactionStarted) {
+        try {
+          await client.query("ROLLBACK");
+          transactionStarted = false;
+        } catch {
+          discardClient = true;
+        }
+      }
+      throw error;
+    } finally {
+      client.release(discardClient);
+    }
+  }
+
   async withAuthenticatedActor<T>(
     actor: AuthenticatedActor,
     operation: (client: PoolClient) => Promise<T>,
