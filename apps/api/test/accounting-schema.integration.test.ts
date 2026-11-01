@@ -1120,9 +1120,9 @@ test(
           "SELECT set_config('app.current_tenant_id', $1, true)",
           [tenantA.tenantId],
         );
-        const linePidResult = await postedFirstLineClient.query<{ pid: number }>(
-          "SELECT pg_backend_pid() AS pid",
-        );
+        const linePidResult = await postedFirstLineClient.query<{
+          pid: number;
+        }>("SELECT pg_backend_pid() AS pid");
         const linePid = linePidResult.rows[0]!.pid;
         const lateLinePromise = postedFirstLineClient
           .query(
