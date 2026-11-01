@@ -2,6 +2,7 @@ import "reflect-metadata";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
+import type { PoolClient } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
 import { DatabaseService } from "../src/database/database.service";
@@ -28,7 +29,7 @@ test(
     async function withRole<T>(
       role: RoleName,
       tenantId: string,
-      work: (client: import("pg").PoolClient) => Promise<T>,
+      work: (client: PoolClient) => Promise<T>,
     ): Promise<T> {
       const client = await ownerDb.connect();
       try {
@@ -54,8 +55,12 @@ test(
       code: string,
     ): Promise<void> {
       await assert.rejects(action, (error: unknown) => {
-        return typeof error === "object" && error !== null &&
-          "code" in error && (error as DbError).code === code;
+        return (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          (error as DbError).code === code
+        );
       });
     }
 
@@ -158,7 +163,9 @@ test(
         "INSERT INTO users (id, display_name, status) VALUES ($1, 'Accounting Owner A', 'ACTIVE'), ($2, 'Accounting Owner B', 'ACTIVE')",
         [ownerId, secondOwnerId],
       );
-      const bootstrap = new TenantBootstrapService(new DatabaseService(runtimeDb));
+      const bootstrap = new TenantBootstrapService(
+        new DatabaseService(runtimeDb),
+      );
       const tenantA = await bootstrap.create(
         { userId: ownerId },
         { displayName: "Accounting A", legalName: null, storeName: "Store A" },
@@ -447,16 +454,20 @@ test(
           }),
         "23514",
       );
-      await withRole("marketfa_accounting_owner", tenantA.tenantId, async (client) => {
-        await client.query(
-          "DELETE FROM journal_lines WHERE tenant_id = $1 AND journal_entry_id = $2",
-          [tenantA.tenantId, badReversalId],
-        );
-        await client.query(
-          "DELETE FROM journal_entries WHERE tenant_id = $1 AND id = $2",
-          [tenantA.tenantId, badReversalId],
-        );
-      });
+      await withRole(
+        "marketfa_accounting_owner",
+        tenantA.tenantId,
+        async (client) => {
+          await client.query(
+            "DELETE FROM journal_lines WHERE tenant_id = $1 AND journal_entry_id = $2",
+            [tenantA.tenantId, badReversalId],
+          );
+          await client.query(
+            "DELETE FROM journal_entries WHERE tenant_id = $1 AND id = $2",
+            [tenantA.tenantId, badReversalId],
+          );
+        },
+      );
 
       const reversalId = await createDraftJournal({
         tenantId: tenantA.tenantId,
@@ -727,11 +738,13 @@ test(
       );
       assert.ok(tenantBAccount);
 
-      const visible = await withRole("marketfa_app", tenantA.tenantId, (client) =>
-        client.query(
-          "SELECT id FROM accounts WHERE tenant_id = $1",
-          [tenantB.tenantId],
-        ),
+      const visible = await withRole(
+        "marketfa_app",
+        tenantA.tenantId,
+        (client) =>
+          client.query("SELECT id FROM accounts WHERE tenant_id = $1", [
+            tenantB.tenantId,
+          ]),
       );
       assert.equal(visible.rowCount, 0);
 
@@ -806,9 +819,9 @@ test(
           [[ownerId, secondOwnerId]],
         );
       } finally {
-        await cleanupClient.query("SET session_replication_role = origin").catch(
-          () => undefined,
-        );
+        await cleanupClient
+          .query("SET session_replication_role = origin")
+          .catch(() => undefined);
         cleanupClient.release();
       }
       await Promise.all([ownerDb.end(), runtimeDb.end()]);
