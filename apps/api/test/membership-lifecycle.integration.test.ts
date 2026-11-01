@@ -85,6 +85,16 @@ test(
 
       await assert.rejects(
         memberships.changeRole(
+          { userId: managerId },
+          tenant.tenantId,
+          cashierMembership.id,
+          "VIEWER",
+        ),
+        ForbiddenException,
+      );
+
+      await assert.rejects(
+        memberships.changeRole(
           { userId: ownerAId },
           tenant.tenantId,
           tenant.ownerMembershipId,
