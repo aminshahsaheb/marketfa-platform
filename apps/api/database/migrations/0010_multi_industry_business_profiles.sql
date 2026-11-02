@@ -382,6 +382,7 @@ BEGIN
      AND capability.status = 'ACTIVE'
     WHERE profile.tenant_id = NEW.tenant_id
       AND profile.id = NEW.business_profile_id
+      AND profile.status = 'ACTIVE'
   ) THEN
     RAISE EXCEPTION 'Business profile does not support a retail store/POS'
       USING ERRCODE = '23514';
