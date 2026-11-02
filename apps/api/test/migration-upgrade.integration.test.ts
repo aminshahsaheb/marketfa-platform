@@ -143,6 +143,21 @@ test(
         capabilities.rows.every((row) => row.status === "SUGGESTED"),
         true,
       );
+
+      await legacy.query(
+        "UPDATE business_profiles SET status = 'INACTIVE' WHERE tenant_id = $1",
+        [tenantId],
+      );
+      await assert.rejects(
+        legacy.query(
+          "INSERT INTO stores (tenant_id, name, business_profile_id) VALUES ($1, $2, $3)",
+          [tenantId, "Must Not Be Created", profile.rows[0]?.id],
+        ),
+        {
+          code: "23514",
+          message: /does not support a retail store\/POS/,
+        },
+      );
     } finally {
       await legacy?.end();
       if (databaseCreated) {
