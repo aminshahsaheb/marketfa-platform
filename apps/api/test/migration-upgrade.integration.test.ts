@@ -33,9 +33,7 @@ test(
       legacy = new Pool({ connectionString, max: 1 });
       const legacySchema = await legacy.query<{
         business_profiles: string | null;
-      }>(
-        "SELECT to_regclass('public.business_profiles') AS business_profiles",
-      );
+      }>("SELECT to_regclass('public.business_profiles') AS business_profiles");
       assert.equal(legacySchema.rows[0]?.business_profiles, null);
 
       const userId = randomUUID();
