@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { ForbiddenException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { Pool } from "pg";
 import test from "node:test";
 import { runMigrations } from "../scripts/migrate";
@@ -12,15 +12,15 @@ const runtimeUrl = process.env.DATABASE_URL;
 const enabled = Boolean(migrationUrl && runtimeUrl);
 
 test(
-  "tenant bootstrap atomically creates tenant, first store, OWNER membership, and audit",
+  "tenant bootstrap creates a profile, accounting book and generic location with an optional store",
   { skip: !enabled },
   async () => {
     await runMigrations();
     const owner = new Pool({ connectionString: migrationUrl, max: 1 });
-    const runtime = new Pool({ connectionString: runtimeUrl, max: 1 });
+    const runtime = new Pool({ connectionString: runtimeUrl, max: 2 });
     const activeUserId = randomUUID();
     const suspendedUserId = randomUUID();
-    let createdTenantId: string | undefined;
+    const tenantIds: string[] = [];
 
     try {
       await owner.query(
@@ -30,105 +30,191 @@ test(
 
       const database = new DatabaseService(runtime);
       const service = new TenantBootstrapService(database);
-      const created = await service.create(
+      const serviceBusiness = await service.create(
         { userId: activeUserId },
         {
-          displayName: "Test Business",
+          displayName: "Test Services",
           legalName: "Test Legal Name",
-          storeName: "Main Store",
+          locationName: "Main Office",
+          storeName: null,
+          industryId: "professional-services",
         },
       );
-      createdTenantId = created.tenantId;
+      tenantIds.push(serviceBusiness.tenantId);
 
-      assert.ok(created.tenantId);
-      assert.ok(created.storeId);
-      assert.ok(created.ownerMembershipId);
+      assert.equal(serviceBusiness.storeId, null);
+      assert.ok(serviceBusiness.tenantId);
+      assert.ok(serviceBusiness.ownerMembershipId);
+      assert.ok(serviceBusiness.businessProfileId);
+      assert.ok(serviceBusiness.businessLocationId);
+      assert.ok(serviceBusiness.accountingBookId);
 
-      const tenant = await owner.query<{
+      const profile = await owner.query<{
+        id: string;
+        tenant_id: string;
         display_name: string;
-        legal_name: string | null;
+        industry_key: string;
+        industry_profile_version: number;
+        accounting_book_id: string;
         created_by_user_id: string;
       }>(
-        "SELECT display_name, legal_name, created_by_user_id FROM tenants WHERE id = $1",
-        [created.tenantId],
+        "SELECT id, tenant_id, display_name, industry_key, industry_profile_version, accounting_book_id, created_by_user_id FROM business_profiles WHERE id = $1",
+        [serviceBusiness.businessProfileId],
       );
-      assert.deepEqual(tenant.rows[0], {
-        display_name: "Test Business",
-        legal_name: "Test Legal Name",
+      assert.deepEqual(profile.rows[0], {
+        id: serviceBusiness.businessProfileId,
+        tenant_id: serviceBusiness.tenantId,
+        display_name: "Test Services",
+        industry_key: "professional-services",
+        industry_profile_version: 1,
+        accounting_book_id: serviceBusiness.accountingBookId,
         created_by_user_id: activeUserId,
       });
 
-      const store = await owner.query<{
+      const book = await owner.query<{
         id: string;
         tenant_id: string;
         name: string;
         currency_code: string;
-        money_display_unit: string;
       }>(
-        "SELECT id, tenant_id, name, currency_code, money_display_unit FROM stores WHERE id = $1",
-        [created.storeId],
+        "SELECT id, tenant_id, name, currency_code FROM accounting_books WHERE id = $1",
+        [serviceBusiness.accountingBookId],
       );
-      assert.deepEqual(store.rows[0], {
-        id: created.storeId,
-        tenant_id: created.tenantId,
-        name: "Main Store",
+      assert.deepEqual(book.rows[0], {
+        id: serviceBusiness.accountingBookId,
+        tenant_id: serviceBusiness.tenantId,
+        name: "Test Services",
         currency_code: "IRR",
-        money_display_unit: "TOMAN",
       });
 
-      const membership = await owner.query<{
-        id: string;
-        tenant_id: string;
-        user_id: string;
-        role: string;
+      const capabilities = await owner.query<{
+        capability_key: string;
         status: string;
       }>(
-        "SELECT id, tenant_id, user_id, role, status FROM tenant_memberships WHERE id = $1",
-        [created.ownerMembershipId],
+        "SELECT capability_key, status FROM business_profile_capabilities WHERE tenant_id = $1 AND business_profile_id = $2 ORDER BY capability_key",
+        [serviceBusiness.tenantId, serviceBusiness.businessProfileId],
       );
-      assert.deepEqual(membership.rows[0], {
-        id: created.ownerMembershipId,
-        tenant_id: created.tenantId,
-        user_id: activeUserId,
-        role: "OWNER",
-        status: "ACTIVE",
-      });
+      const capabilityStatuses = new Map(
+        capabilities.rows.map((row) => [row.capability_key, row.status]),
+      );
+      assert.equal(capabilityStatuses.get("finance"), "SUGGESTED");
+      assert.equal(capabilityStatuses.get("projects"), "SUGGESTED");
+      assert.equal(capabilityStatuses.has("inventory"), false);
+      assert.equal(capabilityStatuses.has("point_of_sale"), false);
+      assert.equal(
+        capabilities.rows.some((row) => row.status === "ENABLED"),
+        false,
+      );
 
-      const audit = await owner.query<{
-        action: string;
+      const location = await owner.query<{
+        id: string;
         tenant_id: string;
-        store_id: string;
-        actor_user_id: string;
-        entity_id: string;
+        business_profile_id: string;
+        name: string;
+        location_type: string;
+        store_id: string | null;
       }>(
-        "SELECT action, tenant_id, store_id, actor_user_id, entity_id FROM audit_events WHERE tenant_id = $1",
-        [created.tenantId],
+        "SELECT id, tenant_id, business_profile_id, name, location_type, store_id FROM business_locations WHERE id = $1",
+        [serviceBusiness.businessLocationId],
       );
-      assert.deepEqual(audit.rows[0], {
-        action: "tenant.bootstrap",
-        tenant_id: created.tenantId,
-        store_id: created.storeId,
-        actor_user_id: activeUserId,
-        entity_id: created.tenantId,
+      assert.deepEqual(location.rows[0], {
+        id: serviceBusiness.businessLocationId,
+        tenant_id: serviceBusiness.tenantId,
+        business_profile_id: serviceBusiness.businessProfileId,
+        name: "Main Office",
+        location_type: "OTHER",
+        store_id: null,
       });
 
       await assert.rejects(
-        runtime.query(
-          "INSERT INTO tenants (display_name, created_by_user_id) VALUES ('Direct write', $1)",
-          [activeUserId],
+        owner.query(
+          "INSERT INTO stores (tenant_id, name, business_profile_id) VALUES ($1, 'Direct Invalid Store', $2)",
+          [serviceBusiness.tenantId, serviceBusiness.businessProfileId],
         ),
       );
 
-      const noTenantLeak = await database.withAuthenticatedActor(
+      await assert.rejects(
+        service.create(
+          { userId: activeUserId },
+          {
+            displayName: "Invalid Service Store",
+            legalName: null,
+            locationName: "Office",
+            storeName: "Unexpected Store",
+            industryId: "professional-services",
+          },
+        ),
+        BadRequestException,
+      );
+
+      const retailBusiness = await service.create(
         { userId: activeUserId },
-        async (client) => {
-          const result = await client.query(
-            "SELECT app_current_tenant_id() AS tenant_id",
-          );
-          return result.rows[0]?.tenant_id;
+        {
+          displayName: "Retail Test",
+          legalName: null,
+          locationName: "Main Branch",
+          storeName: "Main Store",
+          industryId: "general-retail",
         },
       );
-      assert.equal(noTenantLeak, null);
+      tenantIds.push(retailBusiness.tenantId);
+      assert.ok(retailBusiness.storeId);
+      const retailLocation = await owner.query<{
+        store_id: string | null;
+        business_profile_id: string;
+      }>(
+        "SELECT store_id, business_profile_id FROM business_locations WHERE id = $1",
+        [retailBusiness.businessLocationId],
+      );
+      assert.deepEqual(retailLocation.rows[0], {
+        store_id: retailBusiness.storeId,
+        business_profile_id: retailBusiness.businessProfileId,
+      });
+      const retailLocationType = await owner.query<{ location_type: string }>(
+        "SELECT location_type FROM business_locations WHERE id = $1",
+        [retailBusiness.businessLocationId],
+      );
+      assert.equal(retailLocationType.rows[0]?.location_type, "BRANCH");
+
+      const pharmacyBusiness = await service.create(
+        { userId: activeUserId },
+        {
+          displayName: "Pharmacy Test",
+          legalName: null,
+          locationName: "Pharmacy Location",
+          storeName: null,
+          industryId: "pharmacy",
+        },
+      );
+      tenantIds.push(pharmacyBusiness.tenantId);
+      assert.equal(pharmacyBusiness.storeId, null);
+      const regulated = await owner.query<{ status: string }>(
+        "SELECT status FROM business_profile_capabilities WHERE tenant_id = $1 AND business_profile_id = $2",
+        [pharmacyBusiness.tenantId, pharmacyBusiness.businessProfileId],
+      );
+      assert.ok(regulated.rows.length > 0);
+      assert.equal(
+        regulated.rows.every((row) => row.status === "PENDING_APPROVAL"),
+        true,
+      );
+      assert.equal(
+        regulated.rows.some((row) => row.status === "ENABLED"),
+        false,
+      );
+
+      await assert.rejects(
+        service.create(
+          { userId: activeUserId },
+          {
+            displayName: "Invalid Industry",
+            legalName: null,
+            locationName: "Office",
+            storeName: null,
+            industryId: "not-a-real-industry",
+          },
+        ),
+        BadRequestException,
+      );
 
       await assert.rejects(
         service.create(
@@ -136,7 +222,9 @@ test(
           {
             displayName: "Should Not Exist",
             legalName: null,
-            storeName: "Main Store",
+            locationName: "Office",
+            storeName: null,
+            industryId: "professional-services",
           },
         ),
         ForbiddenException,
@@ -154,16 +242,33 @@ test(
         ),
       );
     } finally {
-      if (createdTenantId) {
+      for (const tenantId of tenantIds) {
         await owner.query("DELETE FROM audit_events WHERE tenant_id = $1", [
-          createdTenantId,
+          tenantId,
         ]);
+        await owner.query(
+          "DELETE FROM business_locations WHERE tenant_id = $1",
+          [tenantId],
+        );
         await owner.query("DELETE FROM stores WHERE tenant_id = $1", [
-          createdTenantId,
+          tenantId,
         ]);
-        await owner.query("DELETE FROM tenants WHERE id = $1", [
-          createdTenantId,
+        await owner.query(
+          "DELETE FROM business_profile_capabilities WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await owner.query(
+          "DELETE FROM business_profiles WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await owner.query("DELETE FROM accounting_books WHERE tenant_id = $1", [
+          tenantId,
         ]);
+        await owner.query(
+          "DELETE FROM tenant_memberships WHERE tenant_id = $1",
+          [tenantId],
+        );
+        await owner.query("DELETE FROM tenants WHERE id = $1", [tenantId]);
       }
       await owner.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
         [activeUserId, suspendedUserId],

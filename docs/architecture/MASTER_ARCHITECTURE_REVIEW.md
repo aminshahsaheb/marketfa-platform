@@ -1,5 +1,7 @@
 # MarketFa — Master Architecture and Engineering Review
 
+> **Historical snapshot:** This review records repository state as of 2026-11-01. Its PR status and implementation findings are not current. For current status, use [the engineering roadmap](../roadmap/ROADMAP.md) and [PR #28](https://github.com/aminshahsaheb/marketfa-platform/pull/28).
+
 **Review date:** 2026-11-01  
 **Repository:** `aminshahsaheb/marketfa-platform`  
 **Main snapshot:** `59d78332d0605d4e97e3cec4f320dcb588bdf3e7`  

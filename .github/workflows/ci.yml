@@ -33,6 +33,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://marketfa_runtime:marketfa_local_only@localhost:5432/marketfa
       DATABASE_URL_MIGRATION: postgresql://marketfa_owner:marketfa_owner_local_only@localhost:5432/marketfa
+      MIGRATION_TEST_DATABASE_CREATION: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

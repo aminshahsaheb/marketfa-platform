@@ -2,7 +2,7 @@
 
 Work is gated by evidence. A phase is not complete because its files or screens exist. This roadmap describes the state of `main` and separates it from open pull requests.
 
-**Repository snapshot:** `main` at `59d78332d0605d4e97e3cec4f320dcb588bdf3e7`, 2026-11-01.
+**Repository snapshot:** `main` at `ed0e37c44b7358d2e77e7f62978bfce43966594c`, 2026-11-02.
 
 ## M0 — Product discovery and policy
 
@@ -67,22 +67,22 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 
 ## M0.5 — Multi-industry business model
 
-**Status on main:** design and product direction need to be made canonical; implementation proposal remains in draft PR #26.
+**Status on main:** the architecture baseline is merged in PR #27. The first implementation slice is in open PR #28, ready for review; it is not merged. The latest PR head includes store-eligibility, frontend-version and legacy HTTP bootstrap compatibility safeguards. The live PR records CI results for the exact current head.
 
-- [ ] Define tenant → business profile → business location boundaries.
-- [ ] Keep retail store/POS terminal concepts optional; service businesses must not need fake stores.
-- [ ] Define accounting-book ownership independently from POS store/location.
-- [ ] Version industry templates and localize their labels.
-- [ ] Separate suggested capabilities from supported, enabled, entitled and authorized capabilities.
-- [ ] Add server-side activation, dependency, entitlement, permission, setup and jurisdiction gates.
-- [ ] Block regulated workflow activation until specialist review is complete.
+- [x] Define tenant → business profile → business location boundaries in the merged architecture baseline.
+- [x] Keep retail store/POS terminal concepts optional in the PR #28 implementation.
+- [x] Add accounting-book ownership independently from POS store/location; current onboarding creates one book per profile.
+- [x] Add versioned industry and capability catalogues.
+- [x] Keep capability defaults as suggestions; regulated profiles start in `PENDING_APPROVAL`.
+- [ ] Add server-side capability activation, dependency, entitlement, permission, setup and jurisdiction gates.
+- [x] Prevent regulated workflows from being enabled by onboarding; specialist approval workflow remains unimplemented.
 - [ ] Add module-owned dashboard cards, actions, routes and empty states.
 - [ ] Select first pilot verticals and complete their workflows end to end.
 - [ ] Test profile migration without changing historical records.
 
-**Open PR #26:** draft; head `07247a5035f3942e7ba3b2a542bf296f6a6bdc17`. No CI run exists for this exact head. GitHub compare reports the head and its declared PR #21 base as diverged (79 commits ahead / 37 behind). Rebuild or rebase the branch onto the exact approved base before review. Do not merge based on the PR description alone.
+**Open PR #28:** ready for review; based directly on `main` (`ed0e37c44b7358d2e77e7f62978bfce43966594c`). Check the live PR for the current head and exact-head CI result. CodeRabbit's full review attempt was rate-limited; no completed human architecture review is recorded. PR #26 is closed as superseded.
 
-**Exit:** profile, location and capability contracts are implemented; the server exposes only supported and authorized modules; at least two pilot workflows pass end-to-end tests.
+**Exit:** the profile, location and capability contracts are merged; capability activation is enforced server-side with release, profile, dependency, entitlement, permission, setup, jurisdiction and specialist-approval gates; the UI renders only active, authorized module routes and actions; historical profile changes are explicit; and at least two selected pilot workflows pass end-to-end tests.
 
 ## M3 — Accounting kernel
 
@@ -90,7 +90,8 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 - [x] Define logical accounting model and golden/property/concurrency test plan.
 - [x] Record ADR-0007.
 - [ ] Approve legal/accounting book scope, chart of accounts and fiscal-period policy.
-- [ ] Review the proposed SQL schema against the business-profile and location model.
+- [x] Add the accounting-book-scoped SQL schema foundation (PR #21 merged).
+- [ ] Review and validate the schema against approved legal/accounting policies and real pilot workflows.
 - [ ] Approve posting-rule overlap/version selection policy.
 - [ ] Implement restricted posting, reversal, idempotency and sequence commands.
 - [ ] Implement period close/reopen commands serialized against posting.
@@ -98,7 +99,7 @@ Work is gated by evidence. A phase is not complete because its files or screens 
 - [ ] Add transactional audit and outbox integration.
 - [ ] Pass PostgreSQL, property, tenant-isolation, concurrency and accountant-reviewed golden tests.
 
-**Open PR #21:** accounting schema foundation only; head `c0b7939042345858f3329d820b41a76c03dbde41`. CI passed on that exact head (runs 41304490000 and 41301981703). It is not merged. The schema is not a posting service and is not yet aligned to the final multi-industry accounting-book boundary.
+**Merged PR #21:** accounting schema foundation only. It scopes accounts, periods, journals and sequences by `accounting_book_id`, not by retail store. This is a schema foundation, not a posting service. The accounting policy decisions and all posting/read-model commands remain open.
 
 **Exit:** source transactions and journals commit atomically; duplicate commands return the same result; period close cannot race a late post; reports reconcile exactly; accountant-approved golden cases pass.
 
