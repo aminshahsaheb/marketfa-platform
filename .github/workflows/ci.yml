@@ -44,16 +44,6 @@ jobs:
           node-version: 22.21.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Check formatting for auth files
-        run: pnpm exec prettier --check apps/api/src/auth/*.ts apps/api/src/database/database.module.ts apps/api/src/sessions/session.service.ts apps/api/test/auth-guards.test.ts apps/api/test/cookie-policy.test.ts apps/api/test/csrf-controller.test.ts apps/api/test/session.service.integration.test.ts docs/security/AUTHENTICATION_SESSION_MODEL.md
-      - name: Check formatting for membership lifecycle files
-        run: pnpm exec prettier --check apps/api/src/tenancy/membership.controller.ts apps/api/src/tenancy/membership.service.ts apps/api/test/membership-lifecycle.integration.test.ts
-      - name: Check formatting for terminal lifecycle files
-        run: pnpm exec prettier --check apps/api/src/tenancy/terminal.controller.ts apps/api/src/tenancy/terminal.service.ts apps/api/test/terminal.controller.test.ts apps/api/test/terminal-lifecycle.integration.test.ts
-      - name: Check formatting for HTTP authorization matrix
-        run: pnpm exec prettier --check apps/api/test/api-authorization.integration.test.ts
-      - name: Check formatting for accounting schema test and docs
-        run: pnpm exec prettier --check apps/api/test/accounting-schema.integration.test.ts docs/finance/ACCOUNTING_DATA_MODEL.md docs/finance/ACCOUNTING_KERNEL.md docs/roadmap/ROADMAP.md docs/architecture/TENANCY_AND_IDENTITY.md docs/testing/TENANCY_SECURITY_TEST_PLAN.md
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
