@@ -36,7 +36,7 @@ jobs:
       MIGRATION_TEST_DATABASE_CREATION: "true"
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.20.0
       - uses: actions/setup-node@v4
